@@ -215,7 +215,12 @@ func (a *app) startSearch() {
 	}
 	cancel := &atomic.Bool{}
 	s.cancel, s.running = cancel, true
-	a.runSearch(s.gen, re, s.fold, rels, texts, cancel, false)
+	gen := s.gen
+	a.runSearch(searchRun{
+		re: re, fold: s.fold, rels: rels, texts: texts, cancel: cancel, limit: maxSearchMatches,
+		pre:  &grepQuery{s.query, s.matchCase, s.regex},
+		take: func(files []*searchFile, done, stopped bool) { a.takeResults(gen, files, done, stopped) },
+	})
 }
 
 // wants reports whether search looks in a file, by the files to include
@@ -237,19 +242,32 @@ func (a *app) relOf(path string) (string, bool) {
 	return rel, true
 }
 
-// runSearch looks for re in the files rels, of the text in texts for
-// those open, several at a time, and hands what it finds to the main
-// thread as it goes. A search again of a few files, partial, gives each
-// file it looked in, matches or not, which replace those of the results.
-func (a *app) runSearch(gen int, re *regexp.Regexp, fold foldQuery, rels []string, texts map[string]string, cancel *atomic.Bool, partial bool) {
+// searchRun is a search runSearch makes, and where what it finds goes.
+type searchRun struct {
+	re     *regexp.Regexp
+	fold   foldQuery
+	rels   []string          // the files to look in
+	texts  map[string]string // the text of those open with edits, by rel
+	cancel *atomic.Bool
+	// partial searches a few files again: it gives each file it looked
+	// in, matches or not, which replace those of the results.
+	partial bool
+	limit   int // the most matches it finds
+	// pre narrows the files of a remote folder with rg or grep on its
+	// host first, unless nil.
+	pre *grepQuery
+	// take gets what it found on the main thread as it goes: done once it
+	// ended, unless partial, and stopped once it found limit matches.
+	take func(files []*searchFile, done, stopped bool)
+}
+
+// runSearch looks for r.re in the files r.rels, of the text in r.texts
+// for those open, several at a time, and hands what it finds to the main
+// thread as it goes.
+func (a *app) runSearch(r searchRun) {
 	root := a.root
 	if remote.Is(root) {
-		var pre *grepQuery
-		if !partial {
-			s := &a.inFiles
-			pre = &grepQuery{s.query, s.matchCase, s.regex}
-		}
-		go a.searchRemote(gen, root, re, fold, rels, texts, cancel, partial, pre)
+		go a.searchRemote(root, r)
 		return
 	}
 	bg.Go(func() {
@@ -266,25 +284,25 @@ func (a *app) runSearch(gen int, re *regexp.Regexp, fold foldQuery, rels []strin
 			b := batch
 			batch = nil
 			mu.Unlock()
-			stopped := found.Load() >= maxSearchMatches
+			stopped := found.Load() >= int64(r.limit)
 			if len(b) > 0 || done {
-				a.post(func() { a.takeResults(gen, b, done && !partial, stopped) })
+				a.post(func() { r.take(b, done && !r.partial, stopped) })
 			}
 		}
-		for range max(1, min(runtime.GOMAXPROCS(0), 8, len(rels))) {
+		for range max(1, min(runtime.GOMAXPROCS(0), 8, len(r.rels))) {
 			wg.Go(func() {
 				defer recoverCrash()
-				for !cancel.Load() {
+				for !r.cancel.Load() {
 					i := int(next.Add(1) - 1)
-					if i >= len(rels) {
+					if i >= len(r.rels) {
 						return
 					}
-					limit := maxSearchMatches - int(found.Load())
-					if limit <= 0 && !partial {
-						cancel.Store(true)
+					limit := r.limit - int(found.Load())
+					if limit <= 0 && !r.partial {
+						r.cancel.Store(true)
 						return
 					}
-					f := searchFileText(root, rels[i], texts, re, fold, max(limit, 1), partial)
+					f := searchFileText(root, r.rels[i], r.texts, r.re, r.fold, max(limit, 1), r.partial)
 					if f == nil {
 						continue
 					}
@@ -551,7 +569,11 @@ func (a *app) searchAgain(paths []string) {
 		rels = append(rels, rel)
 	}
 	if len(rels) > 0 {
-		a.runSearch(s.gen, s.re, s.fold, rels, texts, &atomic.Bool{}, true)
+		gen := s.gen
+		a.runSearch(searchRun{
+			re: s.re, fold: s.fold, rels: rels, texts: texts, cancel: &atomic.Bool{}, partial: true, limit: maxSearchMatches,
+			take: func(files []*searchFile, done, stopped bool) { a.takeResults(gen, files, done, stopped) },
+		})
 	}
 }
 
@@ -1170,7 +1192,7 @@ func (a *app) searchMatchRow(c *ui.Context, i int, f *searchFile, m searchMatch,
 		}
 	}
 	row.Children(func() {
-		ui.RichText(c, a.matchPreview(m)...).FontSize(12.5).SingleLine().Grow(1).Shrink(1).MinWidth(0)
+		ui.RichText(c, a.matchPreview(m, s.replacing)...).FontSize(12.5).SingleLine().Grow(1).Shrink(1).MinWidth(0)
 		if hovered && s.replacing {
 			if a.smallButton(c, iconReplace, locales.FindReplace()) {
 				*action = func() { a.replaceMatches([]*searchFile{f}, &m) }
@@ -1187,9 +1209,9 @@ func (a *app) searchMatchRow(c *ui.Context, i int, f *searchFile, m searchMatch,
 const previewLead = 28
 
 // matchPreview is the line of a match as its row shows it: from a little
-// before the match, with the match marked, struck out when replacing and
-// followed by what replaces it.
-func (a *app) matchPreview(m searchMatch) []ui.Span {
+// before the match, with the match marked, struck out when replacing in
+// the search view and followed by what replaces it.
+func (a *app) matchPreview(m searchMatch, replacing bool) []ui.Span {
 	p := a.pal
 	s := &a.inFiles
 	pre := strings.TrimLeft(m.pre, " \t")
@@ -1203,7 +1225,7 @@ func (a *app) matchPreview(m searchMatch) []ui.Span {
 	}
 	oneLine := func(t string) string { return strings.ReplaceAll(strings.ReplaceAll(t, "\t", " "), "\n", "⏎") }
 	spans := []ui.Span{{Text: oneLine(pre), Color: p.text}}
-	if !s.replacing || s.re == nil {
+	if !replacing || s.re == nil {
 		spans = append(spans, ui.Span{Text: oneLine(m.hit), Color: p.text, Background: p.matchNow})
 	} else {
 		with := s.re.ReplaceAllString(m.text, replaceTemplate(s.with, s.regex))

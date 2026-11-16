@@ -4,9 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"os/exec"
-	"regexp"
 	"strings"
-	"sync/atomic"
 
 	"mayoi/internal/remote"
 	"mayoi/internal/workspace"
@@ -23,19 +21,19 @@ type grepQuery struct {
 // once.
 const remoteReadBatch = 200
 
-// searchRemote searches the files rels of a remote folder, as runSearch
-// does those of this machine. rg, or else grep, on the host first finds
-// the files that may match, unless pre is nil; those are read over the
+// searchRemote searches the files of a remote folder, as runSearch does
+// those of this machine. rg, or else grep, on the host first finds the
+// files that may match, unless r.pre is nil; those are read over the
 // connection in batches, and searched here, as the files of this machine
 // are, so that both find the same.
-func (a *app) searchRemote(gen int, root string, re *regexp.Regexp, fold foldQuery, rels []string, texts map[string]string,
-	cancel *atomic.Bool, partial bool, pre *grepQuery) {
+func (a *app) searchRemote(root string, r searchRun) {
 	c, rroot, _ := remote.Lookup(root)
-	if pre != nil {
-		if hits, ok := grepFiles(c, rroot, pre); ok {
+	rels := r.rels
+	if r.pre != nil {
+		if hits, ok := grepFiles(c, rroot, r.pre); ok {
 			var want []string
 			for _, rel := range rels {
-				if _, open := texts[rel]; open || hits[rel] {
+				if _, open := r.texts[rel]; open || hits[rel] {
 					want = append(want, rel)
 				}
 			}
@@ -43,19 +41,19 @@ func (a *app) searchRemote(gen int, root string, re *regexp.Regexp, fold foldQue
 		}
 	}
 	found := 0
-	stopped := func() bool { return found >= maxSearchMatches }
+	stopped := func() bool { return found >= r.limit }
 	take := func(batch []*searchFile, done bool) {
 		if len(batch) > 0 || done {
 			st := stopped()
-			a.post(func() { a.takeResults(gen, batch, done && !partial, st) })
+			a.post(func() { r.take(batch, done && !r.partial, st) })
 		}
 	}
 	search := func(rel string, text map[string]string) *searchFile {
-		limit := maxSearchMatches - found
-		if limit <= 0 && !partial {
+		limit := r.limit - found
+		if limit <= 0 && !r.partial {
 			return nil
 		}
-		f := searchFileText(root, rel, text, re, fold, max(limit, 1), partial)
+		f := searchFileText(root, rel, text, r.re, r.fold, max(limit, 1), r.partial)
 		if f != nil {
 			found += len(f.matches)
 		}
@@ -65,8 +63,8 @@ func (a *app) searchRemote(gen int, root string, re *regexp.Regexp, fold foldQue
 	var batch []*searchFile
 	var toRead []string
 	for _, rel := range rels {
-		if _, ok := texts[rel]; ok {
-			if f := search(rel, texts); f != nil {
+		if _, ok := r.texts[rel]; ok {
+			if f := search(rel, r.texts); f != nil {
 				batch = append(batch, f)
 			}
 		} else {
@@ -74,7 +72,7 @@ func (a *app) searchRemote(gen int, root string, re *regexp.Regexp, fold foldQue
 		}
 	}
 	take(batch, false)
-	for i := 0; i < len(toRead) && !cancel.Load() && !stopped(); i += remoteReadBatch {
+	for i := 0; i < len(toRead) && !r.cancel.Load() && !stopped(); i += remoteReadBatch {
 		part := toRead[i:min(i+remoteReadBatch, len(toRead))]
 		got := map[string]string{}
 		err := c.ReadFiles(rroot, part, maxSearchBytes, func(rel string, data []byte) {
@@ -87,7 +85,7 @@ func (a *app) searchRemote(gen int, root string, re *regexp.Regexp, fold foldQue
 		}
 		batch = nil
 		for _, rel := range part {
-			if cancel.Load() {
+			if r.cancel.Load() {
 				break
 			}
 			if f := search(rel, got); f != nil {

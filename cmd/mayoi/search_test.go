@@ -260,7 +260,7 @@ func TestReplaceOneMatch(t *testing.T) {
 	s.replacing, s.with, s.details = true, "log.$1", true
 	hs.settle()
 	hs.shot("search-replace")
-	if spans := a.matchPreview(s.files[0].matches[0]); len(spans) != 4 || spans[1].Text != "fmt.Println" || !spans[1].Strikethrough || spans[2].Text != "log.Println" {
+	if spans := a.matchPreview(s.files[0].matches[0], s.replacing); len(spans) != 4 || spans[1].Text != "fmt.Println" || !spans[1].Strikethrough || spans[2].Text != "log.Println" {
 		t.Errorf("preview %+v", spans)
 	}
 	f, m := s.files[0], s.files[0].matches[0]

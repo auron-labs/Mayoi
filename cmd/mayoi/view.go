@@ -76,6 +76,7 @@ func (a *app) view(c *ui.Context) {
 		a.dragging, a.dragNow = a.dragNow, false
 	}
 	a.copyDrop = c.Modifiers()&ui.Alt != 0
+	a.shiftTwice(c)
 	a.shortcuts(c)
 	c.SetZoom(float32(math.Pow(1.2, float64(a.settings.ZoomLevel))))
 	// Which pane has the keyboard focus, as the frame before left it, and
@@ -175,6 +176,7 @@ func (a *app) view(c *ui.Context) {
 		a.statusBar(c)
 	})
 	a.quickOpenView(c)
+	a.everywhereView(c)
 	a.branchPickerView(c)
 	a.stashPickerView(c)
 	a.prPickerView(c)

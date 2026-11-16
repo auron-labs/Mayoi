@@ -260,6 +260,7 @@ func (a *app) spawnTerminal(s *session, dir string) (*terminal.Terminal, error) 
 		// Windows and Linux those of Mayoi's it leaves to Mayoi.
 		OnKey: func(mods ui.Modifiers, key ui.Key) bool {
 			a.keyTerm = s
+			a.shift.reset()
 			st := keymap.Stroke{Mods: mods, Key: key}
 			if a.keyStroke(st, placeTerminal) {
 				return true

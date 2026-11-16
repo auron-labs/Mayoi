@@ -1081,6 +1081,7 @@ func (a *app) githubList(c *ui.Context, ctx *gitContext, o *git.GHOverview, rows
 		if !out.Shortcut(ui.Shift, k) {
 			continue
 		}
+		a.shift.reset()
 		to := ghItemStep(rows, gp.row, 1)
 		switch k {
 		case ui.KeyUp:

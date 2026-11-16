@@ -593,6 +593,16 @@ the files Git tracks, so build output stays out.
 - Type `>`, or press ⇧⌘P, to run any command by name. Each shows its menu, its shortcut and a check when it is on,
   and the commands run last come first.
 
+## Search Everywhere
+
+Tap Shift twice, or choose **Go → Search Everywhere…**, to search the folder's files by name and by their text in one
+box: the best files first, then each line that holds the query, ignoring case, with its file and line number. With no
+query it lists recent files. It opens again with the last query selected, to type over or search again.
+
+- Return opens the file or the line, with the match selected; ⌘Return opens it to the side.
+- It lists up to 100 lines; past that, **Show all results in Search** shows every match in the Search view.
+- Shift tapped while a terminal has the keyboard stays with the terminal.
+
 ## Find and replace
 
 ⌘F finds and ⌥⌘F replaces, with options for match case, whole word and regular expressions (`$1` refers to a group). In

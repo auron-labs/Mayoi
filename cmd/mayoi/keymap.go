@@ -40,6 +40,7 @@ func (a *app) takeKeys(el ui.Element, where keyPlace, fn func(ev ui.InputEvent) 
 		a.keyFocus = where
 	}
 	return el.HandleInput(func(ev ui.InputEvent) bool {
+		a.seeKey(ev)
 		if ev.Kind == ui.InputKeyUp && a.held != nil && *a.held == ev.Key {
 			a.held = nil
 			a.invalidate()

@@ -1740,5 +1740,6 @@ func (a *app) floating(c *ui.Context, box ui.Element, dialog bool) ui.Element {
 // the dialog is in. It shows at once, as the
 // keys that open a dialog want it there to type in.
 func (a *app) dialogBack(c *ui.Context) ui.Element {
+	a.dialogShown = true
 	return ui.Column(c).Absolute().Top(0).Left(0).Right(0).Bottom(0).AlignItems(ui.Center).Modal()
 }

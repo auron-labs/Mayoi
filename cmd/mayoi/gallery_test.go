@@ -46,6 +46,16 @@ var galleryStates = []struct {
 	{"file-error", func(hs *harness) { hs.a.openFile(hs.path("missing.go"), true) }},
 	{"palette", func(hs *harness) { hs.a.run("go.commands") }},
 	{"no-match", func(hs *harness) { hs.a.openQuick("zzzz-nothing") }},
+	{"search-everywhere", func(hs *harness) {
+		hs.a.run("go.searchEverywhere")
+		hs.a.everywhere.query = "main"
+		hs.settleEverywhere()
+	}},
+	{"search-everywhere-none", func(hs *harness) {
+		hs.a.run("go.searchEverywhere")
+		hs.a.everywhere.query = "zzzz-nothing"
+		hs.settleEverywhere()
+	}},
 	{"path-pending", func(hs *harness) {
 		hs.a.openQuick(hs.path("pending.go"))
 		p := &hs.a.quick.probe

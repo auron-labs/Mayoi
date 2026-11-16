@@ -2818,6 +2818,16 @@ func (msgs Messages) CmdGoQuickOpen() string {
 	return Catalog.Format(msgs.locale, "cmdGoQuickOpen", nil)
 }
 
+// CmdGoSearchEverywhere says "Search Everywhere…"
+// in the language the app shows.
+func CmdGoSearchEverywhere() string { return In(i18n.Locale()).CmdGoSearchEverywhere() }
+
+// CmdGoSearchEverywhere says "Search Everywhere…"
+// in the language of msgs.
+func (msgs Messages) CmdGoSearchEverywhere() string {
+	return Catalog.Format(msgs.locale, "cmdGoSearchEverywhere", nil)
+}
+
 // CmdGoSymbol says "Go to Symbol…"
 // in the language the app shows.
 func CmdGoSymbol() string { return In(i18n.Locale()).CmdGoSymbol() }
@@ -9192,6 +9202,66 @@ func QuickTypeForCommands() string { return In(i18n.Locale()).QuickTypeForComman
 // in the language of msgs.
 func (msgs Messages) QuickTypeForCommands() string {
 	return Catalog.Format(msgs.locale, "quickTypeForCommands", nil)
+}
+
+// EverywhereFiles says "Files"
+// in the language the app shows.
+func EverywhereFiles() string { return In(i18n.Locale()).EverywhereFiles() }
+
+// EverywhereFiles says "Files"
+// in the language of msgs.
+func (msgs Messages) EverywhereFiles() string {
+	return Catalog.Format(msgs.locale, "everywhereFiles", nil)
+}
+
+// EverywhereLabel says "Search Everywhere"
+// in the language the app shows.
+func EverywhereLabel() string { return In(i18n.Locale()).EverywhereLabel() }
+
+// EverywhereLabel says "Search Everywhere"
+// in the language of msgs.
+func (msgs Messages) EverywhereLabel() string {
+	return Catalog.Format(msgs.locale, "everywhereLabel", nil)
+}
+
+// EverywhereNoFolder says "Open a folder to search its files"
+// in the language the app shows.
+func EverywhereNoFolder() string { return In(i18n.Locale()).EverywhereNoFolder() }
+
+// EverywhereNoFolder says "Open a folder to search its files"
+// in the language of msgs.
+func (msgs Messages) EverywhereNoFolder() string {
+	return Catalog.Format(msgs.locale, "everywhereNoFolder", nil)
+}
+
+// EverywherePlaceholder says "Search files and text"
+// in the language the app shows.
+func EverywherePlaceholder() string { return In(i18n.Locale()).EverywherePlaceholder() }
+
+// EverywherePlaceholder says "Search files and text"
+// in the language of msgs.
+func (msgs Messages) EverywherePlaceholder() string {
+	return Catalog.Format(msgs.locale, "everywherePlaceholder", nil)
+}
+
+// EverywhereShowAll says "Show all results in Search"
+// in the language the app shows.
+func EverywhereShowAll() string { return In(i18n.Locale()).EverywhereShowAll() }
+
+// EverywhereShowAll says "Show all results in Search"
+// in the language of msgs.
+func (msgs Messages) EverywhereShowAll() string {
+	return Catalog.Format(msgs.locale, "everywhereShowAll", nil)
+}
+
+// EverywhereText says "Text"
+// in the language the app shows.
+func EverywhereText() string { return In(i18n.Locale()).EverywhereText() }
+
+// EverywhereText says "Text"
+// in the language of msgs.
+func (msgs Messages) EverywhereText() string {
+	return Catalog.Format(msgs.locale, "everywhereText", nil)
 }
 
 // RailChooseIcon says "Choose Icon…"

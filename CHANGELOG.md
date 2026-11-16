@@ -14,6 +14,10 @@ needs a `## <version>` section here, or its build fails.
 - On Windows, adding or removing a file at the root of a remote folder updates Explorer.
 - On Windows, a nested repository's changes tab stays with that repository after a restart.
 - On Windows, Source Control shows a remote file's folder with slashes.
+- Tap `Shift` twice, or choose **Go → Search Everywhere…**, to find files by name and by text in one box.
+- Search Everywhere lists matching files first, then each line holding the query with its file and line.
+- Search Everywhere opens again with the last query selected, so typing replaces it.
+- **Show all results in Search** opens every match in the Search view when there are more than 100 lines.
 
 ## 0.22.2
 

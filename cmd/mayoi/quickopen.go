@@ -44,6 +44,7 @@ func (q *quickOpen) resetResults(query string) {
 }
 
 func (a *app) openQuick(query string) {
+	a.closeEverywhere()
 	q := &a.quick
 	q.probe.epoch++
 	q.open, q.query, q.sel, q.stale = true, query, 0, true

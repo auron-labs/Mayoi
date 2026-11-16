@@ -1099,6 +1099,7 @@ func (a *app) sessionsView(c *ui.Context) {
 		if !out.Shortcut(ui.Shift, k) {
 			continue
 		}
+		a.shift.reset()
 		to, d := sessionStep(rows, st.row, 1), 1
 		switch k {
 		case ui.KeyUp:

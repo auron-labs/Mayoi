@@ -125,6 +125,7 @@ func (a *app) commandsIn(t locales.Messages) []command {
 		{"go.definition", t.CmdGoDefinition(), "F12", a.goToDefinition},
 		{"go.hover", t.CmdGoHover(), "", a.showHover},
 		{"go.quickOpen", t.CmdGoQuickOpen(), "CmdOrCtrl+P", func() { a.openQuick("") }},
+		{"go.searchEverywhere", t.CmdGoSearchEverywhere(), "", a.openEverywhere},
 		{"go.commands", t.CmdGoCommands(), "Shift+CmdOrCtrl+P", func() { a.openQuick(">") }},
 		{"go.line", t.CmdGoLine(), "Ctrl+G", func() { a.openQuick(":") }},
 		{"go.symbol", t.CmdGoSymbol(), "Shift+CmdOrCtrl+O", func() { a.openQuick("@") }},
@@ -715,7 +716,7 @@ func (a *app) menu(cli bool, run func(id string, win *mygo.Window)) *mygo.Menu {
 			{Role: mygo.RoleToggleFullScreen}, {Role: mygo.RoleToggleDevTools},
 		}},
 		{Label: locales.MenuGo(), Submenu: []*mygo.MenuItem{
-			item("go.quickOpen"), item("go.commands"), item("go.symbol"), item("go.line"), item("go.bracket"), mygo.Separator(),
+			item("go.quickOpen"), item("go.searchEverywhere"), item("go.commands"), item("go.symbol"), item("go.line"), item("go.bracket"), mygo.Separator(),
 			item("go.definition"), item("go.hover"), mygo.Separator(),
 			item("go.nextTab"), item("go.prevTab"), mygo.Separator(),
 			item("go.nextProject"), item("go.prevProject"),

@@ -348,6 +348,9 @@ type app struct {
 	carried  *colTab
 	dragSeen bool
 	copyDrop bool
+	// dialogShown says dialogBack built a dialog since shiftTwice last
+	// looked: one is open.
+	dialogShown bool
 	// middle is the tab a middle press is on, until it is let go of: the
 	// press closes it rather than shows it.
 	middle *colTab
@@ -357,6 +360,8 @@ type app struct {
 	viewedW float32
 
 	quick      quickOpen
+	everywhere everywhere        // Search Everywhere
+	shift      shiftTaps         // the taps of Shift that open Search Everywhere
 	palette    []paletteEntry    // the commands of the command palette, made as it first opens
 	waits      []docWait         // the mayoi --wait commands waiting for documents to close
 	hints      map[string]string // the keys of the commands, as tooltips show them
@@ -941,7 +946,7 @@ func (a *app) refreshIndex() {
 		a.post(func() {
 			if a.indexRead.Done(key) && a.folderKey() == key {
 				a.index = files
-				a.quick.stale = true
+				a.quick.stale, a.everywhere.stale = true, true
 			}
 		})
 	})

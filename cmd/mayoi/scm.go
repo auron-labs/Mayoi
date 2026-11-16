@@ -602,6 +602,7 @@ func (a *gitContext) scmListInput(out ui.Element, rows []scmRow, reveal func(int
 		if !out.Shortcut(ui.Shift, key) {
 			continue
 		}
+		a.app.shift.reset()
 		step, start := 1, s.row+1
 		switch key {
 		case ui.KeyUp:
