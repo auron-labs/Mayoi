@@ -382,6 +382,10 @@ folder's machine, so it runs on the SSH host of a remote folder. Mayoi shows the
 **Go → Go to Definition** (F12), **Go → Show Hover**, **Selection → Complete Word** (⌃Space in the editor), and
 **Format Document** when no plugin formats the language.
 
+You can also set up servers yourself, by language or by file glob, in settings.json, with no plugin. They take
+priority over a plugin's, and an entry with the `id` of a plugin's server replaces it. See
+[`languageServers`](SETTINGS.md#language-servers).
+
 For servers that need setup, use `resolve` instead of `command`:
 
 ```jsonc

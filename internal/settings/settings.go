@@ -277,6 +277,10 @@ type Prefs struct {
 	// Formatters chooses the formatter of a language where plugins offer
 	// several: the formatter's id, or its plugin's name.
 	Formatters map[string]string `json:"formatters,omitempty"`
+	// LanguageServers are the language servers the person sets up, which
+	// win over the plugins' for the documents they match. A folder can't
+	// set them, so that a repository can't choose a program to run.
+	LanguageServers []LanguageServer `json:"languageServers,omitempty"`
 	// PluginSources are the plugins installed from Git and where each came
 	// from, as ~/.mayoi/plugins/plugins.json has them, which Mayoi keeps
 	// here for settings sync to bring to the person's other machines.

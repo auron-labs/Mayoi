@@ -112,6 +112,7 @@ takes its default.
 | `plugins`               | none          | Each plugin's own settings, and `"enabled": false` to turn it off | The **Plugins** page of the settings window |
 | `formatOnSave`          | none          | `true` for each language to format as it saves, or `"*"` for all | Only this file                          |
 | `formatters`            | none          | The formatter of each language, where plugins offer several | Only this file                                 |
+| `languageServers`       | none          | Language servers of your own, by language or by file glob   | Only this file                                 |
 
 ### Language
 
@@ -273,6 +274,8 @@ differ in width lines them up only roughly.
   `{"*": true}` for every language that has a formatter.
 - **`formatters`** chooses the formatter of a language where plugins offer several, by the formatter's id or its
   plugin's name, as `{"typescript": "prettier"}`.
+- **`languageServers`** sets up language servers without a plugin, and takes the place of a plugin's. See
+  [Language servers](#language-servers).
 
 ```json
 {
@@ -281,6 +284,32 @@ differ in width lines them up only roughly.
   "formatters": { "typescript": "biome" }
 }
 ```
+
+### Language servers
+
+**`languageServers`** is a list of servers Mayoi starts for a folder as a document they serve opens, on the folder's
+machine, so over SSH they run on the host. Each entry has an `id` and a `command`, and the documents it serves: its
+`languages`, its `files`, or both, and a document that meets either is served. `args` and `initializationOptions` are
+as a plugin's [language server](PLUGINS.md#language-servers) has them.
+
+```jsonc
+"languageServers": [
+  // Takes the place of a plugin's server for Go.
+  { "id": "gopls.server", "languages": ["go"], "command": "gopls", "args": ["-remote=auto"] },
+  // By glob: the Helm templates, and every `*.tf` file in any folder.
+  { "id": "helm-ls", "files": ["charts/**/templates/*.yaml", "*.tf"], "command": "helm_ls", "args": ["serve"] }
+]
+```
+
+- **Your servers win.** The first entry in the list that serves a document is its server, before any plugin's. An
+  entry with the `id` of a plugin's server replaces that server for every language it had.
+- **A glob matches the document's path from the folder,** with `/` also on Windows and over SSH, as search's "files
+  to include" does: one without a `/` matches the name in any folder, `**` stands for any folders, `{a,b}` for either,
+  and one that matches a folder matches what is in it. A document outside the folder is served by language only.
+- **An entry needs an `id` that no entry before it has, a `command`, and `languages` or `files`.** Mayoi leaves out
+  an entry that doesn't, and tells you which when it reads the file.
+- **Changing the list restarts every language server** for the documents open.
+- **A folder can't set it,** so that a repository can't choose a program to run.
 
 ### Example
 

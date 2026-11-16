@@ -15,6 +15,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"reflect"
 	"runtime"
 	"slices"
 	"strings"
@@ -521,6 +522,7 @@ func main() {
 		}
 		first := m.wins[0]
 		first.a.keysFailed(keys, keysErr)
+		first.a.serversFailed(m.s.LanguageServers)
 		m.setMenu(first.a)
 		if os.Getenv("MAYOI_SNAPSHOT") == "" {
 			m.offerCrashes(first)
@@ -800,6 +802,13 @@ func (m *mayoi) reload(p settings.Prefs) {
 	if plugins != nil {
 		plugins.syncPrefs()
 		plugins.toggled(old.Plugins, p.Plugins)
+		if !reflect.DeepEqual(p.LanguageServers, old.LanguageServers) {
+			plugins.restartServers()
+			if len(m.wins) > 0 {
+				front := m.wins[0]
+				front.do(func() { front.a.serversFailed(p.LanguageServers) })
+			}
+		}
 		if !maps.Equal(p.PluginSources, old.PluginSources) {
 			plugins.syncPlugins()
 		}

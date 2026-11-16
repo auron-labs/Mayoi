@@ -118,6 +118,7 @@ var Schema = []Field{
 	{Key: "plugins", Category: CatPlugins, Kind: KindJSON},
 	{Key: "formatOnSave", Category: CatPlugins, Kind: KindJSON, Folder: true},
 	{Key: "formatters", Category: CatPlugins, Kind: KindJSON, Folder: true},
+	{Key: "languageServers", Category: CatPlugins, Kind: KindJSON},
 	{Key: "pluginSources", Category: CatPlugins, Kind: KindJSON, Memory: true},
 
 	{Key: "locale", Category: CatGeneral, Kind: KindEnum, Options: []string{"", "en", "zh-Hans", "ja"}},

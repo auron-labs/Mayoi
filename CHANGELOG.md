@@ -5,6 +5,9 @@ needs a `## <version>` section here, or its build fails.
 
 ## Unreleased
 
+- `languageServers` in `settings.json` sets up a language server with no plugin, for a language or files.
+- A language server of `languageServers` is used before a plugin's, and one with a plugin's `id` replaces it.
+- `files` in a `languageServers` entry takes globs such as `*.tf` or `charts/**/templates/*.yaml`.
 - On Windows, **File → Remote SSH** opens a folder with the system `ssh`.
 - On Windows, **File → Open WSL Folder…** opens a folder in a WSL distribution.
 - On Windows, a Remote SSH or WSL file keeps a `/ssh:` or `/wsl:` path and opens in one tab.

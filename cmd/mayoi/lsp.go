@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"slices"
 	"strings"
 	"sync"
@@ -17,18 +18,20 @@ import (
 	"mayoi/internal/lsp"
 	"mayoi/internal/plugin"
 	"mayoi/internal/remote"
+	"mayoi/internal/settings"
 	"mayoi/internal/vfs"
+	"mayoi/internal/workspace"
 	"mayoi/locales"
 )
 
-// The language servers plugins declare: started for a folder as a
-// document of one of their languages opens there, on the folder's machine,
-// and told of the documents of their languages as they open, change, save
-// and close.
+// The language servers plugins declare and the person sets up in
+// settings.json: started for a folder as a document they serve opens
+// there, on the folder's machine, and told of the documents they serve as
+// they open, change, save and close.
 
 // lspServer is a language server of a folder.
 type lspServer struct {
-	plugin   *plugin.Plugin
+	plugin   *plugin.Plugin // nil for one the person set up
 	contrib  plugin.ServerContrib
 	root     string
 	client   *lsp.Client
@@ -80,20 +83,50 @@ const maxServerStarts = 3
 // its language opening starts it again.
 var lspRetryPause = 30 * time.Second
 
-// serverContrib is the server a plugin declares for a language, nil for
-// none.
-func serverContrib(lang string) (*plugin.Plugin, *plugin.ServerContrib) {
-	if plugins == nil || lang == "" {
+// serverFor is the server of a document: the first of the person's own
+// that serves it, else a plugin's, nil for none. The plugin is nil for the
+// person's.
+func (a *app) serverFor(d *document) (*plugin.Plugin, *plugin.ServerContrib) {
+	rel, _ := a.relOf(d.path)
+	own, _ := settings.ValidLanguageServers(a.prefs().LanguageServers)
+	return selectServer(own, plugins.enabled(), languageOf(d), rel)
+}
+
+// selectServer chooses among the person's servers, then the plugins', for
+// a document of language lang at rel in the folder, with slashes, "" for
+// one outside it. A server serves a document of one of its languages or
+// whose rel matches one of its files. A plugin's server the person's
+// replaces, by its id, serves nothing.
+func selectServer(own []settings.LanguageServer, enabled []*plugin.Plugin, lang, rel string) (*plugin.Plugin, *plugin.ServerContrib) {
+	for _, s := range own {
+		byLanguage := lang != "" && slices.Contains(s.Languages, lang)
+		byFile := rel != "" && workspace.ParseGlobs(strings.Join(s.Files, ",")).Match(rel)
+		if byLanguage || byFile {
+			return nil, &plugin.ServerContrib{ID: s.ID, Languages: s.Languages, Command: s.Command, Args: s.Args, Options: s.Options}
+		}
+	}
+	if lang == "" {
 		return nil, nil
 	}
-	for _, p := range plugins.enabled() {
+	for _, p := range enabled {
 		for i, s := range p.Contributes.LanguageServers {
-			if slices.Contains(s.Languages, lang) {
+			replaced := slices.ContainsFunc(own, func(o settings.LanguageServer) bool { return o.ID == s.ID })
+			if !replaced && slices.Contains(s.Languages, lang) {
 				return p, &p.Contributes.LanguageServers[i]
 			}
 		}
 	}
 	return nil, nil
+}
+
+// log adds a line to the log of the server's plugin, and of the person's
+// servers to Mayoi's own.
+func (s *lspServer) log(level, msg string) {
+	if s.plugin != nil {
+		s.plugin.Log(level, msg)
+		return
+	}
+	log.Printf("mayoi: %s: %s", level, msg)
 }
 
 // serverURI is the URI a server of root knows a path by: on an SSH host,
@@ -117,16 +150,16 @@ func serverPath(root, uri string) string {
 	return p
 }
 
-// lspFor is the server of a document's language in the folder, started
-// in the background the first time; nil when no plugin declares one.
+// lspFor is the server of a document in the folder, started in the
+// background the first time; nil when none serves it.
 // opening is whether the document is opening, which starts again one that
 // failed to start a while ago.
 func (a *app) lspFor(d *document, opening bool) *lspServer {
 	if a.root == "" || d.path == "" {
 		return nil
 	}
-	p, sc := serverContrib(languageOf(d))
-	if p == nil {
+	p, sc := a.serverFor(d)
+	if sc == nil {
 		return nil
 	}
 	key := a.root + "\x00" + sc.ID
@@ -170,7 +203,7 @@ func (s *lspServer) start(a *app) {
 	launch, err := s.resolve(ctx)
 	if err != nil {
 		s.err = err
-		s.plugin.Log("error", "could not resolve "+s.contrib.ID+": "+err.Error())
+		s.log("error", "could not resolve "+s.contrib.ID+": "+err.Error())
 		return
 	}
 	pr, pw := io.Pipe()
@@ -207,28 +240,28 @@ func (s *lspServer) start(a *app) {
 				}
 				plugins.setDiagnosticList(owner, path, source, false, list)
 			},
-			Log: func(level, msg string) { s.plugin.Log(level, s.contrib.ID+": "+msg) },
+			Log: func(level, msg string) { s.log(level, s.contrib.ID+": "+msg) },
 		}})
 	if err != nil {
 		pr.Close()
 		pw.Close()
 		s.err = fmt.Errorf("%s: %v", launch.Command, err)
-		s.plugin.Log("error", "could not start "+s.contrib.ID+": "+err.Error())
+		s.log("error", "could not start "+s.contrib.ID+": "+err.Error())
 		return
 	}
 	s.client = c
-	s.plugin.Log("info", "started "+s.contrib.ID)
+	s.log("info", "started "+s.contrib.ID)
 	// The documents open of its languages.
 	a.post(func() {
 		for _, d := range a.docs {
-			if slices.Contains(s.contrib.Languages, languageOf(d)) {
+			if p, sc := a.serverFor(d); sc != nil && p == s.plugin && sc.ID == s.contrib.ID {
 				c.Open(serverURI(d.path), languageOf(d), d.buf.String())
 			}
 		}
 	})
 	go func() {
 		<-c.Done()
-		s.plugin.Log("warn", s.contrib.ID+" stopped")
+		s.log("warn", s.contrib.ID+" stopped")
 		if plugins != nil {
 			plugins.setDiagnosticList(owner, "", "", true, nil)
 		}
@@ -236,13 +269,13 @@ func (s *lspServer) start(a *app) {
 }
 
 // forgetFailedServers forgets the servers of the plugins of names, or of
-// every plugin for none, that could not start, so that a document of their
-// languages opening starts them afresh.
+// every plugin and the person for none, that could not start, so that a
+// document they serve opening starts them afresh.
 func forgetFailedServers(names ...string) {
 	lspServers.Lock()
 	defer lspServers.Unlock()
 	for key, s := range lspServers.m {
-		if s.state() == lspFailed && (len(names) == 0 || slices.Contains(names, s.plugin.Name)) {
+		if s.state() == lspFailed && (len(names) == 0 || s.plugin != nil && slices.Contains(names, s.plugin.Name)) {
 			delete(lspServers.m, key)
 		}
 	}
@@ -313,14 +346,22 @@ func (a *app) lspDoc(event string, d *document) {
 }
 
 // stopServers stops every language server, as the app quits.
-func stopServers() {
+func stopServers() { closeServers(takeServers()) }
+
+// takeServers forgets every language server, and returns them.
+func takeServers() []*lspServer {
 	lspServers.Lock()
+	defer lspServers.Unlock()
 	servers := make([]*lspServer, 0, len(lspServers.m))
 	for _, s := range lspServers.m {
 		servers = append(servers, s)
 	}
 	lspServers.m = map[string]*lspServer{}
-	lspServers.Unlock()
+	return servers
+}
+
+// closeServers closes the servers that run.
+func closeServers(servers []*lspServer) {
 	var wg sync.WaitGroup
 	for _, s := range servers {
 		if c := s.live(); c != nil {
@@ -332,6 +373,24 @@ func stopServers() {
 		}
 	}
 	wg.Wait()
+}
+
+// serversFailed says what of the person's language servers in settings.json
+// Mayoi could not use.
+func (a *app) serversFailed(list []settings.LanguageServer) {
+	if _, problems := settings.ValidLanguageServers(list); len(problems) > 0 {
+		a.fail("settings.json: %s", strings.Join(problems, "; "))
+	}
+}
+
+// restartServers stops every language server, as the person's own
+// changed, and starts those the documents open need, as they now choose.
+func (h *pluginHost) restartServers() {
+	servers := takeServers()
+	go func() {
+		closeServers(servers)
+		h.onMain(h.startServers)
+	}()
 }
 
 // caretPosition is where the caret of an editor is, as LSP has it.

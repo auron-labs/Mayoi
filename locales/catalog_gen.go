@@ -16946,6 +16946,26 @@ func (msgs Messages) PrefDescFormatters() string {
 	return Catalog.Format(msgs.locale, "prefDescFormatters", nil)
 }
 
+// PrefTitleLanguageServers says "Language servers"
+// in the language the app shows.
+func PrefTitleLanguageServers() string { return In(i18n.Locale()).PrefTitleLanguageServers() }
+
+// PrefTitleLanguageServers says "Language servers"
+// in the language of msgs.
+func (msgs Messages) PrefTitleLanguageServers() string {
+	return Catalog.Format(msgs.locale, "prefTitleLanguageServers", nil)
+}
+
+// PrefDescLanguageServers says "The language servers you set up, by language or by file, which take the place of a plugin's. Edit them in settings.json."
+// in the language the app shows.
+func PrefDescLanguageServers() string { return In(i18n.Locale()).PrefDescLanguageServers() }
+
+// PrefDescLanguageServers says "The language servers you set up, by language or by file, which take the place of a plugin's. Edit them in settings.json."
+// in the language of msgs.
+func (msgs Messages) PrefDescLanguageServers() string {
+	return Catalog.Format(msgs.locale, "prefDescLanguageServers", nil)
+}
+
 // ThemeAboutPlugin says "From the plugin {plugin}"
 // in the language the app shows.
 func ThemeAboutPlugin(plugin string) string { return In(i18n.Locale()).ThemeAboutPlugin(plugin) }
@@ -17076,11 +17096,11 @@ func (msgs Messages) HoverNone() string {
 	return Catalog.Format(msgs.locale, "hoverNone", nil)
 }
 
-// LspNone says "No plugin has a language server for {language}"
+// LspNone says "No language server is set up for {language}"
 // in the language the app shows.
 func LspNone(language string) string { return In(i18n.Locale()).LspNone(language) }
 
-// LspNone says "No plugin has a language server for {language}"
+// LspNone says "No language server is set up for {language}"
 // in the language of msgs.
 func (msgs Messages) LspNone(language string) string {
 	return Catalog.Format(msgs.locale, "lspNone", map[string]any{"language": language})
