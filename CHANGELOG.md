@@ -8,12 +8,6 @@ needs a `## <version>` section here, or its build fails.
 - `languageServers` in `settings.json` sets up a language server with no plugin, for a language or files.
 - A language server of `languageServers` is used before a plugin's, and one with a plugin's `id` replaces it.
 - `files` in a `languageServers` entry takes globs such as `*.tf` or `charts/**/templates/*.yaml`.
-- On Windows, **File → Remote SSH** opens a folder with the system `ssh`.
-- On Windows, **File → Open WSL Folder…** opens a folder in a WSL distribution.
-- On Windows, a Remote SSH or WSL file keeps a `/ssh:` or `/wsl:` path and opens in one tab.
-- On Windows, adding or removing a file at the root of a remote folder updates Explorer.
-- On Windows, a nested repository's changes tab stays with that repository after a restart.
-- On Windows, Source Control shows a remote file's folder with slashes.
 - Tap `Shift` twice, or choose **Go → Search Everywhere…**, to find files by name and by text in one box.
 - Search Everywhere lists matching files first, then each line holding the query with its file and line.
 - Search Everywhere opens again with the last query selected, so typing replaces it.
@@ -24,6 +18,16 @@ needs a `## <version>` section here, or its build fails.
 - Copy and cut with several carets take each selection as a line, and pasting as many lines puts one at each.
 - **Toggle Line Comment**, **Indent Lines**, **Outdent Lines**, **Delete Line** and **Insert Line Below** act at every caret.
 - `Escape` or a click without `Alt` leaves one caret, and undo brings back the carets an edit was made at.
+- On Windows, **File → Remote SSH** opens a folder with the system `ssh`.
+- On Windows, **File → Open WSL Folder…** opens a folder in a WSL distribution.
+- On Windows, a Remote SSH or WSL file keeps a `/ssh:` or `/wsl:` path and opens in one tab.
+- On Windows, adding or removing a file at the root of a remote folder updates Explorer.
+- On Windows, a nested repository's changes tab stays with that repository after a restart.
+- On Windows, Source Control shows a remote file's folder with slashes.
+- A diff can show one file at a time: **Layout → One File at a Time**, or the `diffFiles` setting.
+- With one file at a time, clicking a file in Source Control or a commit's files shows that file.
+- With one file at a time, the next change or next file goes on to the next file, as `diffCrossFiles` says.
+- With one file at a time, the diff's tab is named after the file it shows.
 
 ## 0.22.2
 
