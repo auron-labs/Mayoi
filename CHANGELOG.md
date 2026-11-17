@@ -18,6 +18,7 @@ needs a `## <version>` section here, or its build fails.
 - Copy and cut with several carets take each selection as a line, and pasting as many lines puts one at each.
 - **Toggle Line Comment**, **Indent Lines**, **Outdent Lines**, **Delete Line** and **Insert Line Below** act at every caret.
 - `Escape` or a click without `Alt` leaves one caret, and undo brings back the carets an edit was made at.
+- Codex subagents no longer appear as duplicate entries in **Sessions**.
 - On Windows, **File → Remote SSH** opens a folder with the system `ssh`.
 - On Windows, **File → Open WSL Folder…** opens a folder in a WSL distribution.
 - On Windows, a Remote SSH or WSL file keeps a `/ssh:` or `/wsl:` path and opens in one tab.
