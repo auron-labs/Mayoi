@@ -3,7 +3,7 @@
 The update window shows the section of the version it offers. Every release
 needs a `## <version>` section here, or its build fails.
 
-## Unreleased
+## 0.22.3
 
 - `languageServers` in `settings.json` sets up a language server with no plugin, for a language or files.
 - A language server of `languageServers` is used before a plugin's, and one with a plugin's `id` replaces it.
