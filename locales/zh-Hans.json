@@ -160,6 +160,7 @@
   "cmdAccountSignIn": "登录…",
   "cmdAccountSignOut": "退出设置同步…",
   "cmdAccountSyncNow": "立即同步设置",
+  "cmdEditCopy": "复制",
   "cmdEditCut": "剪切",
   "cmdEditFind": "查找",
   "cmdEditFindInFiles": "在文件中查找",

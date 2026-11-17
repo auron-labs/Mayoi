@@ -2078,6 +2078,16 @@ func (msgs Messages) CmdAccountSyncNow() string {
 	return Catalog.Format(msgs.locale, "cmdAccountSyncNow", nil)
 }
 
+// CmdEditCopy says "Copy"
+// in the language the app shows.
+func CmdEditCopy() string { return In(i18n.Locale()).CmdEditCopy() }
+
+// CmdEditCopy says "Copy"
+// in the language of msgs.
+func (msgs Messages) CmdEditCopy() string {
+	return Catalog.Format(msgs.locale, "cmdEditCopy", nil)
+}
+
 // CmdEditCut says "Cut"
 // in the language the app shows.
 func CmdEditCut() string { return In(i18n.Locale()).CmdEditCut() }

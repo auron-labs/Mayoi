@@ -32,13 +32,20 @@ func (a *app) selection(d *editor, snap ui.TextSnapshot, first, last int) *selec
 		return sh
 	}
 	sh.version, sh.sel, sh.first, sh.last, sh.font, sh.found = snap.Version(), d.sel, first, last, a.font, true
-	sh.rects, sh.native = sh.rects[:0], false
+	sh.rects, sh.native = selRects(sh.rects[:0], a.font, snap, d.sel, first, last)
+	return sh
+}
+
+// selRects appends the boxes of selection sel on lines first up to last to
+// rects. It reports true, leaving them out, when a line selected runs from
+// right to left, which only the text area knows the places of.
+func selRects(rects []runeRect, f codeFont, snap ui.TextSnapshot, sel [2]int, first, last int) ([]runeRect, bool) {
 	n := snap.Len()
-	sa, sb := min(d.sel[0], d.sel[1], n), min(max(d.sel[0], d.sel[1]), n)
+	sa, sb := min(sel[0], sel[1], n), min(max(sel[0], sel[1]), n)
 	if sa == sb {
-		return sh
+		return rects, false
 	}
-	f := a.font
+	from0 := len(rects)
 	for i := max(first, snap.LineAt(sa)); i <= min(last, snap.LineAt(sb)); i++ {
 		s, e := snap.LineRange(i)
 		from, to := max(sa, s), min(sb, e)
@@ -49,8 +56,7 @@ func (a *app) selection(d *editor, snap ui.TextSnapshot, first, last int) *selec
 		} else {
 			text := snap.Slice(s, to)
 			if hasRTL(text) {
-				sh.rects, sh.native = sh.rects[:0], true
-				return sh
+				return rects[:from0], true
 			}
 			x1 = f.width(text)
 			if from > s {
@@ -61,10 +67,10 @@ func (a *app) selection(d *editor, snap ui.TextSnapshot, first, last int) *selec
 			x1 += f.charW / 2 // the line's end is selected too
 		}
 		if x1 > x0 {
-			sh.rects = append(sh.rects, runeRect{line: i, x0: x0, x1: x1})
+			rects = append(rects, runeRect{line: i, x0: x0, x1: x1})
 		}
 	}
-	return sh
+	return rects, false
 }
 
 // highlightRunes is the longest line the editor measures to place what it

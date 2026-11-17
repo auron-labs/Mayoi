@@ -51,8 +51,9 @@ func (h *history) grouped(s histStep) {
 }
 
 type histStep struct {
-	snap ui.TextSnapshot
-	sel  [2]int
+	snap   ui.TextSnapshot
+	sel    [2]int
+	carets [][2]int
 }
 
 const (
@@ -61,6 +62,7 @@ const (
 )
 
 func (h *history) push(s histStep) {
+	s.carets = slices.Clone(s.carets)
 	h.undo = append(h.undo, s)
 	if len(h.undo) > maxUndo {
 		h.undo = append(h.undo[:0], h.undo[len(h.undo)-maxUndo:]...)
@@ -88,13 +90,23 @@ func (d *document) observe() {
 		h.snap = snap
 		return
 	}
+	if len(t.carets) > 0 {
+		// Typed at one caret, made at each, unless it was not typing.
+		if text, ok := typedOver(h.snap, snap, t.sel); ok {
+			d.buf.Restore(h.snap)
+			h.snap = d.buf.Snapshot()
+			t.typeEach(text)
+			return
+		}
+		t.carets = nil
+	}
 	now := time.Now()
 	old, sel := h.snap, t.sel
 	switch {
 	case h.group != groupNone:
-		h.grouped(histStep{h.snap, t.sel})
+		h.grouped(histStep{h.snap, t.sel, nil})
 	case !h.typing || now.Sub(h.at) > typingPause || len(h.undo) == 0:
-		h.push(histStep{h.snap, t.sel})
+		h.push(histStep{h.snap, t.sel, nil})
 	default:
 		clear(h.redo)
 		h.redo = h.redo[:0]
@@ -122,7 +134,7 @@ func (d *editor) edit(sel [2]int, edits ...textEdit) {
 	}
 	d.observe()
 	h := &d.hist
-	h.grouped(histStep{h.snap, d.sel})
+	h.grouped(histStep{h.snap, d.sel, d.carets})
 	sortEdits(edits)
 	before := h.snap.Len()
 	for _, e := range edits {
@@ -258,7 +270,7 @@ func (d *editor) undo() bool {
 	if h.group == groupJoin {
 		h.group = groupOpen // what is typed next is a step of its own
 	}
-	h.redo = append(h.redo, histStep{d.buf.Snapshot(), d.sel})
+	h.redo = append(h.redo, histStep{d.buf.Snapshot(), d.sel, slices.Clone(d.carets)})
 	d.restore(s)
 	return true
 }
@@ -278,7 +290,7 @@ func (d *editor) redo() bool {
 	if h.group == groupJoin {
 		h.group = groupOpen
 	}
-	h.undo = append(h.undo, histStep{d.buf.Snapshot(), d.sel})
+	h.undo = append(h.undo, histStep{d.buf.Snapshot(), d.sel, slices.Clone(d.carets)})
 	d.restore(s)
 	return true
 }
@@ -296,6 +308,7 @@ func (d *editor) restore(s histStep) {
 	n := s.snap.Len()
 	d.selectRange(min(s.sel[0], n), min(s.sel[1], n), false)
 	d.sel = [2]int{min(s.sel[0], n), min(s.sel[1], n)}
+	d.carets, d.caretsAt, d.keepFor = slices.Clone(s.carets), d.hist.snap.Version(), d.pending
 	d.measureWidest()
 	d.followChange(old, d.hist.snap, min(s.sel[0], s.sel[1]))
 }

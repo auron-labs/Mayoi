@@ -76,6 +76,7 @@ func (a *app) commandsIn(t locales.Messages) []command {
 		{"edit.undo", t.CmdEditUndo(), "", a.editActive(func(d *editor) { d.undo() })},
 		{"edit.redo", t.CmdEditRedo(), "", a.editActive(func(d *editor) { d.redo() })},
 		{"edit.cut", t.CmdEditCut(), "CmdOrCtrl+X", a.editActive(a.cut)},
+		{"edit.copy", t.CmdEditCopy(), "CmdOrCtrl+C", a.editActive(a.copySel)},
 		{"edit.selectAll", t.CmdEditSelectAll(), "CmdOrCtrl+A", a.editActive(selectAll)},
 		{"edit.find", t.CmdEditFind(), "CmdOrCtrl+F", func() { a.openFind(false) }},
 		{"edit.replace", t.CmdEditReplace(), "Alt+CmdOrCtrl+F", func() { a.openFind(true) }},
@@ -83,18 +84,18 @@ func (a *app) commandsIn(t locales.Messages) []command {
 		{"edit.findPrev", t.CmdEditFindPrev(), "Shift+CmdOrCtrl+G", func() { a.findStep(-1) }},
 		{"edit.findInFiles", t.CmdEditFindInFiles(), "Shift+CmdOrCtrl+F", func() { a.showSearch(false) }},
 		{"edit.replaceInFiles", t.CmdEditReplaceInFiles(), "Shift+CmdOrCtrl+H", func() { a.showSearch(true) }},
-		{"sel.comment", t.CmdSelComment(), "CmdOrCtrl+/", a.editActive(toggleComment)},
-		{"sel.indent", t.CmdSelIndent(), "CmdOrCtrl+]", a.editActive(func(d *editor) { indentLines(d, false) })},
-		{"sel.outdent", t.CmdSelOutdent(), "CmdOrCtrl+[", a.editActive(func(d *editor) { indentLines(d, true) })},
+		{"sel.comment", t.CmdSelComment(), "CmdOrCtrl+/", a.editActive(atEachLine(toggleComment))},
+		{"sel.indent", t.CmdSelIndent(), "CmdOrCtrl+]", a.editActive(atEachLine(func(d *editor) { indentLines(d, false) }))},
+		{"sel.outdent", t.CmdSelOutdent(), "CmdOrCtrl+[", a.editActive(atEachLine(func(d *editor) { indentLines(d, true) }))},
 		// The arrows with Alt are the editor's own keys, which the terminal
 		// takes too.
 		{"sel.moveUp", t.CmdSelMoveUp(), "", a.editActive(func(d *editor) { moveLines(d, false) })},
 		{"sel.moveDown", t.CmdSelMoveDown(), "", a.editActive(func(d *editor) { moveLines(d, true) })},
 		{"sel.copyUp", t.CmdSelCopyUp(), "", a.editActive(func(d *editor) { copyLines(d, false) })},
 		{"sel.copyDown", t.CmdSelCopyDown(), "", a.editActive(func(d *editor) { copyLines(d, true) })},
-		{"sel.deleteLine", t.CmdSelDeleteLine(), "Shift+CmdOrCtrl+K", a.editActive(deleteLines)},
-		{"sel.lineBelow", t.CmdSelLineBelow(), "", a.editActive(func(d *editor) { insertLine(d, false) })},
-		{"sel.lineAbove", t.CmdSelLineAbove(), "", a.editActive(func(d *editor) { insertLine(d, true) })},
+		{"sel.deleteLine", t.CmdSelDeleteLine(), "Shift+CmdOrCtrl+K", a.editActive(atEachLine(deleteLines))},
+		{"sel.lineBelow", t.CmdSelLineBelow(), "", a.editActive(atEachLine(func(d *editor) { insertLine(d, false) }))},
+		{"sel.lineAbove", t.CmdSelLineAbove(), "", a.editActive(atEachLine(func(d *editor) { insertLine(d, true) }))},
 		{"sel.line", t.CmdSelLine(), "CmdOrCtrl+L", a.editActive(selectLines)},
 		{"sel.indentTabs", t.CmdSelIndentTabs(), "", a.editActive(func(d *editor) { d.indent.tabs = true })},
 		{"sel.indent2", t.CmdSelIndentSpaces(2), "", a.editActive(func(d *editor) { d.indent = indentStyle{size: 2} })},
@@ -649,9 +650,10 @@ func (a *app) menu(cli bool, run func(id string, win *mygo.Window)) *mygo.Menu {
 		it.Disabled = !a.repository().git.ghOK
 		return it
 	}
-	cut, selectAll := &mygo.MenuItem{Role: mygo.RoleCut}, &mygo.MenuItem{Role: mygo.RoleSelectAll}
+	cut, copy, selectAll := &mygo.MenuItem{Role: mygo.RoleCut}, &mygo.MenuItem{Role: mygo.RoleCopy}, &mygo.MenuItem{Role: mygo.RoleSelectAll}
 	if a.keyFocus == placeEditor {
-		cut, selectAll = item("edit.cut"), item("edit.selectAll")
+		// The editor's own, which copy and cut at each of its carets.
+		cut, copy, selectAll = item("edit.cut"), item("edit.copy"), item("edit.selectAll")
 	}
 	installHC := item("view.installHC")
 	// Attach to Terminal in herdr-core… is not a command while hc is
@@ -664,7 +666,7 @@ func (a *app) menu(cli bool, run func(id string, win *mygo.Window)) *mygo.Menu {
 		{Label: locales.MenuFile(), Submenu: file},
 		{Label: locales.MenuEdit(), Submenu: []*mygo.MenuItem{
 			item("edit.undo"), item("edit.redo"), mygo.Separator(),
-			cut, {Role: mygo.RoleCopy}, {Role: mygo.RolePaste}, selectAll, mygo.Separator(),
+			cut, copy, {Role: mygo.RolePaste}, selectAll, mygo.Separator(),
 			item("edit.find"), item("edit.replace"), item("edit.findNext"), item("edit.findPrev"), mygo.Separator(),
 			item("edit.findInFiles"), item("edit.replaceInFiles"), mygo.Separator(),
 			{Label: locales.MenuMarkdown(), Submenu: []*mygo.MenuItem{

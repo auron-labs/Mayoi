@@ -56,6 +56,13 @@ func expectSel(t *testing.T, d *editor, anchor, caret int) {
 
 func cutFromMenu(t *testing.T, hs *harness) {
 	t.Helper()
+	fromEditMenu(t, hs, mygo.RoleCut, "cut", locales.CmdEditCut())
+}
+
+// fromEditMenu chooses the item of the Edit menu that has role, as the
+// focused element's command, or that is the editor's own, labeled label.
+func fromEditMenu(t *testing.T, hs *harness, role mygo.MenuRole, command, label string) {
+	t.Helper()
 	a := hs.a
 	m := a.menu(false, func(id string, _ *mygo.Window) { a.run(id) })
 	for _, menu := range m.Items() {
@@ -63,17 +70,17 @@ func cutFromMenu(t *testing.T, hs *harness) {
 			continue
 		}
 		for _, item := range menu.Submenu {
-			if item.Role == mygo.RoleCut {
-				hs.tt.Command("cut")
+			if item.Role == role {
+				hs.tt.Command(command)
 				return
 			}
-			if item.Label == locales.CmdEditCut() && item.Role == "" && item.Click != nil {
+			if item.Label == label && item.Role == "" && item.Click != nil {
 				item.Click(item, nil)
 				return
 			}
 		}
 	}
-	t.Fatal("no editor Cut menu command")
+	t.Fatalf("no editor %s menu command", label)
 }
 
 func TestCutCurrentLine(t *testing.T) {

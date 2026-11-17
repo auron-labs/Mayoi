@@ -1,6 +1,0 @@
-- [ ] add support for custom LSP
-- [ ] add quick search like jetbrains (double shift lets you search for files, symbols, classes, etc);
-- [ ] add multi-cursor support
-- [ ] back button on mouse should go back to the previous place (either current or other)
-- [ ] with multiple tabs open with the same name, show the folder name in brackets
-- [ ] add a keymapping automation to use various code editor defaults: vscode, jetbrains, vim

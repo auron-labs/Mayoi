@@ -164,6 +164,24 @@ type editor struct {
 	releaseReview func()        // keep a draft before any editor release path
 	reviewHover   int           // the source line under the pointer, or -1
 	caretSeen     bool
+
+	// carets are the selections besides sel, as anchor and caret, that
+	// typing and the keys act at too, in the text of version caretsAt:
+	// a text changed since drops them. keepFor is the pending selection
+	// that comes with them; any other selection asked for drops them.
+	carets   [][2]int
+	caretsAt uint64
+	keepFor  *[2]int
+	// caretShape is the shape of the carets' selections in the last frame.
+	caretShape selectionShape
+	// goals are the columns Up and Down keep to, by the caret that goes
+	// on from there, in the text of version goalsAt.
+	goals   map[int]int
+	goalsAt uint64
+	// box is where a column selection dragged with the middle button
+	// started, while it lasts.
+	box *boxDrag
+
 	// pending is a selection the app asked for, which the next frame
 	// makes, scrolling the editor to it, nearer its top when center is
 	// set (selectRange).

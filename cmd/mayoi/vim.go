@@ -832,6 +832,16 @@ func vimCol(snap ui.TextSnapshot, i int) int {
 // it is shorter.
 func vimAtCol(snap ui.TextSnapshot, l, col int) int {
 	s, e := snap.LineRange(l)
+	i := atColumn(snap, s, e, col)
+	if i >= e && e > s {
+		i = e - 1
+	}
+	return i
+}
+
+// atColumn is the offset of the runes from s up to e at column col, counted
+// from s, or e when they are narrower.
+func atColumn(snap ui.TextSnapshot, s, e, col int) int {
 	c, i := 0, s
 	for _, r := range snap.Slice(s, e) {
 		w := 1
@@ -843,9 +853,6 @@ func vimAtCol(snap ui.TextSnapshot, l, col int) int {
 		}
 		c += w
 		i++
-	}
-	if i >= e && e > s {
-		i = e - 1
 	}
 	return i
 }

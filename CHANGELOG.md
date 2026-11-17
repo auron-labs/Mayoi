@@ -18,6 +18,12 @@ needs a `## <version>` section here, or its build fails.
 - Search Everywhere lists matching files first, then each line holding the query with its file and line.
 - Search Everywhere opens again with the last query selected, so typing replaces it.
 - **Show all results in Search** opens every match in the Search view when there are more than 100 lines.
+- `Alt`-click in the editor adds another caret, and `Alt`-clicking a caret takes it away.
+- Drag with the middle button while holding `Alt` to put a caret on each line, selecting the columns between.
+- Typing, pasting, deleting, the arrow keys, `Home`, `End`, `Enter` and `Tab` act at every caret.
+- Copy and cut with several carets take each selection as a line, and pasting as many lines puts one at each.
+- **Toggle Line Comment**, **Indent Lines**, **Outdent Lines**, **Delete Line** and **Insert Line Below** act at every caret.
+- `Escape` or a click without `Alt` leaves one caret, and undo brings back the carets an edit was made at.
 
 ## 0.22.2
 

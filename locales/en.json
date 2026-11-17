@@ -431,6 +431,7 @@
   "cmdAccountSignIn": "Sign In…",
   "cmdAccountSignOut": "Sign Out of Settings Sync…",
   "cmdAccountSyncNow": "Sync Settings Now",
+  "cmdEditCopy": "Copy",
   "cmdEditCut": "Cut",
   "cmdEditFind": "Find",
   "cmdEditFindInFiles": "Find in Files",

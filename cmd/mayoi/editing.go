@@ -424,6 +424,10 @@ func (a *app) cut(d *editor) {
 	if snap.Len() == 0 {
 		return
 	}
+	if len(d.carets) > 0 {
+		a.cutEach(d)
+		return
+	}
 	if start, end := min(d.sel[0], d.sel[1]), max(d.sel[0], d.sel[1]); start != end {
 		a.services.WriteClipboard(snap.Slice(start, end))
 		d.edit([2]int{start, start}, textEdit{start, end, ""})
@@ -582,6 +586,9 @@ func (a *app) editorKey(d *editor, ev ui.InputEvent) bool {
 		d.vim.lastVisual = vimVisualArea{d.vim.anchor, d.vim.cursor, d.vim.mode}
 		d.vim.mode, d.vim.keys = vimNormal, d.vim.keys[:0]
 	}
+	if a.caretsPointer(d, ev) {
+		return true
+	}
 	if ev.Kind != ui.InputKeyDown {
 		return false
 	}
@@ -592,6 +599,9 @@ func (a *app) editorKey(d *editor, ev ui.InputEvent) bool {
 	}
 	if ev.Key == ui.KeyEscape && ev.Mods == 0 && d.peek >= 0 {
 		d.peek = -1
+		return true
+	}
+	if a.caretsKey(d, ev) {
 		return true
 	}
 	if ev.Key == ui.KeySpace && ev.Mods == ui.Ctrl && !a.keyBound(ui.Ctrl, ui.KeySpace) {
