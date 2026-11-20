@@ -1760,7 +1760,7 @@
   "prefSectionPlugins": "プラグイン",
   "prefTitlePlugins": "プラグイン",
   "prefDescPlugins": "各プラグインの設定。\"enabled\": false でオフにします。",
-  "prefTitleLanguageServerOptions": "言語サーバー",
+  "prefTitleLanguageServerOptions": "言語サーバーのオプション",
   "prefDescLanguageServerOptions": "各言語サーバーの initializationOptions を \"gopls.server\" のような id ごとに。起動時にプラグインの設定に重ねます。",
   "prefTitleFormatOnSave": "保存時にフォーマット",
   "prefDescFormatOnSave": "保存時にプラグインのフォーマッタで整形します。言語ごとに \"go\": true のように、すべての言語なら \"*\"。",

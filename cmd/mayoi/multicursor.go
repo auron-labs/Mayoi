@@ -528,7 +528,7 @@ func atEachLine(cmd func(*editor)) func(*editor) {
 		all, p := d.spans()
 		before := histStep{d.hist.snap, d.sel, slices.Clone(d.cursors)}
 		h := &d.hist
-		group, undoLen := h.group, len(h.undo)
+		group := h.group
 		if group == groupNone {
 			h.group = groupOpen
 		}
@@ -554,7 +554,7 @@ func atEachLine(cmd func(*editor)) func(*editor) {
 			all[i] = cursor{d.tracked[2*i], d.tracked[2*i+1], -1}
 		}
 		d.tracked = tracked
-		if h.group == groupJoin && len(h.undo) > undoLen {
+		if group != groupJoin && h.group == groupJoin {
 			last := &h.undo[len(h.undo)-1]
 			last.sel, last.cursors = before.sel, before.cursors
 		}

@@ -1988,7 +1988,7 @@
   "prefSectionPlugins": "Plugins",
   "prefTitlePlugins": "Plugins",
   "prefDescPlugins": "Each plugin's own settings, and \"enabled\": false to turn one off.",
-  "prefTitleLanguageServerOptions": "Language Servers",
+  "prefTitleLanguageServerOptions": "Language Server Options",
   "prefDescLanguageServerOptions": "Each language server's initializationOptions, by its id, as \"gopls.server\", laid over its plugin's as it starts.",
   "prefTitleFormatOnSave": "Format on Save",
   "prefDescFormatOnSave": "Formats a document with a plugin's formatter as you save it, by language, as \"go\": true, or \"*\" for every language.",

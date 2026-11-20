@@ -51,7 +51,16 @@ func TestLanguageServersPreference(t *testing.T) {
 	if len(p.LanguageServers) != 1 || p.IsDefaultKey("languageServers") {
 		t.Errorf("set: %+v", p.LanguageServers)
 	}
-	if f, _ := FieldOf("languageServers"); f.Folder {
-		t.Error("a folder may choose languageServers")
+	options := json.RawMessage(`{"a":{"initializationOptions":{"enabled":true}}}`)
+	if err := p.Set("languageServerOptions", options); err != nil {
+		t.Fatal(err)
+	}
+	if len(p.LanguageServers) != 1 || len(p.LanguageServerOptions) != 1 || p.IsDefaultKey("languageServerOptions") {
+		t.Fatalf("servers: %+v, options: %+v", p.LanguageServers, p.LanguageServerOptions)
+	}
+	for _, key := range []string{"languageServers", "languageServerOptions"} {
+		if f, _ := FieldOf(key); f.Folder {
+			t.Errorf("a folder may choose %s", key)
+		}
 	}
 }

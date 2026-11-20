@@ -418,7 +418,7 @@ func TestColumnSelectByDrag(t *testing.T) {
 		name   string
 		button int
 		mods   ui.Modifiers
-	}{{"shift-alt", 0, ui.Shift | ui.Alt}, {"middle", 2, 0}} {
+	}{{"shift-alt", 0, ui.Shift | ui.Alt}, {"middle", 2, 0}, {"alt-middle", 2, ui.Alt}} {
 		t.Run(tc.name, func(t *testing.T) {
 			hs, d := editHarness(t, "a.txt", "abcdef\nab\nabcdef\n")
 			a, f := hs.a, hs.a.font

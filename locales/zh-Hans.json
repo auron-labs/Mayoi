@@ -1760,7 +1760,7 @@
   "prefSectionPlugins": "插件",
   "prefTitlePlugins": "插件",
   "prefDescPlugins": "每个插件自己的设置；\"enabled\": false 可关闭插件。",
-  "prefTitleLanguageServerOptions": "语言服务器",
+  "prefTitleLanguageServerOptions": "语言服务器选项",
   "prefDescLanguageServerOptions": "每个语言服务器的 initializationOptions，按其 id 设置，如 \"gopls.server\"，启动时叠加在插件的设置之上。",
   "prefTitleFormatOnSave": "保存时格式化",
   "prefDescFormatOnSave": "保存时用插件的格式化程序格式化文档，按语言设置，如 \"go\": true，\"*\" 表示所有语言。",

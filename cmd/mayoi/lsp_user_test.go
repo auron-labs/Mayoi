@@ -100,7 +100,7 @@ func TestUserLanguageServerReplacesAPlugin(t *testing.T) {
 	path := hs.path("a.fake")
 	os.WriteFile(path, []byte("fine\nso bad\n"), 0o644)
 	a.openFile(path, true)
-	hs.untilLong("the server's diagnostics", func() bool { return len(h.diagnosticsOf(path)) == 1 })
+	hs.until("the server's diagnostics", func() bool { return len(h.diagnosticsOf(path)) == 1 })
 	server := func() *lspServer {
 		lspServers.Lock()
 		defer lspServers.Unlock()
@@ -112,7 +112,7 @@ func TestUserLanguageServerReplacesAPlugin(t *testing.T) {
 	}
 
 	h.restartServers()
-	hs.untilLong("the restarted server", func() bool {
+	hs.until("the restarted server", func() bool {
 		s := server()
 		return s != nil && s != old && s.state() == lspRunning
 	})

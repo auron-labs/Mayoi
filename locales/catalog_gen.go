@@ -17792,13 +17792,13 @@ func (msgs Messages) PrefDescPlugins() string {
 	return Catalog.Format(msgs.locale, "prefDescPlugins", nil)
 }
 
-// PrefTitleLanguageServerOptions says "Language Servers"
+// PrefTitleLanguageServerOptions says "Language Server Options"
 // in the language the app shows.
 func PrefTitleLanguageServerOptions() string {
 	return In(i18n.Locale()).PrefTitleLanguageServerOptions()
 }
 
-// PrefTitleLanguageServerOptions says "Language Servers"
+// PrefTitleLanguageServerOptions says "Language Server Options"
 // in the language of msgs.
 func (msgs Messages) PrefTitleLanguageServerOptions() string {
 	return Catalog.Format(msgs.locale, "prefTitleLanguageServerOptions", nil)
