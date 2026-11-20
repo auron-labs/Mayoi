@@ -1,7 +1,6 @@
 package main
 
 import (
-	"math"
 	"slices"
 	"strconv"
 	"strings"
@@ -201,6 +200,10 @@ func (a *app) editorView(c *ui.Context, d *editor) {
 		d.hiddenPlaced = placed
 	}
 
+	// Vim mode and Live Preview have one caret of their own.
+	if len(d.cursors) > 0 && !a.multiOK(d) {
+		d.collapse()
+	}
 	if !a.prefs().Vim {
 		vimReset(d)
 		if a.vimLine.d == d {
@@ -273,9 +276,6 @@ func (a *app) editorView(c *ui.Context, d *editor) {
 	// types nothing, and shows a block for its caret.
 	vimKeys := a.prefs().Vim && d.vim.mode != vimInsert
 	focused := d.vscroll.Focused(c)
-	if len(d.carets) > 0 && (d.caretsAt != snap.Version() || !a.multiCaret(d)) {
-		d.carets = nil // the text changed under them
-	}
 	g := a.geometry(d, lines)
 	wrap := g.lines != nil
 	if wrap {
@@ -311,6 +311,24 @@ func (a *app) editorView(c *ui.Context, d *editor) {
 			Padding(editorPadY, padR, editorPadY, textX).
 			Label(locales.EditorLabel(d.name())).
 			ReadOnly(vimKeys || a.chording() || d.locked())
+		// What an input method composes stays at the primary until it
+		// commits, which then types at the other selections too.
+		if composing := area.Composing(); composing != d.composing {
+			d.composing = composing
+			if !composing && d.held {
+				a.invalidate()
+			}
+		}
+		// A paste goes to every selection, a line at each when it has as
+		// many lines as there are of them.
+		area.OnPaste(func(text string) bool {
+			if len(d.cursors) == 0 || text == "" {
+				return false
+			}
+			d.cmds = append(d.cmds, func(d *editor) { a.pasteSpans(d, text) })
+			a.invalidate()
+			return true
+		})
 		a.takeKeys(area, placeEditor, func(ev ui.InputEvent) bool {
 			switch ev.Kind {
 			case ui.InputPointerDown:
@@ -374,14 +392,6 @@ func (a *app) editorView(c *ui.Context, d *editor) {
 		d.resync = d.resync || !d.caretSeen
 		if from, to := area.TextAnchorCaret(); kept && d.parked < 0 && [2]int{from, to} != d.sel {
 			d.resync = true // moved while it was out of sight
-		}
-		if d.pending != nil {
-			// A selection asked for leaves the text area's caret the
-			// only one, unless it came with the others.
-			if d.pending != d.keepFor {
-				d.carets = nil
-			}
-			d.keepFor = nil
 		}
 		quiet := d.pending != nil && d.quiet
 		// A bracket typed that closes moves the caret as typing does.
@@ -469,6 +479,11 @@ func (a *app) editorView(c *ui.Context, d *editor) {
 			}
 		}
 		if sel := [2]int{anchor, caret}; sel != d.sel {
+			// The area moved its selection itself, as a drag or Find
+			// does: one selection again.
+			if !edited && !d.held && len(d.cursors) > 0 {
+				d.collapse()
+			}
 			if !edited {
 				d.hist.typing = false // the caret moved: typing after starts a step
 				if n := snap.Len(); snap.LineAt(min(caret, n)) != snap.LineAt(min(d.sel[1], n)) {
@@ -476,20 +491,6 @@ func (a *app) editorView(c *ui.Context, d *editor) {
 				}
 			}
 			d.sel = sel
-			// The text area's caret, clicked or dragged onto another, takes it in.
-			d.carets = slices.DeleteFunc(d.carets, func(s [2]int) bool { return joins(s, sel) })
-		}
-		// The carets this frame paints: the edits made after this read
-		// move the editor's.
-		carets := slices.Clone(d.carets)
-		if len(carets) > 0 {
-			area.OnPaste(func(text string) bool {
-				if text == "" {
-					return false
-				}
-				a.queueEdit(d, func(d *editor) { pasteEach(d, text) })
-				return true
-			})
 		}
 		if !early && len(d.cmds) > 0 {
 			// The next frame shows them.
@@ -677,8 +678,6 @@ func (a *app) editorView(c *ui.Context, d *editor) {
 		// The editor paints the selection, rounded, and keeps it in sight,
 		// fainter, while the keyboard is elsewhere, as in find's field.
 		shape := a.selection(d, snap, first, last)
-		extra, bars := a.caretShapes(d, snap, carets, first, last)
-		caretCol := c.Theme().Accent
 		selecting := anchor != caret
 		selCol := p.selected
 		if !focused {
@@ -687,6 +686,11 @@ func (a *app) editorView(c *ui.Context, d *editor) {
 		if !shape.native {
 			area.SelectionColor(ui.Color{})
 		}
+		// The carets of the other selections on the lines in view, painted
+		// still, as the primary's blinks, and the lines of those that
+		// select nothing, lit as the caret's is.
+		carets, caretLines := a.otherCarets(d, snap, first, last, caretLine, focused)
+		caretCol := c.Theme().Accent.Alpha(0.8)
 		// The block of vim's cursor: from the cursor to the next rune, or a
 		// cell wide at the end of a line.
 		var block *runeRect
@@ -769,6 +773,11 @@ func (a *app) editorView(c *ui.Context, d *editor) {
 			if y := lineY(r, caretLine); !selecting && y+lineH > r.Y && y < r.Y+r.H {
 				pt.Fill(ui.Rect{X: r.X, Y: y, W: r.W, H: lineHeight(caretLine)}, p.line, 0)
 			}
+			for _, l := range caretLines {
+				if !g.hidden(l) {
+					pt.Fill(ui.Rect{X: r.X, Y: lineY(r, l), W: r.W, H: lineHeight(l)}, p.line, 0)
+				}
+			}
 			// The line a jump landed on, lit, fading as the eye finds it.
 			if since := pt.Now().Sub(d.landAt); !d.landAt.IsZero() && since >= 0 && since < landFor && d.landLine < lines {
 				t := float32(since) / float32(landFor)
@@ -783,7 +792,6 @@ func (a *app) editorView(c *ui.Context, d *editor) {
 				})
 			}
 			shape.paint(pt, func(i int, x0, x1 float32, fn func(y, x0, x1 float32)) { place(r, i, x0, x1, fn) }, lineH, selCol)
-			extra.paint(pt, func(i int, x0, x1 float32, fn func(y, x0, x1 float32)) { place(r, i, x0, x1, fn) }, lineH, selCol)
 			for _, fl := range flash {
 				place(r, fl.line, fl.x0, fl.x1, func(y, x0, x1 float32) {
 					pt.Fill(ui.Rect{X: x0 - 1, Y: y + 1, W: x1 - x0 + 2, H: lineH - 2}, p.accent.Alpha(0.32*flashK), 3)
@@ -887,6 +895,11 @@ func (a *app) editorView(c *ui.Context, d *editor) {
 			if wr == nil {
 				rowsAt(r)
 			}
+			for _, cr := range carets {
+				place(r, cr.line, cr.x0, cr.x0+0.01, func(y, x0, _ float32) {
+					pt.Fill(ui.Rect{X: x0 - 0.75, Y: y, W: 1.5, H: lineH}, caretCol, 0)
+				})
+			}
 			// Struck text has a line through it, over the text.
 			for _, m := range strikes {
 				x0, x1 := runX(m)
@@ -898,20 +911,6 @@ func (a *app) editorView(c *ui.Context, d *editor) {
 				x0, x1 := runX(dg.lineRun)
 				col := p.diagColor(dg.severity)
 				place(r, dg.line, x0, x1, func(y, x0, x1 float32) { paintSquiggle(pt, x0, max(x1, x0+4), y+lineH-2, col) })
-			}
-			// The other carets, as thin as the text area's own. They do not
-			// blink: the area's blinks on a clock the editor cannot read.
-			if focused {
-				w := max(float32(math.Round(float64(pt.Scale()))), 1) / pt.Scale()
-				for _, b := range bars {
-					drawn := false
-					place(r, b.line, b.x0, b.x1, func(y, x0, _ float32) {
-						if !drawn {
-							pt.Fill(ui.Rect{X: x0, Y: y, W: w, H: lineH}, caretCol, 0)
-							drawn = true
-						}
-					})
-				}
 			}
 			x := r.X + d.hscroll.X
 			top := d.vscroll.Y

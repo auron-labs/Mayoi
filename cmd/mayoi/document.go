@@ -176,32 +176,34 @@ type editor struct {
 	// out.
 	rows wrapRows
 
-	caret         int           // the caret's rune offset in the last frame
-	textX         float32       // where the text starts in the view, in the last frame
-	sel           [2]int        // the selection in the last frame
+	caret int     // the caret's rune offset in the last frame
+	textX float32 // where the text starts in the view, in the last frame
+	sel   [2]int  // the selection in the last frame
+	// cursors are the selections besides sel, which edit with it, sorted
+	// and apart, nil while there is one (multicursor.go). goal is the
+	// column moves up and down keep for sel while it is goalSel; column
+	// is the rectangle a column selection grows, added the carets Add
+	// Cursor Above or Below added in a row, and mdrag a press that adds
+	// a caret or selects a column. matchWhole is the text Add Next
+	// Occurrence matches as a whole word, as it started from a caret.
+	cursors    []cursor
+	goal       int
+	goalSel    [2]int
+	column     *columnSel
+	added      *addRun
+	mdrag      *multiDrag
+	matchWhole string
+	// composing is whether an input method composed in the text area in
+	// the last frame; held is set while what was typed at sel waits for
+	// it, from heldSel, to be typed at the others.
+	composing     bool
+	held          bool
+	heldSel       [2]int
 	selecting     bool          // the pointer is dragging a text selection
 	reviewSource  *editorReview // source layout while writing an inline review
 	releaseReview func()        // keep a draft before any editor release path
 	reviewHover   int           // the source line under the pointer, or -1
 	caretSeen     bool
-
-	// carets are the selections besides sel, as anchor and caret, that
-	// typing and the keys act at too, in the text of version caretsAt:
-	// a text changed since drops them. keepFor is the pending selection
-	// that comes with them; any other selection asked for drops them.
-	carets   [][2]int
-	caretsAt uint64
-	keepFor  *[2]int
-	// caretShape is the shape of the carets' selections in the last frame.
-	caretShape selectionShape
-	// goals are the columns Up and Down keep to, by the caret that goes
-	// on from there, in the text of version goalsAt.
-	goals   map[int]int
-	goalsAt uint64
-	// box is where a column selection dragged with the middle button
-	// started, while it lasts.
-	box *boxDrag
-
 	// pending is a selection the app asked for, which the next frame
 	// makes, scrolling the editor to it, nearer its top when center is
 	// set (selectRange).
