@@ -12,6 +12,8 @@ needs a `## <version>` section here, or its build fails.
 - Line comments, indentation, deletion and insertion act at every caret.
 - Up and Down move every caret through wrapped rows.
 - Hold `Alt` while dragging with the middle button to select a column.
+
+- Closing the settings window keeps what was typed in a text field, rather than losing it.
 - Archive sessions from a row's menu, its archive button or `⌫`, and **Undo** from the toast.
 - Choose several sessions to archive them together.
 - The archive button in the Sessions title, or **View → Archived Sessions**, lists archived sessions to restore.
