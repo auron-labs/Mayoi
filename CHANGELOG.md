@@ -5,7 +5,24 @@ needs a `## <version>` section here, or its build fails.
 
 ## Unreleased
 
-- Give a language server your own startup options with `languageServerOptions` in settings.json, by the server's id.
+- `languageServers` in `settings.json` sets up a language server with no plugin, for a language or files.
+- A language server of `languageServers` is used before a plugin's, and one with a plugin's `id` replaces it.
+- `files` in a `languageServers` entry takes globs such as `*.tf` or `charts/**/templates/*.yaml`.
+- Tap `Shift` twice, or choose **Go → Search Everywhere…**, to find files by name and by text in one box.
+- Search Everywhere lists matching files first, then each line holding the query with its file and line.
+- Search Everywhere opens again with the last query selected, so typing replaces it.
+- **Show all results in Search** opens every match in the Search view when there are more than 100 lines.
+- `Alt`-click in the editor adds another caret, and `Alt`-clicking a caret takes it away.
+- Drag with the middle button while holding `Alt` to put a caret on each line, selecting the columns between.
+- Typing, pasting, deleting, the arrow keys, `Home`, `End`, `Enter` and `Tab` act at every caret.
+- Copy and cut with several carets take each selection as a line, and pasting as many lines puts one at each.
+- **Toggle Line Comment**, **Indent Lines**, **Outdent Lines**, **Delete Line** and **Insert Line Below** act at every caret.
+- `Escape` or a click without `Alt` leaves one caret, and undo brings back the carets an edit was made at.
+- Archive sessions from a row's menu, its archive button or `⌫`, and **Undo** from the toast.
+- Choose several sessions to archive them together.
+- The archive button in the Sessions title, or **View → Archived Sessions**, lists archived sessions to restore.
+- Resuming an archived session brings it back to the list; its terminal and transcript are left alone.
+- Give a language server your own startup options with `languageServers` in settings.json, by the server's id.
 - Options go over the plugin's own, deeply, and `null` takes one away, as in `{"tsserver": {"path": null}}`.
 - Saving changed options restarts only the servers they're for, in every folder.
 - A language server plugin's details show where to set its `initializationOptions`.
@@ -140,19 +157,6 @@ needs a `## <version>` section here, or its build fails.
 
 ## 0.22.3
 
-- `languageServers` in `settings.json` sets up a language server with no plugin, for a language or files.
-- A language server of `languageServers` is used before a plugin's, and one with a plugin's `id` replaces it.
-- `files` in a `languageServers` entry takes globs such as `*.tf` or `charts/**/templates/*.yaml`.
-- Tap `Shift` twice, or choose **Go → Search Everywhere…**, to find files by name and by text in one box.
-- Search Everywhere lists matching files first, then each line holding the query with its file and line.
-- Search Everywhere opens again with the last query selected, so typing replaces it.
-- **Show all results in Search** opens every match in the Search view when there are more than 100 lines.
-- `Alt`-click in the editor adds another caret, and `Alt`-clicking a caret takes it away.
-- Drag with the middle button while holding `Alt` to put a caret on each line, selecting the columns between.
-- Typing, pasting, deleting, the arrow keys, `Home`, `End`, `Enter` and `Tab` act at every caret.
-- Copy and cut with several carets take each selection as a line, and pasting as many lines puts one at each.
-- **Toggle Line Comment**, **Indent Lines**, **Outdent Lines**, **Delete Line** and **Insert Line Below** act at every caret.
-- `Escape` or a click without `Alt` leaves one caret, and undo brings back the carets an edit was made at.
 - Codex subagents no longer appear as duplicate entries in **Sessions**.
 - On Windows, **File → Remote SSH** opens a folder with the system `ssh`.
 - On Windows, **File → Open WSL Folder…** opens a folder in a WSL distribution.
