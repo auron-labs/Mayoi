@@ -155,7 +155,7 @@ func selectServer(own []settings.LanguageServer, enabled []*plugin.Plugin, lang,
 		byLanguage := lang != "" && slices.Contains(s.Languages, lang)
 		byFile := rel != "" && workspace.ParseGlobs(strings.Join(s.Files, ",")).Match(rel)
 		if byLanguage || byFile {
-			return nil, &plugin.ServerContrib{ID: s.ID, Languages: s.Languages, Command: s.Command, Args: s.Args, Options: s.Options}
+			return nil, userServerContrib(s)
 		}
 	}
 	if lang == "" {
@@ -170,6 +170,10 @@ func selectServer(own []settings.LanguageServer, enabled []*plugin.Plugin, lang,
 		}
 	}
 	return nil, nil
+}
+
+func userServerContrib(s settings.LanguageServer) *plugin.ServerContrib {
+	return &plugin.ServerContrib{ID: s.ID, Languages: s.Languages, Command: s.Command, Args: s.Args, Options: s.Options}
 }
 
 // log adds a line to the log of the server's plugin, and of the person's
@@ -245,7 +249,7 @@ func (a *app) lspRunningFor(d *document) *lspServer {
 	if a.root == "" || d.path == "" {
 		return nil
 	}
-	_, sc := serverContrib(languageOf(d))
+	_, sc := a.serverFor(d)
 	if sc == nil {
 		return nil
 	}

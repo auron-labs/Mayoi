@@ -4,9 +4,12 @@ import (
 	"bytes"
 	"cmp"
 	"context"
+	"encoding/json"
 	"errors"
 	"io/fs"
+	"maps"
 	"os/exec"
+	"reflect"
 	"slices"
 	"strconv"
 	"strings"
@@ -14,6 +17,7 @@ import (
 	"mayoi/internal/lsp"
 	"mayoi/internal/plugin"
 	"mayoi/internal/remote"
+	"mayoi/internal/settings"
 	"mayoi/internal/vfs"
 	"mayoi/locales"
 )
@@ -164,7 +168,11 @@ func (s *lspServer) reason() string {
 // and its command.
 func (s *lspServer) failMessage() string {
 	if s.failure == lspFailMissing {
-		if install := cmp.Or(s.contrib.Install, serverInstallHint(s.plugin.Name, s.command)); install != "" {
+		install := s.contrib.Install
+		if s.plugin != nil {
+			install = cmp.Or(install, serverInstallHint(s.plugin.Name, s.command))
+		}
+		if install != "" {
 			return locales.LspCouldNotStartInstall(s.contrib.ID, s.reason(), install)
 		}
 	}
@@ -207,7 +215,14 @@ func serverByID(id string) (*plugin.Plugin, *plugin.ServerContrib) {
 func (a *app) restartServer(key string) {
 	root, id, _ := strings.Cut(key, "\x00")
 	p, sc := serverByID(id)
-	if p == nil {
+	own, _ := settings.ValidLanguageServers(a.prefs().LanguageServers)
+	for _, server := range own {
+		if server.ID == id {
+			p, sc = nil, userServerContrib(server)
+			break
+		}
+	}
+	if sc == nil {
 		a.tell(note{message: locales.LspGone(id)})
 		return
 	}
@@ -270,7 +285,7 @@ func (a *app) showLanguageServers() {
 	}
 	lspServers.Unlock()
 	if d := a.textEditor(); d != nil && a.root != "" {
-		if _, sc := serverContrib(languageOf(d.document)); sc != nil &&
+		if _, sc := a.serverFor(d.document); sc != nil &&
 			!slices.ContainsFunc(rows, func(r row) bool { return r.id == sc.ID }) {
 			rows = append(rows, row{sc.ID, nil})
 		}
@@ -295,4 +310,62 @@ func (a *app) showLanguageServers() {
 			a.restartServer(serverKey(root, rows[i].id))
 		}
 	})
+}
+
+// changedInitOptions are the ids of the servers whose initializationOptions
+// of settings.json's languageServerOptions differ from old to now: set, taken
+// away or changed, but not only written otherwise.
+func changedInitOptions(old, now map[string]json.RawMessage) []string {
+	var ids []string
+	for id := range maps.Keys(old) {
+		if _, ok := now[id]; !ok {
+			if _, set := userInitOptions(old[id]); set {
+				ids = append(ids, id)
+			}
+		}
+	}
+	for id, prefs := range now {
+		a, aSet := userInitOptions(old[id])
+		b, bSet := userInitOptions(prefs)
+		if aSet != bSet || !sameJSON(a, b) {
+			ids = append(ids, id)
+		}
+	}
+	slices.Sort(ids)
+	return ids
+}
+
+// sameJSON reports whether a and b are the same JSON value, however each
+// is written.
+func sameJSON(a, b json.RawMessage) bool {
+	if bytes.Equal(a, b) {
+		return true
+	}
+	var va, vb any
+	return decodeJSON(a, &va) == nil && decodeJSON(b, &vb) == nil && reflect.DeepEqual(va, vb)
+}
+
+// restartServersOf restarts the servers of ids, in every folder, each
+// as its Restart would, so that their new initializationOptions reach
+// them; the others are left as they are.
+func (m *mayoi) restartServersOf(ids []string) {
+	if len(ids) == 0 || len(m.wins) == 0 {
+		return
+	}
+	lspServers.Lock()
+	var servers []*lspServer
+	for _, s := range lspServers.m {
+		if slices.Contains(ids, s.contrib.ID) {
+			servers = append(servers, s)
+		}
+	}
+	lspServers.Unlock()
+	slices.SortFunc(servers, func(x, y *lspServer) int { return strings.Compare(x.key, y.key) })
+	for _, s := range servers {
+		a := m.wins[0].a
+		if w := m.showing(s.root); w != nil {
+			a = w.a
+		}
+		a.restartServer(s.key)
+	}
 }

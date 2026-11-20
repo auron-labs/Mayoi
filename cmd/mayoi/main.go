@@ -816,6 +816,8 @@ func (m *mayoi) reload(p settings.Prefs) {
 				front := m.wins[0]
 				front.do(func() { front.a.serversFailed(p.LanguageServers) })
 			}
+		} else {
+			m.restartServersOf(changedInitOptions(old.LanguageServerOptions, p.LanguageServerOptions))
 		}
 		if !maps.Equal(p.PluginSources, old.PluginSources) {
 			plugins.syncPlugins()
