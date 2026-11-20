@@ -394,6 +394,11 @@ You can also set up servers yourself, by language or by file glob, in settings.j
 priority over a plugin's, and an entry with the `id` of a plugin's server replaces it. See
 [`languageServers`](SETTINGS.md#language-servers).
 
+A server that stops, or cannot start, is started again a few times as documents of its languages open. One that cannot
+start says why (its program is not installed, it quit, or it did not answer) and offers **Restart**. **Plugins → Show
+Language Servers** lists the servers of the folder, how each is and where it runs, and restarts the one chosen, after
+the old one is gone; the documents open are told of again.
+
 For servers that need setup, use `resolve` instead of `command`:
 
 ```jsonc
