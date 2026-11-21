@@ -3,7 +3,7 @@
 The update window shows the section of the version it offers. Every release
 needs a `## <version>` section here, or its build fails.
 
-## Unreleased
+## 0.23.1
 
 - `languageServers` sets up custom language servers by language or file glob.
 - Custom language servers take priority and can replace a plugin's server by ID.
