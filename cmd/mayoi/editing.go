@@ -425,6 +425,21 @@ func deleteLines(d *editor) {
 	d.sel = [2]int{c, c}
 }
 
+// cmdBackspaceLine makes ⌘Backspace on macOS delete the lines of all the
+// selections, as JetBrains does, when the setting asks for it; off, the
+// toolkit deletes back to the line start. Vim's normal mode keeps its keys.
+func (a *app) cmdBackspaceLine(d *editor, ev ui.InputEvent) bool {
+	p := a.prefs()
+	if !macKeys() || !p.CmdBackspaceDeletesLine || ev.Key != ui.KeyBackspace || ev.Mods != ui.Super {
+		return false
+	}
+	if d.locked() || p.Vim && d.vim.mode != vimInsert {
+		return false
+	}
+	a.queueEdit(d, atEachLine(deleteLines))
+	return true
+}
+
 // cut cuts the selection, or the caret's line when there is none, as in
 // VS Code.
 func (a *app) cut(d *editor) {
@@ -670,6 +685,9 @@ func (a *app) editorKey(d *editor, ev ui.InputEvent) bool {
 	// would take before the menus' shortcuts, then the keys that act at
 	// all of them.
 	if a.multiOK(d) && a.multiStroke(ev) {
+		return true
+	}
+	if a.cmdBackspaceLine(d, ev) {
 		return true
 	}
 	if len(d.cursors) > 0 && a.multiKey(d, ev) {

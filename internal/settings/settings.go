@@ -164,6 +164,9 @@ type Prefs struct {
 	// TrimTrailingWhitespace removes the spaces and tabs at the ends of
 	// lines as a file saves, keeping the hard breaks of Markdown.
 	TrimTrailingWhitespace bool `json:"trimTrailingWhitespace,omitempty"`
+	// CmdBackspaceDeletesLine makes Cmd+Backspace on macOS delete the whole
+	// line the caret is on, as JetBrains does, rather than up to the caret.
+	CmdBackspaceDeletesLine bool `json:"cmdBackspaceDeletesLine,omitempty"`
 	// TabSize is how many columns a tab takes in the editor, from 1 to 8.
 	TabSize int `json:"tabSize"`
 	// EditorAgentContext offers selection actions in ordinary files to

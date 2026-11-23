@@ -1761,6 +1761,8 @@
   "prefDescAutoSave": "Saves a changed file a moment after you stop typing, and when you leave it.",
   "prefTitleWordWrap": "Word Wrap",
   "prefDescWordWrap": "Wraps long lines at the edge of the editor. A tab can still choose otherwise.",
+  "prefTitleCmdBackspaceDeletesLine": "Cmd+Backspace Deletes Line",
+  "prefDescCmdBackspaceDeletesLine": "Makes Cmd+Backspace on macOS delete the whole line, as in JetBrains, rather than up to the caret.",
   "prefTitleTrimTrailingWhitespace": "Trim Trailing Whitespace",
   "prefDescTrimTrailingWhitespace": "Removes the spaces and tabs at the ends of lines as you save, keeping Markdown's line breaks.",
   "prefTitleTabSize": "Tab Size",

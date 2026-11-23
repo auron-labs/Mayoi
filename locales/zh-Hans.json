@@ -1533,6 +1533,8 @@
   "prefDescAutoSave": "停止输入片刻后，以及离开文件时，自动保存修改。",
   "prefTitleWordWrap": "自动换行",
   "prefDescWordWrap": "在编辑器边缘折行。单个标签页仍可另行选择。",
+  "prefTitleCmdBackspaceDeletesLine": "Cmd+Backspace 删除整行",
+  "prefDescCmdBackspaceDeletesLine": "在 macOS 上，Cmd+Backspace 删除整行（与 JetBrains 相同），而不是只删到光标处。",
   "prefTitleTrimTrailingWhitespace": "去除行尾空白",
   "prefDescTrimTrailingWhitespace": "保存时去除行尾的空格和制表符，保留 Markdown 的换行。",
   "prefTitleTabSize": "制表符宽度",

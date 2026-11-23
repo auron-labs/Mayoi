@@ -1063,3 +1063,50 @@ func TestDeletedLongLineNarrowsTheText(t *testing.T) {
 		t.Errorf("without the long line the text still scrolls %v sideways", d.hscroll.MaxX)
 	}
 }
+
+func TestCmdBackspaceDeletesLine(t *testing.T) {
+	const text = "one\ntwo\nthree\nfour"
+	setup := func(on bool) (*harness, *editor) {
+		hs, d := editHarness(t, "a.txt", text)
+		hs.a.settings.CmdBackspaceDeletesLine = on
+		hs.a.settings.Changed()
+		return hs, d
+	}
+
+	t.Run("off keeps deleting to the line start", func(t *testing.T) {
+		hs, d := setup(false)
+		hs.place(d, 6, 6)
+		hs.key(ui.Super, ui.KeyBackspace)
+		expectText(t, d, "one\no\nthree\nfour")
+	})
+	t.Run("on deletes the whole line from the middle", func(t *testing.T) {
+		hs, d := setup(true)
+		hs.place(d, 6, 6)
+		hs.key(ui.Super, ui.KeyBackspace)
+		expectText(t, d, "one\nthree\nfour")
+		hs.a.run("edit.undo")
+		hs.settle()
+		expectText(t, d, text)
+	})
+	t.Run("on deletes every line a selection touches", func(t *testing.T) {
+		hs, d := setup(true)
+		hs.place(d, 5, 10)
+		hs.key(ui.Super, ui.KeyBackspace)
+		expectText(t, d, "one\nfour")
+	})
+	t.Run("on deletes the last line with the break before it", func(t *testing.T) {
+		hs, d := setup(true)
+		hs.place(d, 16, 16)
+		hs.key(ui.Super, ui.KeyBackspace)
+		expectText(t, d, "one\ntwo\nthree")
+	})
+	t.Run("on deletes a line at each caret in one step of undo", func(t *testing.T) {
+		hs, d := setup(true)
+		hs.setSpans(d, [2]int{1, 1}, [2]int{10, 10})
+		hs.key(ui.Super, ui.KeyBackspace)
+		expectText(t, d, "two\nfour")
+		hs.a.run("edit.undo")
+		hs.settle()
+		expectText(t, d, text)
+	})
+}

@@ -82,6 +82,7 @@ var Schema = []Field{
 	{Key: "jsonlMode", Category: CatEditor, Kind: KindEnum, Options: []string{"", "source"}, Folder: true},
 	{Key: "editorAgentContext", Category: CatEditor, Kind: KindBool},
 	{Key: "editorHover", Category: CatEditor, Kind: KindBool},
+	{Key: "cmdBackspaceDeletesLine", Category: CatEditor, Kind: KindBool},
 
 	{Key: "markdownMode", Category: CatMarkdown, Kind: KindEnum, Options: []string{"", "live", "reading"}, Folder: true},
 	{Key: "previewMermaid", Category: CatMarkdown, Kind: KindBool, Folder: true},

@@ -15510,6 +15510,30 @@ func (msgs Messages) PrefDescWordWrap() string {
 	return Catalog.Format(msgs.locale, "prefDescWordWrap", nil)
 }
 
+// PrefTitleCmdBackspaceDeletesLine says "Cmd+Backspace Deletes Line"
+// in the language the app shows.
+func PrefTitleCmdBackspaceDeletesLine() string {
+	return In(i18n.Locale()).PrefTitleCmdBackspaceDeletesLine()
+}
+
+// PrefTitleCmdBackspaceDeletesLine says "Cmd+Backspace Deletes Line"
+// in the language of msgs.
+func (msgs Messages) PrefTitleCmdBackspaceDeletesLine() string {
+	return Catalog.Format(msgs.locale, "prefTitleCmdBackspaceDeletesLine", nil)
+}
+
+// PrefDescCmdBackspaceDeletesLine says "Makes Cmd+Backspace on macOS delete the whole line, as in JetBrains, rather than up to the caret."
+// in the language the app shows.
+func PrefDescCmdBackspaceDeletesLine() string {
+	return In(i18n.Locale()).PrefDescCmdBackspaceDeletesLine()
+}
+
+// PrefDescCmdBackspaceDeletesLine says "Makes Cmd+Backspace on macOS delete the whole line, as in JetBrains, rather than up to the caret."
+// in the language of msgs.
+func (msgs Messages) PrefDescCmdBackspaceDeletesLine() string {
+	return Catalog.Format(msgs.locale, "prefDescCmdBackspaceDeletesLine", nil)
+}
+
 // PrefTitleTrimTrailingWhitespace says "Trim Trailing Whitespace"
 // in the language the app shows.
 func PrefTitleTrimTrailingWhitespace() string {

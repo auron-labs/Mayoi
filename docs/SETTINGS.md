@@ -87,6 +87,7 @@ takes its default.
 | `autoSave`              | `true`        | `true`, `false`                                             | **File → Auto Save**                           |
 | `wordWrap`              | `false`       | `true`, `false`                                             | **View → Word Wrap**                           |
 | `trimTrailingWhitespace` | `false`      | `true`, `false`                                             |                                                |
+| `cmdBackspaceDeletesLine` | `false`     | `true`, `false`                                             |                                                |
 | `tabSize`               | `4`           | `1` to `8`                                                  |                                                |
 | `jsonlMode`             | `""`          | `""` (table), `"source"`                                    | **View → Open JSON Lines As**                  |
 | `editorAgentContext`    | `false`       | `true`, `false`                                             | Only this file                                 |
@@ -247,6 +248,9 @@ differ in width lines them up only roughly.
 - **`autoSave`** saves a changed file a moment after you stop typing, and when you leave it.
 - **`wordWrap`** wraps long lines at the edge of the editor. **⌥Z** wraps or unwraps one tab only, until this
   setting changes.
+- **`cmdBackspaceDeletesLine`** makes **⌘Backspace** on macOS delete the whole line the caret is on, with its line
+  break and at every caret, in one step that **Undo** takes back, as JetBrains does. Off, it deletes back to the line
+  start. Windows and Linux keep **Ctrl+Backspace** deleting a word.
 - **`trimTrailingWhitespace`** removes the spaces and tabs at the ends of lines as you save a file, after any
   formatting, in one step that **Undo** takes back. In Markdown, two or more spaces ending a line of text stay, as
   they make a line break. Auto Save leaves the line the caret is on. **Trim Trailing Whitespace** in the command
