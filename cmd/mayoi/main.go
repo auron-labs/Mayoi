@@ -61,10 +61,12 @@ const (
 // mayoi is the app's projects, the focused one last first, and its
 // windows.
 type mayoi struct {
-	s      *settings.Settings
-	keys   *keymap.Map // the shortcuts of keybindings.json
-	wins   []*desktop
-	frames []*frame
+	s    *settings.Settings
+	keys *keymap.Map // the shortcuts of keybindings.json
+	// keymapShown is the keymap the windows' shortcuts are made with.
+	keymapShown string
+	wins        []*desktop
+	frames      []*frame
 	// pending are the folders and files the app was asked to open before
 	// it was ready, and pendingTargets the files a URL asked for with a
 	// line and column.
@@ -866,14 +868,28 @@ func (m *mayoi) reloadKeys(km *keymap.Map, err error) {
 	}
 	if err == nil {
 		m.keys = km
-		for _, w := range m.wins {
-			w.a.keys, w.a.chord, w.a.palette, w.a.hints = km, nil, nil, nil
-			w.a.invalidate()
-		}
-		m.refreshMenu()
+		m.applyKeys()
 	}
 	front := m.wins[0]
 	front.do(func() { front.a.keysFailed(km, err) })
+}
+
+// effectiveKeys are the shortcuts the windows run: those of the keymap
+// setting, under keybindings.json's.
+func (m *mayoi) effectiveKeys() *keymap.Map {
+	m.keymapShown = m.s.Keymap
+	return layerKeys(m.keymapShown, m.keys)
+}
+
+// applyKeys has the windows run the shortcuts again, as keybindings.json
+// or the keymap changed.
+func (m *mayoi) applyKeys() {
+	keys := m.effectiveKeys()
+	for _, w := range m.wins {
+		w.a.keys, w.a.chord, w.a.palette, w.a.hints = keys, nil, nil, nil
+		w.a.invalidate()
+	}
+	m.refreshMenu()
 }
 
 // applyLocale shows the app in the language of tag, or of the system's
@@ -1168,7 +1184,7 @@ func (m *mayoi) settle(wins []*desktop, quit bool, done, cancelled func()) {
 func (m *mayoi) openWindow(st *settings.Window) *desktop {
 	h := &desktop{m: m}
 	a := newApp(h, m.s, st)
-	a.keys = m.keys
+	a.keys = m.effectiveKeys()
 	h.a = a
 	if m.s.ProjectTabs && len(m.wins) > 0 && m.wins[0].f != nil {
 		f := m.wins[0].f

@@ -90,6 +90,7 @@ takes its default.
 | `cmdBackspaceDeletesLine` | `false`     | `true`, `false`                                             |                                                |
 | `tabSize`               | `4`           | `1` to `8`                                                  |                                                |
 | `jsonlMode`             | `""`          | `""` (table), `"source"`                                    | **View → Open JSON Lines As**                  |
+| `keymap`                | `""`          | `""` (Mayoi), `"vscode"`, `"jetbrains"`                     |                                                |
 | `editorAgentContext`    | `false`       | `true`, `false`                                             | Only this file                                 |
 | `editorHover`           | `true`        | `true`, `false`                                             | Only this file                                 |
 | `previewMermaid`        | `true`        | `true`, `false`                                             | Only this file                                 |
@@ -261,6 +262,10 @@ differ in width lines them up only roughly.
 - **`jsonlMode`** is how JSON Lines files, .jsonl and .ndjson, open: as a table, a row per line and a column per
   key, with the chosen row whole below it, or as their source. The buttons at the right of a tab's path and **⇧⌘V**
   switch a tab between them. The table reads the text as it is, edits made in the source included.
+- **`keymap`** has Mayoi's shortcuts follow another editor's: `""` for Mayoi's own, `"vscode"` for VS Code's or
+  `"jetbrains"` for JetBrains'. The preset changes the keys of the commands Mayoi has that the editor binds, and a
+  key it takes from another command leaves that command without it. `keybindings.json` wins over the preset, and
+  Vim mode, `vim`, is its own setting that works with any of them. The change applies at once.
 - **`editorAgentContext`** shows a **+** beside the line under the pointer in ordinary files. Click it
   to comment on that line or the selected lines in an inline review card; an empty comment collects the
   code alone. Collect snippets across files and send them together from the editor toolbar. It is off

@@ -258,6 +258,10 @@ type Prefs struct {
 	// below the editors, "left" or "right" at the window's side, past
 	// the sidebar.
 	PanelPosition string `json:"panelPosition,omitempty"`
+	// Keymap is the editor whose shortcuts Mayoi's follow: "" for Mayoi's
+	// own, "vscode" for VS Code's or "jetbrains" for JetBrains'. The
+	// shortcuts of keybindings.json win over them.
+	Keymap string `json:"keymap,omitempty"`
 	// TerminalLocation is where a new terminal opens: "" in the panel, or
 	// "editor" in a tab of the editor area.
 	TerminalLocation string `json:"terminalLocation,omitempty"`
@@ -725,6 +729,9 @@ func (p *Prefs) normalize() {
 	}
 	if p.TerminalLocation != "editor" {
 		p.TerminalLocation = ""
+	}
+	if p.Keymap != "vscode" && p.Keymap != "jetbrains" {
+		p.Keymap = ""
 	}
 	if p.TerminalBackend != "hc" {
 		p.TerminalBackend = ""

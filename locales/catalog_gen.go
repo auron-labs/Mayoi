@@ -15588,6 +15588,26 @@ func (msgs Messages) PrefDescTabSize() string {
 	return Catalog.Format(msgs.locale, "prefDescTabSize", nil)
 }
 
+// PrefTitleKeymap says "Keymap"
+// in the language the app shows.
+func PrefTitleKeymap() string { return In(i18n.Locale()).PrefTitleKeymap() }
+
+// PrefTitleKeymap says "Keymap"
+// in the language of msgs.
+func (msgs Messages) PrefTitleKeymap() string {
+	return Catalog.Format(msgs.locale, "prefTitleKeymap", nil)
+}
+
+// PrefDescKeymap says "Which editor's shortcuts Mayoi follows. Your keyboard shortcuts file still wins."
+// in the language the app shows.
+func PrefDescKeymap() string { return In(i18n.Locale()).PrefDescKeymap() }
+
+// PrefDescKeymap says "Which editor's shortcuts Mayoi follows. Your keyboard shortcuts file still wins."
+// in the language of msgs.
+func (msgs Messages) PrefDescKeymap() string {
+	return Catalog.Format(msgs.locale, "prefDescKeymap", nil)
+}
+
 // PrefTitleEditorAgentContext says "Collect Agent Context"
 // in the language the app shows.
 func PrefTitleEditorAgentContext() string { return In(i18n.Locale()).PrefTitleEditorAgentContext() }
@@ -16374,6 +16394,16 @@ func (msgs Messages) PrefDefaultTerminalBackend() string {
 	return Catalog.Format(msgs.locale, "prefDefaultTerminalBackend", nil)
 }
 
+// PrefDefaultKeymap says "Mayoi"
+// in the language the app shows.
+func PrefDefaultKeymap() string { return In(i18n.Locale()).PrefDefaultKeymap() }
+
+// PrefDefaultKeymap says "Mayoi"
+// in the language of msgs.
+func (msgs Messages) PrefDefaultKeymap() string {
+	return Catalog.Format(msgs.locale, "prefDefaultKeymap", nil)
+}
+
 // PrefDefaultDiffLayout says "Side by side when wide"
 // in the language the app shows.
 func PrefDefaultDiffLayout() string { return In(i18n.Locale()).PrefDefaultDiffLayout() }
@@ -16592,6 +16622,26 @@ func PrefOptTerminalBackendHc() string { return In(i18n.Locale()).PrefOptTermina
 // in the language of msgs.
 func (msgs Messages) PrefOptTerminalBackendHc() string {
 	return Catalog.Format(msgs.locale, "prefOptTerminalBackendHc", nil)
+}
+
+// PrefOptKeymapVscode says "VS Code"
+// in the language the app shows.
+func PrefOptKeymapVscode() string { return In(i18n.Locale()).PrefOptKeymapVscode() }
+
+// PrefOptKeymapVscode says "VS Code"
+// in the language of msgs.
+func (msgs Messages) PrefOptKeymapVscode() string {
+	return Catalog.Format(msgs.locale, "prefOptKeymapVscode", nil)
+}
+
+// PrefOptKeymapJetbrains says "JetBrains"
+// in the language the app shows.
+func PrefOptKeymapJetbrains() string { return In(i18n.Locale()).PrefOptKeymapJetbrains() }
+
+// PrefOptKeymapJetbrains says "JetBrains"
+// in the language of msgs.
+func (msgs Messages) PrefOptKeymapJetbrains() string {
+	return Catalog.Format(msgs.locale, "prefOptKeymapJetbrains", nil)
 }
 
 // PrefOptDiffLayoutSplit says "Side by side"

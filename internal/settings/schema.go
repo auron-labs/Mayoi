@@ -80,6 +80,7 @@ var Schema = []Field{
 	{Key: "trimTrailingWhitespace", Category: CatEditor, Kind: KindBool, Folder: true},
 	{Key: "tabSize", Category: CatEditor, Kind: KindNumber, Min: 1, Max: 8, Step: 1},
 	{Key: "jsonlMode", Category: CatEditor, Kind: KindEnum, Options: []string{"", "source"}, Folder: true},
+	{Key: "keymap", Category: CatEditor, Kind: KindEnum, Options: []string{"", "vscode", "jetbrains"}},
 	{Key: "editorAgentContext", Category: CatEditor, Kind: KindBool},
 	{Key: "editorHover", Category: CatEditor, Kind: KindBool},
 	{Key: "cmdBackspaceDeletesLine", Category: CatEditor, Kind: KindBool},

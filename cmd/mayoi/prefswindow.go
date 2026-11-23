@@ -147,6 +147,9 @@ func (m *mayoi) showPrefs(section, key string, from *desktop) {
 // prefsChanged draws the settings window anew, as the preferences or the
 // shortcuts changed.
 func (m *mayoi) prefsChanged() {
+	if m.s != nil && m.s.Keymap != m.keymapShown {
+		m.applyKeys()
+	}
 	if m.prefs != nil {
 		m.prefs.invalidate()
 	}

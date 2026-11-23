@@ -23,6 +23,11 @@ needs a `## <version>` section here, or its build fails.
 - Line comments, indentation, deletion and insertion act at every caret.
 - Up and Down move every caret through wrapped rows.
 - Hold `Alt` while dragging with the middle button to select a column.
+- **Settings → Editor → Keymap** switches Mayoi's shortcuts to VS Code's or JetBrains' keys, and applies at once.
+- The JetBrains keymap has `⇧⌘O` go to a file, `⌘O` to a symbol and `⇧⌘A` open the command palette.
+- The JetBrains keymap has `⌘D` duplicate a line, `⌥⌘L` reformat, `⌘B` go to the definition and `⇧F6` rename.
+- `keybindings.json` wins over the keymap, and Vim mode works with any keymap.
+- **Keyboard Shortcuts** shows the keys of the chosen keymap.
 
 ## 0.23.3
 

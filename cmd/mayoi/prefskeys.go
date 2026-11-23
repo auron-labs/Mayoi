@@ -172,14 +172,15 @@ func defaultAccel(cmd command) string {
 // rows are the commands of a's window with their keys.
 func (k *keysPane) rows(a *app) []keyRow {
 	km := k.w.m.keys
+	preset := presetKeys(k.w.m.s.Keymap)
 	var rows []keyRow
 	for _, cmd := range a.commands() {
 		names := commandNames(cmd.id)
 		r := keyRow{cmd: cmd}
 		if keys := km.Last(names...); keys != nil {
 			r.keys, r.source = keys, keyUser
-		} else if st, ok := parseAccel(defaultAccel(cmd)); ok {
-			r.keys, r.source = []keymap.Stroke{st}, keyDefault
+		} else if keys := defaultStrokes(preset, cmd); keys != nil {
+			r.keys, r.source = keys, keyDefault
 			if km.Removes(names...) {
 				r.keys, r.source = nil, keyRemoved
 			}
@@ -769,12 +770,12 @@ func unconditional(e keymap.Entry, names []string) bool {
 
 // defaultRemoval is the entry that takes cmd's own shortcut away, false
 // when it has none.
-func defaultRemoval(cmd command) (keymap.Entry, bool) {
-	st, ok := parseAccel(defaultAccel(cmd))
-	if !ok {
+func (k *keysPane) defaultRemoval(cmd command) (keymap.Entry, bool) {
+	keys := defaultStrokes(presetKeys(k.w.m.s.Keymap), cmd)
+	if keys == nil {
 		return keymap.Entry{}, false
 	}
-	return keymap.Entry{Key: st.String(), Command: "-" + cmd.id}, true
+	return keymap.Entry{Key: keymap.KeysString(keys), Command: "-" + cmd.id}, true
 }
 
 // setKeys gives cmd the keys in keybindings.json, in place of those it
@@ -782,7 +783,7 @@ func defaultRemoval(cmd command) (keymap.Entry, bool) {
 func (k *keysPane) setKeys(cmd command, keys []keymap.Stroke) {
 	names := commandNames(cmd.id)
 	var add []keymap.Entry
-	if rm, ok := defaultRemoval(cmd); ok && rm.Key != keymap.KeysString(keys) {
+	if rm, ok := k.defaultRemoval(cmd); ok && rm.Key != keymap.KeysString(keys) {
 		add = append(add, rm)
 	}
 	add = append(add, keymap.Entry{Key: keymap.KeysString(keys), Command: cmd.id})
@@ -792,7 +793,7 @@ func (k *keysPane) setKeys(cmd command, keys []keymap.Stroke) {
 // removeKeys takes cmd's keys away, with a toast that undoes it.
 func (k *keysPane) removeKeys(cmd command) {
 	var add []keymap.Entry
-	if rm, ok := defaultRemoval(cmd); ok {
+	if rm, ok := k.defaultRemoval(cmd); ok {
 		add = append(add, rm)
 	}
 	k.replaceKeys(cmd, add, locales.KeysWereRemoved(cmd.label))

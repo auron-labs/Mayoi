@@ -1053,6 +1053,10 @@ be pasted in. Saving it applies it in every window at once. It binds keys and ch
 names for them, with `when` conditions. See [SETTINGS.md](SETTINGS.md#keybindingsjson) for the format, and for the
 shortcuts that differ on Windows and Linux.
 
+The `keymap` setting, in the settings window's Editor page, has Mayoi's shortcuts follow VS Code's or JetBrains' for the
+commands Mayoi has, such as ⇧⌘O for Go to File and ⌘D to duplicate a line with JetBrains. Your `keybindings.json` wins
+over it, and Vim mode works on top of either.
+
 Some commands are only in the command palette: **Copy Path of Active File**, **Copy Relative Path of Active File**,
 **Reveal Active File in Finder** (File Explorer on Windows), **Indent Using Tabs** and **Indent Using 2, 4 or 8 Spaces**. **Selection → Sort Lines
 Ascending**, **Sort Lines Descending** and **Transform to Camel Case** work on the lines selected, or every line, and on
