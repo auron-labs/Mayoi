@@ -5,6 +5,16 @@ needs a `## <version>` section here, or its build fails.
 
 ## Unreleased
 
+- `languageServers` sets up custom language servers by language or file glob.
+- Custom language servers take priority and can replace a plugin's server by ID.
+- Tap `Shift` twice or choose **Go → Search Everywhere…** to find files by name and text.
+- Search Everywhere keeps the last query and can open all matches in Search.
+- Line comments, indentation, deletion and insertion act at every caret.
+- Up and Down move every caret through wrapped rows.
+- Hold `Alt` while dragging with the middle button to select a column.
+
+## 0.23.3
+
 - Opening a folder with `mayoi <folder>` brings its project window to the front.
 - Clicking a file's “Could not read” page or **Try Again** now makes that tab the active one.
 - In Live Preview, `Up` from a heading now moves to the line above instead of staying on the heading.
@@ -71,14 +81,6 @@ needs a `## <version>` section here, or its build fails.
 - Quick Open no longer crashes when opened after **File → Close Folder**.
 
 ## 0.23.1
-
-- `languageServers` sets up custom language servers by language or file glob.
-- Custom language servers take priority and can replace a plugin's server by ID.
-- Tap `Shift` twice or choose **Go → Search Everywhere…** to find files by name and text.
-- Search Everywhere keeps the last query and can open all matches in Search.
-- Line comments, indentation, deletion and insertion act at every caret.
-- Up and Down move every caret through wrapped rows.
-- Hold `Alt` while dragging with the middle button to select a column.
 
 - Set the TypeScript plugin's `path` to `tsrs` to use tsrs.
 - Set the Python plugin's `path` to `ty` to use ty.
