@@ -1008,10 +1008,7 @@ func (a *app) pasteSpans(d *editor, text string) {
 // primary, as does any other key that edits but text typed.
 func (a *app) multiKey(d *editor, ev ui.InputEvent) bool {
 	m, k := ev.Mods, ev.Key
-	word := ui.Ctrl
-	if macKeys() {
-		word = ui.Alt
-	}
+	word := wordKey()
 	base, extend := m&^ui.Shift, m&ui.Shift != 0
 	queue := func(fn func(d *editor)) bool {
 		d.cmds = append(d.cmds, fn)
@@ -1636,4 +1633,13 @@ func (a *app) multiStroke(ev ui.InputEvent) bool {
 		}
 	}
 	return false
+}
+
+// wordKey is the modifier of the keys that move and delete by a word:
+// Option on macOS, Control elsewhere.
+func wordKey() ui.Modifiers {
+	if macKeys() {
+		return ui.Alt
+	}
+	return ui.Ctrl
 }

@@ -416,6 +416,41 @@ func TestAutoClose(t *testing.T) {
 	expectText(t, d, "[(x)'\n")
 }
 
+// Deleting a word takes one run of a kind past the spaces, and at the
+// edge of a line only the line break, not the words beyond it.
+func TestDeleteWordStopsAtPunctuationAndLineEdges(t *testing.T) {
+	cases := []struct {
+		name  string
+		text  string
+		at    int
+		dir   int
+		want  string
+		caret int
+	}{
+		{"back after punctuation", "foo bar, ", 9, -1, "foo bar", 7},
+		{"back multiple spaces", "foo   bar   ", 12, -1, "foo   ", 6},
+		{"back at line start", "foo\n\nbar", 5, -1, "foo\nbar", 4},
+		{"back at line start after word", "foo bar\nbaz", 8, -1, "foo barbaz", 7},
+		{"forward before punctuation", " , foo bar", 0, 1, " foo bar", 0},
+		{"forward multiple spaces", "   foo bar", 0, 1, " bar", 0},
+		{"forward at line end", "foo\n\nbar", 3, 1, "foo\nbar", 3},
+		{"forward at line end before word", "foo\nbar baz", 3, 1, "foobar baz", 3},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			hs, d := editHarness(t, "a.txt", c.text)
+			hs.place(d, c.at, c.at)
+			key := ui.KeyBackspace
+			if c.dir > 0 {
+				key = ui.KeyDelete
+			}
+			hs.key(wordKey(), key)
+			expectText(t, d, c.want)
+			expectSel(t, d, c.caret, c.caret)
+		})
+	}
+}
+
 func TestReindent(t *testing.T) {
 	hs, d := editHarness(t, "a.py", "def f():\n    if x:\n        y()\n")
 	if d.indent.tabs || d.indent.size != 4 {

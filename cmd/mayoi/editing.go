@@ -695,6 +695,15 @@ func (a *app) editorKey(d *editor, ev ui.InputEvent) bool {
 	var cmd func(d *editor)
 	cmdKey := ui.Cmd
 	switch m := ev.Mods; {
+	case (ev.Key == ui.KeyBackspace || ev.Key == ui.KeyDelete) && m == wordKey():
+		// The toolkit's word deletion skips punctuation, newlines and
+		// blank lines before a word; this one steps as the carets of
+		// several selections do.
+		dir := 1
+		if ev.Key == ui.KeyBackspace {
+			dir = -1
+		}
+		cmd = func(d *editor) { a.deleteSpans(d, moveWord, dir) }
 	case ev.Key == ui.KeyX && m == cmdKey:
 		cmd = a.cut
 	case ev.Key == ui.KeyA && m == cmdKey:
