@@ -483,3 +483,32 @@ func TestCmdPointerOverName(t *testing.T) {
 		hold(0)
 	}
 }
+
+// The mouse back and forward buttons go one step through the history,
+// with the keyboard in the editor or not.
+func TestMouseButtonsGoThroughHistory(t *testing.T) {
+	hs := newHarness(t, false)
+	a := hs.a
+	for _, n := range []string{"one.txt", "two.txt", "three.txt"} {
+		os.WriteFile(hs.path(n), []byte("x\n"), 0o644)
+		a.openFileAt(hs.path(n), 0, true)
+		hs.settle()
+	}
+	at := func(want string) {
+		t.Helper()
+		if name, _, _ := caretAt(a); name != want {
+			t.Fatalf("at %s, want %s", name, want)
+		}
+	}
+	hs.key(0, ui.KeyBack)
+	at("two.txt")
+	hs.key(0, ui.KeyBack)
+	at("one.txt")
+	hs.key(0, ui.KeyForward)
+	at("two.txt")
+	// With the keyboard in the Explorer, they go as well.
+	a.run("view.explorer")
+	hs.settle()
+	hs.key(0, ui.KeyForward)
+	at("three.txt")
+}

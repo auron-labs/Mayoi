@@ -647,16 +647,6 @@ func (a *app) editorKey(d *editor, ev ui.InputEvent) bool {
 	if a.wikiKey(d, ev) {
 		return true
 	}
-	// The mouse's back and forward buttons go through the history of the
-	// jumps, as a browser's do.
-	if (ev.Key == ui.KeyBack || ev.Key == ui.KeyForward) && ev.Mods == 0 {
-		n := 1
-		if ev.Key == ui.KeyBack {
-			n = -1
-		}
-		a.post(func() { a.navGo(n) })
-		return true
-	}
 	// Escape closes a hover first, and only it: in Vim's insert mode too.
 	if ev.Key == ui.KeyEscape && ev.Mods == 0 && a.hover != nil && (a.hover.ed == d || a.hover.auto) {
 		if a.hover.auto {

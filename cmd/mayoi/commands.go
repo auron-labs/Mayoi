@@ -861,6 +861,13 @@ func (a *app) shortcuts(c *ui.Context) {
 			}
 		}
 	}
+	// The mouse's back and forward buttons go through the history of the
+	// jumps, as a browser's do, wherever the keyboard is.
+	for key, n := range map[ui.Key]int{ui.KeyBack: -1, ui.KeyForward: 1} {
+		if c.Shortcut(0, key) {
+			a.post(func() { a.navGo(n) })
+		}
+	}
 	a.menuKeys(c)
 }
 
