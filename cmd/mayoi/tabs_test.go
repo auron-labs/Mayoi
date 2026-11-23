@@ -255,3 +255,18 @@ func TestDoubleClickTabBarOpensAFile(t *testing.T) {
 		t.Error("the column double clicked does not have the keyboard")
 	}
 }
+
+// Files that share a name are told apart by the fewest folders that differ;
+// a name that is alone keeps none.
+func TestFolderSuffixes(t *testing.T) {
+	got := folderSuffixes([]string{
+		"/p/api/index.ts", "/p/web/index.ts", "/p/main.go",
+		"/p/a/src/util.go", "/p/b/src/util.go", "/p/c/lib/util.go", "",
+	})
+	want := []string{"api", "web", "", "a/src", "b/src", "c/lib", ""}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Errorf("path %d: %q, want %q", i, got[i], want[i])
+		}
+	}
+}

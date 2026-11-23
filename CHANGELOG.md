@@ -5,6 +5,7 @@ needs a `## <version>` section here, or its build fails.
 
 ## Unreleased
 
+- Tabs of files with the same name show their folder in brackets, such as `index.ts (api)`.
 - `languageServers` sets up custom language servers by language or file glob.
 - Custom language servers take priority and can replace a plugin's server by ID.
 - Tap `Shift` twice or choose **Go → Search Everywhere…** to find files by name and text.

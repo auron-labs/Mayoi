@@ -1,7 +1,9 @@
 package main
 
 import (
+	"path/filepath"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/egoist/mygo/ui"
@@ -70,6 +72,7 @@ func (a *app) tabStrip(c *ui.Context, col *column) {
 		atEnd = atEnd || strip.FileDragOver()
 		strip.Children(func() {
 			ui.Row(c).Height(tabStripH).AlignItems(ui.Stretch).Children(func() {
+				where := tabFolders(col.tabs)
 				for i, t := range col.tabs {
 					active := i == col.active
 					tip := locales.TabTerminal()
@@ -80,7 +83,7 @@ func (a *app) tabStrip(c *ui.Context, col *column) {
 						tip = a.relOrPath(t.path())
 					}
 					tab := ui.ButtonBase(c.Key(t.id)).Padding(0, 6, 0, 12).Gap(7).AlignItems(ui.Center).
-						BorderWidth(0, 1, 0, 0).BorderColor(p.border).Label(t.name()).Tooltip(tip).
+						BorderWidth(0, 1, 0, 0).BorderColor(p.border).Label(strings.TrimSpace(t.name() + " " + where[i])).Tooltip(tip).
 						Drag(dragItem{tab: t}).Transition(tabMotion)
 					// The middle button closes the tab, as in a browser.
 					box := tab.LayoutBounds()
@@ -173,6 +176,10 @@ func (a *app) tabStrip(c *ui.Context, col *column) {
 							name.TextColor(p.text)
 						default:
 							name.TextColor(p.muted)
+						}
+						if where[i] != "" {
+							// Which of the files by one name this is, dimmer than it.
+							ui.Text(c.Key("where"), "("+where[i]+")").FontSize(12.5).SingleLine().MaxWidth(160).TextColor(p.faint)
 						}
 						// The dot of unsaved changes turns into the cross under the
 						// pointer.
@@ -403,4 +410,59 @@ func (a *app) columnLockMenu(m *ui.Menu, col *column) {
 	if m.Item(label).Chosen() {
 		a.post(func() { a.toggleColumnLock(col) })
 	}
+}
+
+// tabFolders returns, for each tab, the folders to show after its name when
+// another file tab has the same name, "" otherwise.
+func tabFolders(tabs []*colTab) []string {
+	paths := make([]string, len(tabs))
+	for i, t := range tabs {
+		if t.ed != nil || t.view != nil {
+			paths[i] = t.path()
+		}
+	}
+	return folderSuffixes(paths)
+}
+
+// folderSuffixes names, for each path whose file name another path shares,
+// the fewest folders at its end that tell it from the others, such as "web"
+// or "web/src". Paths of "" and of a name that is alone get "".
+func folderSuffixes(paths []string) []string {
+	out := make([]string, len(paths))
+	byName := map[string][]int{}
+	for i, p := range paths {
+		if p != "" {
+			n := filepath.Base(p)
+			byName[n] = append(byName[n], i)
+		}
+	}
+	for _, group := range byName {
+		if len(group) < 2 {
+			continue
+		}
+		dirs := make([][]string, len(group))
+		deepest := 0
+		for k, i := range group {
+			dirs[k] = strings.Split(filepath.ToSlash(filepath.Dir(paths[i])), "/")
+			deepest = max(deepest, len(dirs[k]))
+		}
+		for depth := 1; depth <= deepest; depth++ {
+			seen := map[string]bool{}
+			labels := make([]string, len(group))
+			unique := true
+			for k := range group {
+				d := dirs[k]
+				labels[k] = strings.Join(d[max(0, len(d)-depth):], "/")
+				unique = unique && !seen[labels[k]]
+				seen[labels[k]] = true
+			}
+			if unique || depth == deepest {
+				for k, i := range group {
+					out[i] = labels[k]
+				}
+				break
+			}
+		}
+	}
+	return out
 }
