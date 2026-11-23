@@ -772,6 +772,10 @@ func languageOf(d *document) string {
 	if d.language != "" {
 		return d.language
 	}
+	// The person's file associations come before a plugin's language.
+	if l := highlight.Associated(d.path); l != nil {
+		return strings.ToLower(strings.ReplaceAll(highlight.Name(l), " ", ""))
+	}
 	if id := pluginLanguage(d.path); id != "" {
 		return id
 	}

@@ -1795,6 +1795,8 @@
   "prefDescFormatters": "複数のプラグインがある言語のフォーマッタを、その id かプラグイン名で選びます。",
   "prefTitleLanguageServers": "言語サーバー",
   "prefDescLanguageServers": "言語またはファイルごとに設定する言語サーバーです。プラグインのものより優先されます。settings.json で編集します。",
+  "prefTitleFileAssociations": "ファイルの関連付け",
+  "prefDescFileAssociations": "グロブでファイルの言語を指定します（例: \"*.foo\": \"yaml\"）。構文ハイライトと言語サーバーに使われます。settings.json で編集します。",
   "themeAboutPlugin": "プラグイン {plugin} のテーマ",
   "cmdSelInsertSnippet": "スニペットを挿入…",
   "snippetsNone": "{language} のスニペットを持つプラグインはありません",

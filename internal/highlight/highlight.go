@@ -87,6 +87,10 @@ var LexerOverride func(path string) chroma.Lexer
 
 // Lexer returns the lexer of a file by its name, nil for plain text.
 func Lexer(path string) chroma.Lexer {
+	// The person's choice wins over a plugin's language.
+	if l := Associated(path); l != nil {
+		return l
+	}
 	if LexerOverride != nil {
 		if l := LexerOverride(path); l != nil {
 			return chroma.Coalesce(l)

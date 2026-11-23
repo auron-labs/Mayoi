@@ -18150,6 +18150,26 @@ func (msgs Messages) PrefDescLanguageServers() string {
 	return Catalog.Format(msgs.locale, "prefDescLanguageServers", nil)
 }
 
+// PrefTitleFileAssociations says "File associations"
+// in the language the app shows.
+func PrefTitleFileAssociations() string { return In(i18n.Locale()).PrefTitleFileAssociations() }
+
+// PrefTitleFileAssociations says "File associations"
+// in the language of msgs.
+func (msgs Messages) PrefTitleFileAssociations() string {
+	return Catalog.Format(msgs.locale, "prefTitleFileAssociations", nil)
+}
+
+// PrefDescFileAssociations says "The language of files by glob, as \"*.foo\": \"yaml\", for highlighting and language servers. Edit them in settings.json."
+// in the language the app shows.
+func PrefDescFileAssociations() string { return In(i18n.Locale()).PrefDescFileAssociations() }
+
+// PrefDescFileAssociations says "The language of files by glob, as \"*.foo\": \"yaml\", for highlighting and language servers. Edit them in settings.json."
+// in the language of msgs.
+func (msgs Messages) PrefDescFileAssociations() string {
+	return Catalog.Format(msgs.locale, "prefDescFileAssociations", nil)
+}
+
 // ThemeAboutPlugin says "From the plugin {plugin}"
 // in the language the app shows.
 func ThemeAboutPlugin(plugin string) string { return In(i18n.Locale()).ThemeAboutPlugin(plugin) }

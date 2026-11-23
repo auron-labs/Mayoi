@@ -8,10 +8,13 @@ needs a `## <version>` section here, or its build fails.
 // refused_by: statement_fold · collision: none (no common ancestor text)
 // refused_by: statement_fold · collision: none (no common ancestor text)
 // refused_by: statement_fold · collision: none (no common ancestor text)
+// refused_by: statement_fold · collision: none (no common ancestor text)
 - Tabs of files with the same name show their folder in brackets, such as `index.ts (api)`.
 - Fix `Alt+Backspace` and `Alt+Delete` deleting past punctuation and across lines (`Ctrl` elsewhere).
 - The mouse back and forward buttons go through the navigation history in every pane.
 - `cmdBackspaceDeletesLine` makes `Cmd+Backspace` on macOS delete the whole line, as in JetBrains.
+- `fileAssociations` in `settings.json` sets the language of files by glob, as `{"*.foo": "yaml"}`.
+- A `fileAssociations` language decides highlighting and the language server, before a plugin's.
 - `languageServers` sets up custom language servers by language or file glob.
 - Custom language servers take priority and can replace a plugin's server by ID.
 - Tap `Shift` twice or choose **Go → Search Everywhere…** to find files by name and text.

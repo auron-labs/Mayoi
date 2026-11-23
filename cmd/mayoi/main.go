@@ -8,6 +8,7 @@ import (
 	"log"
 	"maps"
 	"mayoi/internal/cli"
+	"mayoi/internal/highlight"
 	"mayoi/internal/keymap"
 	"mayoi/internal/remote"
 	"mayoi/internal/settings"
@@ -503,6 +504,7 @@ func main() {
 	})
 	mygo.App.WhenReady(func() {
 		m.s = settings.Load(settingsPath())
+		highlight.SetAssociations(m.s.FileAssociations)
 		if p := settingsPath(); p != "" {
 			m.icons = filepath.Join(filepath.Dir(p), "project-icons")
 		}
@@ -818,7 +820,14 @@ func (m *mayoi) reload(p settings.Prefs) {
 	if p.Locale != old.Locale {
 		applyLocale(p.Locale)
 	}
+	associationsChanged := !maps.Equal(p.FileAssociations, old.FileAssociations)
+	if associationsChanged {
+		highlight.SetAssociations(p.FileAssociations)
+	}
 	for _, w := range m.wins {
+		if associationsChanged {
+			w.a.rehighlight()
+		}
 		if p.AutoSave && !old.AutoSave {
 			w.a.autoSaveAll()
 		}
@@ -829,7 +838,8 @@ func (m *mayoi) reload(p settings.Prefs) {
 	if plugins != nil {
 		plugins.syncPrefs()
 		plugins.toggled(old.Plugins, p.Plugins)
-		if !reflect.DeepEqual(p.LanguageServers, old.LanguageServers) {
+		// A file's language picks its server, so a change of either restarts them.
+		if associationsChanged || !reflect.DeepEqual(p.LanguageServers, old.LanguageServers) {
 			plugins.restartServers()
 			if len(m.wins) > 0 {
 				front := m.wins[0]

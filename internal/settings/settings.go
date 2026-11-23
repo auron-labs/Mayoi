@@ -340,6 +340,10 @@ type Prefs struct {
 	// win over the plugins' for the documents they match. A folder can't
 	// set them, so that a repository can't choose a program to run.
 	LanguageServers []LanguageServer `json:"languageServers,omitempty"`
+	// FileAssociations choose the language of files, by glob: a name such
+	// as "Jenkinsfile" or "*.foo", or a path with a slash. They win over
+	// the plugins' languages.
+	FileAssociations map[string]string `json:"fileAssociations,omitempty"`
 	// PluginSources are the plugins installed from Git and where each came
 	// from, as ~/.mayoi/plugins/plugins.json has them, which Mayoi keeps
 	// here for settings sync to bring to the person's other machines.

@@ -122,6 +122,7 @@ takes its default.
 | `formatters`            | none          | The formatter of each language, where plugins offer several | Only this file                                 |
 | `languageServers`       | none          | Language servers of your own, by language or by file glob   | Only this file                                 |
 | `languageServerOptions`       | none          | Each language server's `initializationOptions`, by its id   | Only this file                                 |
+| `fileAssociations`      | none          | The language of files by glob, as `{"*.foo": "yaml"}`         | Only this file                                 |
 
 ### Language
 
@@ -333,6 +334,10 @@ differ in width lines them up only roughly.
   plugin's name, as `{"typescript": "prettier"}`.
 - **`languageServers`** sets up language servers without a plugin, and takes the place of a plugin's. See
   [Language servers](#language-servers).
+- **`fileAssociations`** sets the language of files by glob, as `{"*.foo": "yaml", "Jenkinsfile": "groovy"}`. A glob
+  without a `/` matches a file's name in any folder; one with a `/`, as `config/*.conf`, matches the end of a path.
+  A language is a name or alias of the syntax highlighter in any case, and an entry that names none is ignored. It
+  decides the highlighting and the language servers, before a plugin's languages. A folder can't set it.
 
 ```json
 {

@@ -1795,6 +1795,8 @@
   "prefDescFormatters": "多个插件提供格式化时，为每种语言选择格式化程序，填其 id 或插件名。",
   "prefTitleLanguageServers": "语言服务器",
   "prefDescLanguageServers": "按语言或文件设置的语言服务器，优先于插件提供的。在 settings.json 中编辑。",
+  "prefTitleFileAssociations": "文件关联",
+  "prefDescFileAssociations": "按通配符指定文件的语言，如 \"*.foo\": \"yaml\"，用于语法高亮和语言服务器。在 settings.json 中编辑。",
   "themeAboutPlugin": "来自插件 {plugin}",
   "cmdSelInsertSnippet": "插入代码片段…",
   "snippetsNone": "没有插件提供 {language} 的代码片段",

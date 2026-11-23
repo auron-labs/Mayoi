@@ -2023,6 +2023,8 @@
   "prefDescFormatters": "The formatter of each language where plugins offer several, by its id or its plugin's name.",
   "prefTitleLanguageServers": "Language servers",
   "prefDescLanguageServers": "The language servers you set up, by language or by file, which take the place of a plugin's. Edit them in settings.json.",
+  "prefTitleFileAssociations": "File associations",
+  "prefDescFileAssociations": "The language of files by glob, as \"*.foo\": \"yaml\", for highlighting and language servers. Edit them in settings.json.",
   "themeAboutPlugin": "From the plugin {plugin}",
   "cmdSelInsertSnippet": "Insert Snippet…",
   "snippetsNone": "No plugin has snippets for {language}",

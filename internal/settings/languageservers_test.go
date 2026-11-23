@@ -64,3 +64,19 @@ func TestLanguageServersPreference(t *testing.T) {
 		}
 	}
 }
+
+func TestFileAssociationsSetAndRaw(t *testing.T) {
+	p := Default().Prefs
+	if err := p.Set("fileAssociations", json.RawMessage(`{"*.foo":"yaml","Jenkinsfile":"groovy"}`)); err != nil {
+		t.Fatal(err)
+	}
+	if p.FileAssociations["*.foo"] != "yaml" || p.FileAssociations["Jenkinsfile"] != "groovy" {
+		t.Errorf("set %v", p.FileAssociations)
+	}
+	if !jsonEqual(p.Raw("fileAssociations"), json.RawMessage(`{"*.foo":"yaml","Jenkinsfile":"groovy"}`)) {
+		t.Errorf("raw %s", p.Raw("fileAssociations"))
+	}
+	if err := p.Set("fileAssociations", json.RawMessage(`["*.foo"]`)); err == nil {
+		t.Error("a list is accepted")
+	}
+}
