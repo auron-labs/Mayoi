@@ -81,7 +81,11 @@ func (a *app) view(c *ui.Context) {
 	c.SetZoom(float32(math.Pow(1.2, float64(a.settings.ZoomLevel))))
 	// Which pane has the keyboard focus, as the frame before left it, and
 	// which column: its editor is the one typing is of.
+	keys := -1
 	for i, col := range a.cols {
+		if col.body.FocusWithin(c) {
+			keys = i
+		}
 		if len(col.tabs) > 0 {
 			col.holds = holdNone // a tab came: the column holds the keys no more
 		}
@@ -101,6 +105,9 @@ func (a *app) view(c *ui.Context) {
 		case t.ed != nil && t.ed.vscroll.FocusWithin(c):
 			a.focus, a.col = paneEditor, i
 			t.ed.typist = t.ed
+		case t.ed != nil && t.ed.unread() && col.body.FocusWithin(c):
+			// Try Again of a file not read focused makes it the column too.
+			a.focus, a.col = paneEditor, i
 		case t.term != nil && (t.term.view.FocusWithin(c) || t.term.findInput.Focused(c)):
 			a.focus, a.col = paneEditor, i
 		case t.view != nil && t.view.pane.FocusWithin(c):
@@ -115,6 +122,10 @@ func (a *app) view(c *ui.Context) {
 			a.focus, a.col = paneEditor, i
 		}
 	}
+	if keys >= 0 && keys != a.keysCol {
+		a.keyboardTo(a.cols[keys])
+	}
+	a.keysCol = keys
 	a.autoSaveTick()
 	switch {
 	case a.panelTerm != nil && (a.panelTerm.view.FocusWithin(c) || a.panelTerm.findInput.Focused(c)):
@@ -707,7 +718,7 @@ func (a *app) columnView(c *ui.Context, col *column) {
 					a.issueViewUI(c, shown.issue)
 				case shown.ed.unread():
 					a.hideEditor(shown.ed)
-					a.loadingView(c, shown.ed)
+					a.loadingView(c, col, shown.ed)
 				case shown.ed.preview != nil:
 					a.hideEditor(shown.ed)
 					v := shown.ed.preview
