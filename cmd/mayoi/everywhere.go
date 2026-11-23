@@ -1,8 +1,10 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"path"
+	"path/filepath"
 	"strings"
 	"sync/atomic"
 	"time"
@@ -10,6 +12,7 @@ import (
 	"github.com/egoist/mygo/ui"
 
 	"mayoi/internal/bg"
+	"mayoi/internal/lsp"
 	"mayoi/internal/workspace"
 	"mayoi/locales"
 )
@@ -17,6 +20,11 @@ import (
 const (
 	// everywhereFiles is how many files Search Everywhere lists by name.
 	everywhereFiles = 8
+	// everywhereSymbols is the most symbols Search Everywhere lists, of all
+	// the language servers together, and symbolTimeout how long one has
+	// to answer.
+	everywhereSymbols = 30
+	symbolTimeout     = 5 * time.Second
 	// everywhereLines is the most lines of text Search Everywhere lists;
 	// the search view finds them all.
 	everywhereLines = 100
@@ -26,7 +34,8 @@ const (
 )
 
 // everywhere is Search Everywhere: one box that finds the folder's files
-// by name and the lines of their text, opened by tapping Shift twice.
+// by name, the symbols the language servers know and the lines of their
+// text, opened by tapping Shift twice.
 type everywhere struct {
 	open  bool
 	query string
@@ -49,6 +58,19 @@ type everywhere struct {
 	cancel  *atomic.Bool
 	lines   []textLine // in the order found
 	stopped bool       // there are more than lines
+
+	// symbols are what the running language servers found, which they
+	// are asked for as the text is searched; asking is how many have yet
+	// to answer.
+	symbols []symbolHit
+	asking  int
+}
+
+// symbolHit is a symbol of the workspace a language server found, and the
+// file of its location.
+type symbolHit struct {
+	sym  lsp.Symbol
+	path string
 }
 
 // textLine is a line of a file Search Everywhere found the query in, at
@@ -85,6 +107,58 @@ func (e *everywhere) stopText() {
 	}
 	e.gen++
 	e.cancel, e.waiting, e.running, e.lines, e.stopped = nil, false, false, nil, false
+	e.symbols, e.asking = nil, 0
+}
+
+// symbolServers are the language servers of the folder that run and
+// search symbols: none, when no document of a language with one is open.
+func (a *app) symbolServers() []*lspServer {
+	lspServers.Lock()
+	defer lspServers.Unlock()
+	var out []*lspServer
+	for _, s := range lspServers.m {
+		if s.root == a.root && s.state() == lspRunning && s.client.CanSearchSymbols() {
+			out = append(out, s)
+		}
+	}
+	return out
+}
+
+// startSymbols asks the language servers for the symbols that match the
+// query, each in the background, so that typing goes on. One that fails
+// is logged and has none listed.
+func (a *app) startSymbols() {
+	e := &a.everywhere
+	root, query, gen := a.root, e.shown, e.gen
+	for _, s := range a.symbolServers() {
+		e.asking++
+		bg.Go(func() {
+			ctx, cancel := context.WithTimeout(context.Background(), symbolTimeout)
+			defer cancel()
+			syms, err := s.client.WorkspaceSymbols(ctx, query)
+			a.post(func() { a.takeSymbols(gen, s, root, syms, err) })
+		})
+	}
+}
+
+// takeSymbols lists the symbols a server found, unless another search
+// started since, up to everywhereSymbols and those in files that are
+// not the machine's.
+func (a *app) takeSymbols(gen int, s *lspServer, root string, syms []lsp.Symbol, err error) {
+	e := &a.everywhere
+	if gen != e.gen {
+		return
+	}
+	e.asking--
+	if err != nil {
+		s.log("warn", fmt.Sprintf("workspace/symbol: %v", err))
+		return
+	}
+	for _, sym := range syms {
+		if file := serverPath(root, sym.Location.URI); file != "" && len(e.symbols) < everywhereSymbols {
+			e.symbols = append(e.symbols, symbolHit{sym, file})
+		}
+	}
 }
 
 // startText searches the text of the folder's files for the query, as
@@ -181,12 +255,15 @@ func (a *app) everywhereView(c *ui.Context) {
 	}
 	if e.waiting && time.Since(e.typedAt) >= searchPause {
 		a.startText()
+		if !e.waiting {
+			a.startSymbols()
+		}
 	}
-	// The rows are the files, then the lines, then the row that shows
+	// The rows are the files, then the symbols, then the lines, then the row that shows
 	// them all when there are more. They are taken from e, as closing the
 	// box forgets them.
-	files, names, lines, stopped := e.files, e.names, e.lines, e.stopped
-	rows := len(names) + len(lines)
+	files, names, syms, lines, stopped := e.files, e.names, e.symbols, e.lines, e.stopped
+	rows := len(names) + len(syms) + len(lines)
 	if stopped {
 		rows++
 	}
@@ -204,8 +281,11 @@ func (a *app) everywhereView(c *ui.Context) {
 			} else {
 				a.openFile(name, true)
 			}
-		case i < len(names)+len(lines):
-			l := lines[i-len(names)]
+		case i < len(names)+len(syms):
+			hit := syms[i-len(names)]
+			a.goToLocation(hit.path, hit.sym.Location)
+		case i < len(names)+len(syms)+len(lines):
+			l := lines[i-len(names)-len(syms)]
 			if side {
 				a.openText(func() { a.openFileToSide(l.file.path) })
 				a.selectMatch(l.file.path, l.match)
@@ -240,12 +320,12 @@ func (a *app) everywhereView(c *ui.Context) {
 						choose(e.sel, false)
 					}
 				})
-				if e.waiting || e.running {
+				if e.waiting || e.running || e.asking > 0 {
 					ui.Progress(c.Key("everywhere-activity"), -1).Height(2).Radius(0).Label(locales.SearchSearching())
 				} else {
 					ui.Box(c.Key("everywhere-activity")).Height(2)
 				}
-				a.everywhereBody(c, files, names, lines, stopped, choose)
+				a.everywhereBody(c, files, names, syms, lines, stopped, choose)
 				a.quickFooter(c, false, locales.QuickOpenAction(), "", false, e.shown != "" && rows > 0)
 			})
 			if box.PressedOutside() || back.OverlayShortcut(0, ui.KeyEscape) {
@@ -259,18 +339,19 @@ func (a *app) everywhereView(c *ui.Context) {
 }
 
 // everywhereBody is what Search Everywhere lists: the files found by
-// name, then the lines found in them, or why there are none.
-func (a *app) everywhereBody(c *ui.Context, files []string, names []workspace.Match, lines []textLine, stopped bool, choose func(int, bool)) {
+// name, then the symbols the language servers found, then the lines found
+// in the files, or why there are none.
+func (a *app) everywhereBody(c *ui.Context, files []string, names []workspace.Match, syms []symbolHit, lines []textLine, stopped bool, choose func(int, bool)) {
 	e := &a.everywhere
 	p := a.pal
-	if len(names) == 0 && len(lines) == 0 {
+	if len(names) == 0 && len(syms) == 0 && len(lines) == 0 {
 		var msg string
 		switch {
 		case a.root == "":
 			msg = locales.EverywhereNoFolder()
 		case a.indexRead.Running() && a.index == nil:
 			msg = locales.QuickIndexing()
-		case e.waiting || e.running:
+		case e.waiting || e.running || e.asking > 0:
 			return // the bar shows it searches
 		default:
 			msg = locales.SearchNoResults()
@@ -303,12 +384,27 @@ func (a *app) everywhereBody(c *ui.Context, files []string, names []workspace.Ma
 			rel := files[m.Index]
 			row(i, "file:"+rel, rel, func() { a.quickRow(c, rel, m.Positions) })
 		}
+		if len(syms) > 0 {
+			section(locales.EverywhereSymbols())
+		}
+		for j, hit := range syms {
+			kind := lsp.SymbolKind(hit.sym.Kind)
+			detail := strings.TrimSpace(kind + " " + hit.sym.Container)
+			line := hit.sym.Location.Range.Start.Line
+			row(len(names)+j, fmt.Sprintf("symbol:%s:%d:%s", hit.path, line, hit.sym.Name), hit.sym.Name, func() {
+				icon, col := a.symbolIcon(kind)
+				ui.Icon(c, icon).FontSize(14).TextColor(col)
+				ui.Text(c, hit.sym.Name).FontSize(13).SingleLine().Shrink(0)
+				ui.Text(c, detail).FontSize(12).TextColor(p.faint).SingleLine().Grow(1).Shrink(1).MinWidth(0)
+				ui.Text(c, filepath.Base(hit.path)).FontSize(12).TextColor(p.faint).SingleLine().Shrink(0)
+			})
+		}
 		if len(lines) > 0 {
 			section(locales.EverywhereText())
 		}
 		for j, l := range lines {
 			at := fmt.Sprintf("%s:%d", path.Base(l.file.rel), l.match.line+1)
-			row(len(names)+j, "line:"+l.file.rel+":"+fmt.Sprint(l.match.line), l.match.pre+l.match.hit+l.match.post, func() {
+			row(len(names)+len(syms)+j, "line:"+l.file.rel+":"+fmt.Sprint(l.match.line), l.match.pre+l.match.hit+l.match.post, func() {
 				icon, col := fileIcon(p, path.Base(l.file.rel))
 				ui.Icon(c, icon).FontSize(15).TextColor(col)
 				ui.RichText(c, a.matchPreview(l.match, false)...).FontSize(12.5).SingleLine().Grow(1).Shrink(1).MinWidth(0)
@@ -317,7 +413,7 @@ func (a *app) everywhereBody(c *ui.Context, files []string, names []workspace.Ma
 		}
 		if stopped {
 			label := locales.EverywhereShowAll()
-			row(len(names)+len(lines), "show-all", label, func() {
+			row(len(names)+len(syms)+len(lines), "show-all", label, func() {
 				ui.Icon(c, iconSearch).FontSize(15).TextColor(p.muted)
 				ui.Text(c, label).FontSize(13).TextColor(p.muted).SingleLine()
 			})

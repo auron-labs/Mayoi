@@ -2,12 +2,15 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"slices"
 	"sync/atomic"
 	"testing"
 	"time"
 
 	"github.com/egoist/mygo/ui"
+
+	"mayoi/internal/lsp"
 )
 
 // settleEverywhere draws frames until Search Everywhere's search of the
@@ -17,7 +20,7 @@ func (hs *harness) settleEverywhere() {
 	deadline := time.Now().Add(5 * time.Second)
 	for {
 		hs.settle()
-		if !e.running && !e.waiting || time.Now().After(deadline) {
+		if !e.running && !e.waiting && e.asking == 0 || time.Now().After(deadline) {
 			break
 		}
 	}
@@ -162,5 +165,58 @@ func TestSearchEverywhereLines(t *testing.T) {
 	hs.settle()
 	if !hs.tt.HasText("Show all results in Search") {
 		t.Fatalf("no way to the rest: %q", hs.tt.Texts())
+	}
+}
+
+// A language server's workspace symbols are listed in a Symbols group
+// once typing pauses, and choosing one opens its file at the place and
+// keeps where it was in the navigation history. Without a server there
+// is no group.
+func TestSearchEverywhereFindsSymbols(t *testing.T) {
+	hs := withFakeServer(t)
+	a, tt := hs.a, hs.tt
+	e := &a.everywhere
+	os.WriteFile(hs.path("sym.fake"), []byte("one\ntwo\nclass Widget\n"), 0o644)
+	os.WriteFile(hs.path("a.fake"), []byte("one\n"), 0o644)
+	a.openFile(hs.path("a.fake"), true)
+	serverUp(hs)
+
+	a.run("go.searchEverywhere")
+	hs.settle()
+	tt.Type("widget")
+	hs.settleEverywhere()
+	var names []string
+	for _, s := range e.symbols {
+		names = append(names, s.sym.Name+" "+lsp.SymbolKind(s.sym.Kind)+" "+s.sym.Container)
+	}
+	if want := []string{"Widget class shapes", "WidgetList struct "}; !slices.Equal(names, want) {
+		t.Fatalf("symbols %q; want %q", names, want)
+	}
+	if !tt.HasText("Symbols") || !tt.HasText("WidgetList") {
+		t.Errorf("group missing: %q", tt.Texts())
+	}
+
+	places := len(a.nav.places)
+	e.sel = len(e.names)
+	hs.key(0, ui.KeyEnter)
+	hs.until("the symbol's place", func() bool {
+		file, line, col := caretAt(a)
+		return file == "sym.fake" && line == 2 && col == 6
+	})
+	if e.open || len(a.nav.places) != places+1 {
+		t.Errorf("open %v, %d places, was %d", e.open, len(a.nav.places), places)
+	}
+}
+
+// With no language server there is no Symbols group and no error.
+func TestSearchEverywhereWithoutSymbolServers(t *testing.T) {
+	hs := newHarness(t, true)
+	a, tt := hs.a, hs.tt
+	a.run("go.searchEverywhere")
+	hs.settle()
+	tt.Type("main")
+	hs.settleEverywhere()
+	if len(a.everywhere.symbols) != 0 || tt.HasText("Symbols") {
+		t.Errorf("symbols %v: %q", a.everywhere.symbols, tt.Texts())
 	}
 }

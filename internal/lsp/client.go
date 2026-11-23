@@ -105,6 +105,7 @@ type Client struct {
 	caps struct {
 		Hover, Definition, Completion, Formatting  bool
 		TypeDefinition, Implementation, References bool
+		WorkspaceSymbol                            bool
 		Commands                                   []string
 		Experimental                               map[string]json.RawMessage
 		// Sync is the text document sync kind: 1 full, 2 incremental.
@@ -222,7 +223,7 @@ func Start(ctx context.Context, opts Options) (*Client, error) {
 				"formatting":         map[string]any{},
 				"publishDiagnostics": map[string]any{"relatedInformation": false},
 			},
-			"workspace": map[string]any{"workspaceFolders": true, "configuration": true},
+			"workspace": map[string]any{"workspaceFolders": true, "configuration": true, "symbol": map[string]any{}},
 		},
 		"clientInfo": map[string]any{"name": "Mayoi"},
 	}
@@ -241,12 +242,13 @@ func Start(ctx context.Context, opts Options) (*Client, error) {
 	}
 	var init struct {
 		Capabilities struct {
-			HoverProvider          json.RawMessage `json:"hoverProvider"`
-			DefinitionProvider     json.RawMessage `json:"definitionProvider"`
-			TypeDefinitionProvider json.RawMessage `json:"typeDefinitionProvider"`
-			ImplementationProvider json.RawMessage `json:"implementationProvider"`
-			ReferencesProvider     json.RawMessage `json:"referencesProvider"`
-			ExecuteCommandProvider struct {
+			HoverProvider           json.RawMessage `json:"hoverProvider"`
+			DefinitionProvider      json.RawMessage `json:"definitionProvider"`
+			TypeDefinitionProvider  json.RawMessage `json:"typeDefinitionProvider"`
+			ImplementationProvider  json.RawMessage `json:"implementationProvider"`
+			ReferencesProvider      json.RawMessage `json:"referencesProvider"`
+			WorkspaceSymbolProvider json.RawMessage `json:"workspaceSymbolProvider"`
+			ExecuteCommandProvider  struct {
 				Commands []string `json:"commands"`
 			} `json:"executeCommandProvider"`
 			CompletionProvider         json.RawMessage `json:"completionProvider"`
@@ -263,6 +265,7 @@ func Start(ctx context.Context, opts Options) (*Client, error) {
 	c.caps.TypeDefinition = on(cp.TypeDefinitionProvider)
 	c.caps.Implementation = on(cp.ImplementationProvider)
 	c.caps.References = on(cp.ReferencesProvider)
+	c.caps.WorkspaceSymbol = on(cp.WorkspaceSymbolProvider)
 	c.caps.Commands = cp.ExecuteCommandProvider.Commands
 	_ = json.Unmarshal(cp.Experimental, &c.caps.Experimental)
 	c.caps.Sync = 1

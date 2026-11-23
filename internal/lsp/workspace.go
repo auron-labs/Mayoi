@@ -77,6 +77,7 @@ var locationURIs = uriFields{
 	"uri": nil, "targetUri": nil,
 	"*": {"uri": nil, "targetUri": nil},
 }
+var symbolURIs = uriFields{"*": {"location": {"uri": nil}}}
 var editURIs = uriFields{
 	"changes": {"$keys": {}},
 	"documentChanges": {"*": {
@@ -202,6 +203,8 @@ func mapResult(method string, data json.RawMessage, mappings []PathMapping, toSe
 	switch method {
 	case "textDocument/definition", "textDocument/typeDefinition", "textDocument/implementation", "textDocument/references":
 		return mapURIFields(data, locationURIs, mappings, toServer)
+	case "workspace/symbol":
+		return mapURIFields(data, symbolURIs, mappings, toServer)
 	case "workspace/workspaceFolders":
 		return mapURIFields(data, folderURIs, mappings, toServer)
 	default:

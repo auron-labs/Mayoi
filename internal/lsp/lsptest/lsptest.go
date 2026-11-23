@@ -95,7 +95,8 @@ func Serve(in io.Reader, out io.Writer) {
 				"hoverProvider": true, "definitionProvider": true, "completionProvider": map[string]any{},
 				"documentFormattingProvider": true, "textDocumentSync": 1,
 				"typeDefinitionProvider": map[string]any{}, "implementationProvider": true, "referencesProvider": true,
-				"executeCommandProvider": map[string]any{"commands": []string{"fake.sourceDefinition"}},
+				"workspaceSymbolProvider": true,
+				"executeCommandProvider":  map[string]any{"commands": []string{"fake.sourceDefinition"}},
 			}})
 		case "textDocument/didOpen", "textDocument/didChange":
 			document = append(json.RawMessage(nil), m.Params...)
@@ -142,6 +143,8 @@ func Serve(in io.Reader, out io.Writer) {
 			default:
 				answer(map[string]any{"contents": map[string]any{"kind": "markdown", "value": "**hello**"}})
 			}
+		case "workspace/symbol":
+			reply(workspaceSymbols(initialize, m.Params))
 		case "test/snapshot":
 			reply(map[string]any{"initialize": initialize, "document": document, "navigation": navigation})
 		case "test/noReply":
@@ -193,6 +196,31 @@ func Serve(in io.Reader, out io.Writer) {
 			}
 		}
 	}
+}
+
+// workspaceSymbols are the symbols of the fake workspace whose names hold
+// the query: Widget, with its range, and WidgetList, as a workspace
+// symbol with only its file, both in the folder it was started in.
+func workspaceSymbols(initialize, params json.RawMessage) any {
+	var in struct {
+		RootURI string `json:"rootUri"`
+	}
+	json.Unmarshal(initialize, &in)
+	var q struct {
+		Query string `json:"query"`
+	}
+	json.Unmarshal(params, &q)
+	has := func(name string) bool { return strings.Contains(strings.ToLower(name), strings.ToLower(q.Query)) }
+	var out []any
+	if has("Widget") {
+		out = append(out, map[string]any{"name": "Widget", "kind": 5, "containerName": "shapes", "location": map[string]any{
+			"uri": in.RootURI + "/sym.fake", "range": map[string]any{
+				"start": map[string]any{"line": 2, "character": 6}, "end": map[string]any{"line": 2, "character": 12}}}})
+	}
+	if has("WidgetList") {
+		out = append(out, map[string]any{"name": "WidgetList", "kind": 23, "location": map[string]any{"uri": in.RootURI + "/other.fake"}})
+	}
+	return out
 }
 
 // definitions are where the word at a place follows "def" on a line of

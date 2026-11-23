@@ -10098,14 +10098,24 @@ func (msgs Messages) EverywhereNoFolder() string {
 	return Catalog.Format(msgs.locale, "everywhereNoFolder", nil)
 }
 
-// EverywherePlaceholder says "Search files and text"
+// EverywherePlaceholder says "Search files, symbols and text"
 // in the language the app shows.
 func EverywherePlaceholder() string { return In(i18n.Locale()).EverywherePlaceholder() }
 
-// EverywherePlaceholder says "Search files and text"
+// EverywherePlaceholder says "Search files, symbols and text"
 // in the language of msgs.
 func (msgs Messages) EverywherePlaceholder() string {
 	return Catalog.Format(msgs.locale, "everywherePlaceholder", nil)
+}
+
+// EverywhereSymbols says "Symbols"
+// in the language the app shows.
+func EverywhereSymbols() string { return In(i18n.Locale()).EverywhereSymbols() }
+
+// EverywhereSymbols says "Symbols"
+// in the language of msgs.
+func (msgs Messages) EverywhereSymbols() string {
+	return Catalog.Format(msgs.locale, "everywhereSymbols", nil)
 }
 
 // EverywhereShowAll says "Show all results in Search"

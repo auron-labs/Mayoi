@@ -70,6 +70,39 @@ func TestClient(t *testing.T) {
 	}
 }
 
+// Workspace symbols come as the server gives them, with or without a
+// range, and their files go through the path mappings.
+func TestWorkspaceSymbols(t *testing.T) {
+	cmd := exec.Command(os.Args[0])
+	cmd.Env = append(os.Environ(), "MAYOI_FAKE_LSP=1")
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	c, err := Start(ctx, Options{Cmd: cmd, RootURI: "file:///server/root",
+		PathMappings: []PathMapping{{ClientURI: "file:///client/root", ServerURI: "file:///server/root"}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer c.Close()
+	if !c.CanSearchSymbols() {
+		t.Fatal("the server says it searches symbols")
+	}
+	syms, err := c.WorkspaceSymbols(ctx, "wid")
+	if err != nil || len(syms) != 2 {
+		t.Fatalf("symbols = %+v, %v", syms, err)
+	}
+	w, l := syms[0], syms[1]
+	if w.Name != "Widget" || SymbolKind(w.Kind) != "class" || w.Container != "shapes" ||
+		w.Location.URI != "file:///client/root/sym.fake" || w.Location.Range.Start != (Position{2, 6}) {
+		t.Errorf("Widget = %+v", w)
+	}
+	if l.Name != "WidgetList" || SymbolKind(l.Kind) != "struct" || l.Location.URI != "file:///client/root/other.fake" {
+		t.Errorf("WidgetList = %+v", l)
+	}
+	if syms, err = c.WorkspaceSymbols(ctx, "WidgetL"); err != nil || len(syms) != 1 {
+		t.Errorf("narrowed symbols = %+v, %v", syms, err)
+	}
+}
+
 func TestURIs(t *testing.T) {
 	if u := URI("/a b/c.go"); u != "file:///a%20b/c.go" {
 		t.Fatalf("URI = %s", u)
