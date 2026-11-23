@@ -51,6 +51,7 @@ func textCount(hs *harness, s string) int {
 func TestExplorerDragMovesFiles(t *testing.T) {
 	hs := newHarness(t, true)
 	a := hs.a
+	a.settings.AutoSave = false
 	// A file with changes not yet saved, in a tab.
 	a.openFile(hs.path("README.md"), true)
 	hs.settle()
