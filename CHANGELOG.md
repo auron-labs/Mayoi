@@ -5,18 +5,6 @@ needs a `## <version>` section here, or its build fails.
 
 ## Unreleased
 
-- Rename a file or folder right in its explorer row, as in VS Code, instead of in a dialog.
-- On macOS, `Enter` on a chosen file or folder renames it; `F2` does on every system.
-- On macOS, `⌘↓` keeps the chosen file open in a tab, as `Enter` did before.
-- **Rename…** in the explorer's menu and **Rename File** in the command palette edit the name in place too.
-- `Escape` keeps the old name; clicking elsewhere keeps the new one, and a taken name shows why below.
-- The title of the Rename, New File and New Folder dialogs no longer wraps beside a long path.
-- **Toggle Line Comment** (`⌘/`) now works in JSON, GraphQL, Less and `.gitignore` files.
-- In CSS, HTML, XML and Markdown, **Toggle Line Comment** wraps each line in `/* */` or `<!-- -->`.
-- In Vue and Svelte files it comments a line as its script, style or markup part expects.
-
-## 0.23.4
-
 - Fix the caret disappearing after a keymap shortcut with `Cmd`, such as `Cmd+D` or `Cmd+Backspace`, on macOS.
 - Tabs of files with the same name show their folder in brackets, such as `index.ts (api)`.
 - Fix `Alt+Backspace` and `Alt+Delete` deleting past punctuation and across lines (`Ctrl` elsewhere).
@@ -37,6 +25,18 @@ needs a `## <version>` section here, or its build fails.
 - The JetBrains keymap has `⌘D` duplicate a line, `⌥⌘L` reformat, `⌘B` go to the definition and `⇧F6` rename.
 - `keybindings.json` wins over the keymap, and Vim mode works with any keymap.
 - **Keyboard Shortcuts** shows the keys of the chosen keymap.
+- Rename a file or folder right in its explorer row, as in VS Code, instead of in a dialog.
+- On macOS, `Enter` on a chosen file or folder renames it; `F2` does on every system.
+- On macOS, `⌘↓` keeps the chosen file open in a tab, as `Enter` did before.
+- **Rename…** in the explorer's menu and **Rename File** in the command palette edit the name in place too.
+- `Escape` keeps the old name; clicking elsewhere keeps the new one, and a taken name shows why below.
+- The title of the Rename, New File and New Folder dialogs no longer wraps beside a long path.
+- **Toggle Line Comment** (`⌘/`) now works in JSON, GraphQL, Less and `.gitignore` files.
+- In CSS, HTML, XML and Markdown, **Toggle Line Comment** wraps each line in `/* */` or `<!-- -->`.
+- In Vue and Svelte files it comments a line as its script, style or markup part expects.
+
+## 0.23.4
+
 - **Settings → Terminal → Match Claude Code to Mayoi Theme** gives Claude Code on this Mac Mayoi's colors.
 - Turning it off gives Claude Code back its earlier theme; a theme you pick with `/theme` takes over.
 - Symbolic links to files and folders show a link mark after their name in the explorer.
