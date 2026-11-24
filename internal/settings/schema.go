@@ -84,6 +84,7 @@ var Schema = []Field{
 	{Key: "editorAgentContext", Category: CatEditor, Kind: KindBool},
 	{Key: "editorHover", Category: CatEditor, Kind: KindBool},
 	{Key: "cmdBackspaceDeletesLine", Category: CatEditor, Kind: KindBool},
+	{Key: "searchFollowSymlinks", Category: CatEditor, Kind: KindBool, Folder: true},
 
 	{Key: "markdownMode", Category: CatMarkdown, Kind: KindEnum, Options: []string{"", "live", "reading"}, Folder: true},
 	{Key: "previewMermaid", Category: CatMarkdown, Kind: KindBool, Folder: true},
