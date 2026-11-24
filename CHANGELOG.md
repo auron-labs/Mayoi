@@ -3,7 +3,7 @@
 The update window shows the section of the version it offers. Every release
 needs a `## <version>` section here, or its build fails.
 
-## Unreleased
+## 0.23.4
 
 - Fix the caret disappearing after a keymap shortcut with `Cmd`, such as `Cmd+D` or `Cmd+Backspace`, on macOS.
 - Tabs of files with the same name show their folder in brackets, such as `index.ts (api)`.
