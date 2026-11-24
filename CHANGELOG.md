@@ -27,6 +27,8 @@ needs a `## <version>` section here, or its build fails.
 - **Keyboard Shortcuts** shows the keys of the chosen keymap.
 - **Settings → Terminal → Match Claude Code to Mayoi Theme** gives Claude Code on this Mac Mayoi's colors.
 - Turning it off gives Claude Code back its earlier theme; a theme you pick with `/theme` takes over.
+- Symbolic links to files and folders show a link mark after their name in the explorer.
+- Changed files that are symbolic links show the same mark in the **Source Control** changes list.
 
 ## 0.23.3
 
