@@ -5,10 +5,7 @@ needs a `## <version>` section here, or its build fails.
 
 ## Unreleased
 
-// refused_by: statement_fold · collision: none (no common ancestor text)
-// refused_by: statement_fold · collision: none (no common ancestor text)
-// refused_by: statement_fold · collision: none (no common ancestor text)
-// refused_by: statement_fold · collision: none (no common ancestor text)
+- Fix the caret disappearing after a keymap shortcut with `Cmd`, such as `Cmd+D` or `Cmd+Backspace`, on macOS.
 - Tabs of files with the same name show their folder in brackets, such as `index.ts (api)`.
 - Fix `Alt+Backspace` and `Alt+Delete` deleting past punctuation and across lines (`Ctrl` elsewhere).
 - The mouse back and forward buttons go through the navigation history in every pane.

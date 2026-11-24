@@ -292,3 +292,25 @@ func TestKeymapChordTypesNothingAndLetsGo(t *testing.T) {
 		t.Errorf("typing after the chord: %q, chording %v", d.buf.String(), a.chording())
 	}
 }
+
+// macOS sends no release for a key pressed with ⌘, so a command of the
+// keymap that leaves the keyboard in the editor must not wait for one: the
+// editor stays editable, with its caret.
+func TestKeymapCmdKeyDoesNotHoldTheEditor(t *testing.T) {
+	hs := newHarness(t, false)
+	a := hs.a
+	a.settings.AutoSave = false
+	withKeys(t, a, `[{"key": "cmd+d", "command": "sel.copyDown"}]`)
+	a.openFile(hs.path("go.mod"), true)
+	hs.settle()
+	d := a.activeEditor()
+	lines := d.buf.Snapshot().LineCount()
+	a.keyEvent(ui.InputEvent{Kind: ui.InputKeyDown, Key: ui.KeyD, Mods: ui.Super}, placeEditor)
+	hs.settle()
+	if got := d.buf.Snapshot().LineCount(); got != lines+1 {
+		t.Fatalf("⌘D made %d lines from %d", got, lines)
+	}
+	if a.chording() {
+		t.Errorf("the editor waits for the release of ⌘D: chord %v held %v", a.chord, a.held)
+	}
+}

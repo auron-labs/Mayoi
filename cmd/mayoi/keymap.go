@@ -53,7 +53,8 @@ func (a *app) keyEvent(ev ui.InputEvent, where keyPlace) bool {
 		a.invalidate()
 	}
 	if a.keyInput(ev, where) {
-		if where != placeTerminal {
+		// A key pressed with ⌘ on macOS has no release, and types no text.
+		if where != placeTerminal && ev.Mods&ui.Super == 0 {
 			k := ev.Key
 			a.held = &k
 		}
