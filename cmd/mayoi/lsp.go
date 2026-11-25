@@ -136,44 +136,78 @@ const maxServerStarts = 3
 // its language opening starts it again.
 var lspRetryPause = 30 * time.Second
 
-// serverFor is the server of a document: the first of the person's own
-// that serves it, else a plugin's, nil for none. The plugin is nil for the
-// person's.
-func (a *app) serverFor(d *document) (*plugin.Plugin, *plugin.ServerContrib) {
-	rel, _ := a.relOf(d.path)
-	own, _ := settings.ValidLanguageServers(a.prefs().LanguageServers)
-	return selectServer(own, plugins.enabled(), languageOf(d), rel)
+// docServer is a server that serves a document, and its plugin, nil for
+// the person's.
+type docServer struct {
+	plugin  *plugin.Plugin
+	contrib *plugin.ServerContrib
 }
 
-// selectServer chooses among the person's servers, then the plugins', for
-// a document of language lang at rel in the folder, with slashes, "" for
-// one outside it. A server serves a document of one of its languages or
-// whose rel matches one of its files. A plugin's server the person's
-// replaces, by its id, serves nothing.
-func selectServer(own []settings.LanguageServer, enabled []*plugin.Plugin, lang, rel string) (*plugin.Plugin, *plugin.ServerContrib) {
+// serversFor are the servers of a document, in the order in which they
+// answer what only one answers, as Go to Definition.
+func (a *app) serversFor(d *document) []docServer {
+	rel, _ := a.relOf(d.path)
+	own, _ := settings.ValidLanguageServers(a.prefs().LanguageServers)
+	return selectServers(own, plugins.enabled(), languageOf(d), rel)
+}
+
+// selectServers are the servers of a document of language lang at rel in
+// the folder, with slashes, "" for one outside it. A server serves a
+// document of one of its languages, or whose rel matches one of its files,
+// beside every other that does: the person's first, in their order, then
+// the plugins' by their files, then by their languages. A plugin's server
+// the person's replaces, by its id, serves nothing. When an exclusive
+// server serves a document, the servers that are not exclusive leave it to
+// it, as the YAML server leaves gonsible Ansible's files.
+func selectServers(own []settings.LanguageServer, enabled []*plugin.Plugin, lang, rel string) []docServer {
+	var out, byLanguage []docServer
 	for _, s := range own {
-		byLanguage := lang != "" && slices.Contains(s.Languages, lang)
+		byLang := lang != "" && slices.Contains(s.Languages, lang)
 		byFile := rel != "" && workspace.ParseGlobs(strings.Join(s.Files, ",")).Match(rel)
-		if byLanguage || byFile {
-			return nil, userServerContrib(s)
+		if byLang || byFile {
+			out = append(out, docServer{nil, userServerContrib(s)})
 		}
 	}
-	if lang == "" {
-		return nil, nil
-	}
 	for _, p := range enabled {
-		for i, s := range p.Contributes.LanguageServers {
-			replaced := slices.ContainsFunc(own, func(o settings.LanguageServer) bool { return o.ID == s.ID })
-			if !replaced && slices.Contains(s.Languages, lang) {
-				return p, &p.Contributes.LanguageServers[i]
+		for i := range p.Contributes.LanguageServers {
+			s := &p.Contributes.LanguageServers[i]
+			switch {
+			case slices.ContainsFunc(own, func(o settings.LanguageServer) bool { return o.ID == s.ID }):
+			case rel != "" && len(s.Files) > 0 && serverFiles(p, s).Match(rel):
+				out = append(out, docServer{p, s})
+			case lang != "" && slices.Contains(s.Languages, lang):
+				byLanguage = append(byLanguage, docServer{p, s})
 			}
 		}
 	}
-	return nil, nil
+	out = append(out, byLanguage...)
+	if slices.ContainsFunc(out, func(s docServer) bool { return s.contrib.Exclusive }) {
+		out = slices.DeleteFunc(out, func(s docServer) bool { return !s.contrib.Exclusive })
+	}
+	return out
+}
+
+// serves reports whether s is a server of d, of a's folder.
+func (a *app) serves(s *lspServer, d *document) bool {
+	return slices.ContainsFunc(a.serversFor(d), func(ds docServer) bool {
+		return ds.plugin == s.plugin && ds.contrib.ID == s.contrib.ID
+	})
+}
+
+// serverFiles are the globs of a plugin's server's files, with its
+// plugin's settings; none when a setting they take is not a string.
+func serverFiles(p *plugin.Plugin, s *plugin.ServerContrib) workspace.Globs {
+	settings, _ := serverSettings(p)
+	files, err := expandServerArgs(s.Files, settings)
+	if err != nil {
+		return nil
+	}
+	return workspace.ParseGlobs(strings.Join(files, ","))
 }
 
 func userServerContrib(s settings.LanguageServer) *plugin.ServerContrib {
-	return &plugin.ServerContrib{ID: s.ID, Languages: s.Languages, Command: s.Command, Args: s.Args, Options: s.Options}
+	return &plugin.ServerContrib{ID: s.ID, Languages: s.Languages, Command: s.Command, Args: s.Args, Options: s.Options,
+		Exclusive: s.Exclusive}
 }
 
 // log adds a line to the log of the server's plugin, and of the person's
@@ -207,59 +241,82 @@ func serverPath(root, uri string) string {
 	return p
 }
 
-// lspFor is the server of a document in the folder, started in the
-// background the first time; nil when none serves it.
-// opening is whether the document is opening, which starts again one that
-// failed to start a while ago.
-func (a *app) lspFor(d *document, opening bool) *lspServer {
+// lspFor are the servers of a document in the folder, in the order of
+// serversFor, each started in the background the first time; none when
+// none serves it. opening is whether the document is opening, which starts
+// again one that failed to start a while ago.
+func (a *app) lspFor(d *document, opening bool) []*lspServer {
 	if a.root == "" || d.path == "" {
 		return nil
 	}
-	p, sc := a.serverFor(d)
-	if sc == nil {
-		return nil
-	}
-	key := serverKey(a.root, sc.ID)
+	served := a.serversFor(d)
+	out := make([]*lspServer, 0, len(served))
 	lspServers.Lock()
 	defer lspServers.Unlock()
-	s := lspServers.m[key]
-	// One that stopped is started again, a few times, and one that could
-	// not start as well, as a document opens a while after.
-	if s != nil {
-		switch st := s.state(); {
-		case s.starts >= maxServerStarts, st == lspStarting, st == lspRunning:
-			return s
-		case st == lspFailed && (!opening || time.Since(s.failedAt) < lspRetryPause):
+	for _, ds := range served {
+		key := serverKey(a.root, ds.contrib.ID)
+		s := lspServers.m[key]
+		// One that stopped is started again, a few times, and one that
+		// could not start as well, as a document opens a while after.
+		if s != nil {
+			st := s.state()
+			if s.starts >= maxServerStarts || st == lspStarting || st == lspRunning ||
+				st == lspFailed && (!opening || time.Since(s.failedAt) < lspRetryPause) {
+				out = append(out, s)
+				continue
+			}
+		}
+		starts := 0
+		if s != nil {
+			starts = s.starts
+		}
+		s = newServer(ds.plugin, *ds.contrib, a.root, starts+1)
+		lspServers.m[key] = s
+		go s.start(a, nil)
+		out = append(out, s)
+	}
+	return out
+}
+
+// lspRunningFor are the servers of document d that run, in the order of
+// serversFor: unlike lspFor, it starts none, nor again one that stopped.
+func (a *app) lspRunningFor(d *document) []*lspServer {
+	if a.root == "" || d.path == "" {
+		return nil
+	}
+	served := a.serversFor(d)
+	lspServers.Lock()
+	defer lspServers.Unlock()
+	var out []*lspServer
+	for _, ds := range served {
+		if s := lspServers.m[serverKey(a.root, ds.contrib.ID)]; s != nil && s.state() == lspRunning {
+			out = append(out, s)
+		}
+	}
+	return out
+}
+
+// firstReady waits for servers in their order, for limit in all, and is
+// the first that runs and can; none when none can by then.
+func firstReady(servers []*lspServer, limit time.Duration, can func(*lspServer, *lsp.Client) bool) (*lspServer, *lsp.Client) {
+	deadline := time.Now().Add(limit)
+	for _, s := range servers {
+		if c := s.wait(time.Until(deadline)); c != nil && can(s, c) {
+			return s, c
+		}
+	}
+	return nil, nil
+}
+
+// notRunning is the first of servers that does not run, which a question
+// none answered is told of by; nil when all run.
+func notRunning(servers []*lspServer) *lspServer {
+	for _, s := range servers {
+		if s.state() != lspRunning {
 			return s
 		}
 	}
-	starts := 0
-	if s != nil {
-		starts = s.starts
-	}
-	s = newServer(p, *sc, a.root, starts+1)
-	lspServers.m[key] = s
-	go s.start(a, nil)
-	return s
-}
-
-// lspRunningFor returns the language server of document d that runs, nil
-// for none: unlike lspFor, it starts none, nor again one that stopped.
-func (a *app) lspRunningFor(d *document) *lspServer {
-	if a.root == "" || d.path == "" {
-		return nil
-	}
-	_, sc := a.serverFor(d)
-	if sc == nil {
-		return nil
-	}
-	lspServers.Lock()
-	s := lspServers.m[serverKey(a.root, sc.ID)]
-	lspServers.Unlock()
-	if s == nil || s.state() != lspRunning {
-		return nil
-	}
-	return s
+	return nil
 }
 
 // newServer is a server of root yet to start, for lspServers.
@@ -365,7 +422,7 @@ func (s *lspServer) start(a *app, prev *lspServer) {
 		}
 		for _, w := range s.windows(a) {
 			for _, d := range w.docs {
-				if p, sc := w.serverFor(d); sc != nil && p == s.plugin && sc.ID == s.contrib.ID {
+				if w.serves(s, d) {
 					c.Open(serverURI(d.path), languageOf(d), d.buf.String())
 				}
 			}
@@ -486,20 +543,27 @@ func (a *app) lspDoc(event string, d *document) {
 		}
 		return
 	}
-	s := a.lspFor(d, event == "open")
-	if s == nil && event == "open" {
+	servers := a.lspFor(d, event == "open")
+	if len(servers) == 0 && event == "open" {
 		a.offerServer(d)
 	}
-	c := s.live()
-	if c == nil {
-		return // the server opens it as it starts
-	}
 	uri := serverURI(d.path)
-	switch event {
-	case "save":
-		c.Saved(uri)
-	default:
-		c.Open(uri, languageOf(d), d.buf.String())
+	var text *string
+	for _, s := range servers {
+		c := s.live()
+		if c == nil {
+			continue // the server opens it as it starts
+		}
+		switch event {
+		case "save":
+			c.Saved(uri)
+		default:
+			if text == nil {
+				t := d.buf.String()
+				text = &t
+			}
+			c.Open(uri, languageOf(d), *text)
+		}
 	}
 }
 
@@ -574,17 +638,17 @@ func (a *app) showHover() {
 	a.askHover(d, min(d.sel[1], snap.Len()), nil)
 }
 
-// askHover asks the server and the plugins of d's language what is at
-// rune at, and shows it. rest is the name the pointer rests on, asked of
-// quietly: of a server that runs, saying nothing of none or a failure;
-// nil is the caret, as Show Hover asks.
+// askHover asks the servers and the plugins of d's language what is at
+// rune at, and shows what each says, in the servers' order. rest is the
+// name the pointer rests on, asked of quietly: of servers that run, saying
+// nothing of none or a failure; nil is the caret, as Show Hover asks.
 func (a *app) askHover(d *editor, at int, rest *pointerHover) {
 	pos := positionOf(d.buf.Snapshot(), at)
-	var s *lspServer
+	var servers []*lspServer
 	if rest == nil {
-		s = a.lspFor(d.document, false)
+		servers = a.lspFor(d.document, false)
 	} else {
-		s = a.lspRunningFor(d.document)
+		servers = a.lspRunningFor(d.document)
 	}
 	doc := a.docJSON(d.document)
 	lang := languageOf(d.document)
@@ -597,14 +661,14 @@ func (a *app) askHover(d *editor, at int, rest *pointerHover) {
 			}
 		}
 	}
-	if rest != nil && s == nil && len(providers) == 0 {
+	if rest != nil && len(servers) == 0 && len(providers) == 0 {
 		return
 	}
 	text := d.buf.String()
 	var current func() bool
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	if rest == nil {
-		current = a.lspAsked(s, d, &a.hoverAsked)
+		current = a.lspAsked(servers, d, &a.hoverAsked)
 	} else {
 		// Of the editor the pointer is over, which need not have the
 		// keyboard: the name it still rests on, its text as it was.
@@ -614,19 +678,34 @@ func (a *app) askHover(d *editor, at int, rest *pointerHover) {
 		current = func() bool {
 			r := &a.rest
 			return a.restAsked == n && r.ed == d && r.word == word && d.buf.Version() == version &&
-				a.picksOpened == picks && (s == nil || s.current())
+				a.picksOpened == picks && allCurrent(servers)
 		}
 	}
 	auto := rest != nil
 	bg.Go(func() {
 		defer cancel()
+		answers := make([]lsp.Hover, len(servers))
+		var wg sync.WaitGroup
+		for i, s := range servers {
+			wg.Go(func() {
+				if c := s.wait(3 * time.Second); c != nil && c.Hover() {
+					// The server knows the text as it is now.
+					c.Open(uri, lang, text)
+					if hover, err := c.HoverAt(ctx, uri, lsp.Position(pos)); err == nil {
+						answers[i] = hover
+					}
+				}
+			})
+		}
+		wg.Wait()
 		var parts []string
 		var span *lsp.Range
-		if c := s.wait(3 * time.Second); c != nil && c.Hover() {
-			// The server knows the text as it is now.
-			c.Open(uri, lang, text)
-			if hover, err := c.HoverAt(ctx, uri, lsp.Position(pos)); err == nil && strings.TrimSpace(hover.Markdown) != "" {
-				parts, span = append(parts, hover.Markdown), hover.Range
+		for _, hover := range answers {
+			if strings.TrimSpace(hover.Markdown) != "" {
+				parts = append(parts, hover.Markdown)
+				if span == nil {
+					span = hover.Range
+				}
 			}
 		}
 		for _, p := range providers {
@@ -648,7 +727,7 @@ func (a *app) askHover(d *editor, at int, rest *pointerHover) {
 					return // the pointer asked: nothing shows, nothing is said
 				}
 				// A server not running did not say there is nothing.
-				if s != nil && s.state() != lspRunning {
+				if s := notRunning(servers); s != nil {
 					a.lspFailed(s)
 					return
 				}
@@ -665,18 +744,28 @@ func (a *app) askHover(d *editor, at int, rest *pointerHover) {
 	})
 }
 
-// lspAsked counts a question asked at the caret of d, of s or none, in
+// lspAsked counts a question asked at the caret of d, of servers, in
 // asked, and is whether its answer still goes: the last of its kind asked,
-// of the server still the folder's, at the caret, view and text it was
-// asked at. One gone on from, a server restarted, or a picker opened
-// since, as Quick Open, leaves it too late.
-func (a *app) lspAsked(s *lspServer, d *editor, asked *int) func() bool {
+// of servers still the folder's, at the caret, view and text it was asked
+// at. One gone on from, a server restarted, or a picker opened since, as
+// Quick Open, leaves it too late.
+func (a *app) lspAsked(servers []*lspServer, d *editor, asked *int) func() bool {
 	*asked++
 	n, root, version, sel, picks := *asked, a.root, d.buf.Version(), d.sel, a.picksOpened
 	return func() bool {
 		return *asked == n && a.root == root && a.activeEditor() == d && d.buf.Version() == version && d.sel == sel &&
-			a.picksOpened == picks && (s == nil || s.current())
+			a.picksOpened == picks && allCurrent(servers)
 	}
+}
+
+// allCurrent reports whether each of servers is still its folder's.
+func allCurrent(servers []*lspServer) bool {
+	for _, s := range servers {
+		if !s.current() {
+			return false
+		}
+	}
+	return true
 }
 
 const sourceDefinition lsp.Navigation = "sourceDefinition"
@@ -706,10 +795,11 @@ func (a *app) definitionAt(d *editor, click bool) {
 
 // locationsAt uses the same document, stale-answer checks and targets for
 // keyboard commands and Cmd-click. A click says nothing about missing servers.
+// The first of the document's servers that answers kind is asked.
 func (a *app) locationsAt(d *editor, kind lsp.Navigation, click bool) {
-	s := a.lspFor(d.document, false)
-	current := a.lspAsked(s, d, &a.defAsked)
-	if s == nil {
+	servers := a.lspFor(d.document, false)
+	current := a.lspAsked(servers, d, &a.defAsked)
+	if len(servers) == 0 {
 		if !click {
 			a.tell(note{message: locales.LspNone(languageOf(d.document))})
 		}
@@ -717,34 +807,30 @@ func (a *app) locationsAt(d *editor, kind lsp.Navigation, click bool) {
 	}
 	pos, uri, root := caretPosition(d), serverURI(d.path), a.root
 	lang, text := languageOf(d.document), d.buf.String()
-	command := s.contrib.SourceDefinitionCommand
 	bg.Go(func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
-		c := s.wait(5 * time.Second)
+		s, c := firstReady(servers, 5*time.Second, func(s *lspServer, c *lsp.Client) bool {
+			if kind == sourceDefinition {
+				return sourceDefinitionMethod(s, c) != "" || c.SupportsCommand(s.contrib.SourceDefinitionCommand)
+			}
+			return c.CanNavigate(kind)
+		})
 		if c == nil {
 			a.post(func() {
-				if current() {
-					a.lspFailed(s)
-				}
-			})
-			return
-		}
-		supported := c.CanNavigate(kind)
-		var sourceMethod string
-		if kind == sourceDefinition {
-			if source := s.launch.SourceDefinition; source != nil && c.SupportsExperimental(source.Capability) {
-				sourceMethod = source.Method
-			}
-			supported = sourceMethod != "" || c.SupportsCommand(command)
-		}
-		if !supported {
-			a.post(func() {
-				if current() && !click {
+				switch failed := notRunning(servers); {
+				case !current():
+				case failed != nil:
+					a.lspFailed(failed)
+				case !click:
 					a.tell(note{message: locales.LspNavigationUnsupported()})
 				}
 			})
 			return
+		}
+		sourceMethod, command := "", s.contrib.SourceDefinitionCommand
+		if kind == sourceDefinition {
+			sourceMethod = sourceDefinitionMethod(s, c)
 		}
 		// The server knows the text as it is now: not as the last change
 		// it was told of a moment ago, nor before the documents open are
@@ -843,6 +929,16 @@ func (a *app) locationsAt(d *editor, kind lsp.Navigation, click bool) {
 	})
 }
 
+// sourceDefinitionMethod is the request s asks Go to Source Definition
+// with, as its plugin's resolver said, when its client c says it answers
+// it; "" for none.
+func sourceDefinitionMethod(s *lspServer, c *lsp.Client) string {
+	if source := s.launch.SourceDefinition; source != nil && c.SupportsExperimental(source.Capability) {
+		return source.Method
+	}
+	return ""
+}
+
 // goToLocation shows a place a language server named, the caret at its
 // start.
 func (a *app) goToLocation(path string, loc lsp.Location) {
@@ -883,45 +979,64 @@ func (a *app) complete() {
 	if a.wikiSuggestNow(d) {
 		return
 	}
-	s := a.lspFor(d.document, false)
-	if s == nil {
+	servers := a.lspFor(d.document, false)
+	if len(servers) == 0 {
 		a.tell(note{message: locales.LspNone(languageOf(d.document))})
 		return
 	}
 	pos, uri := caretPosition(d), serverURI(d.path)
 	lang, text := languageOf(d.document), d.buf.String()
-	current := a.lspAsked(s, d, &a.completeAsked)
+	current := a.lspAsked(servers, d, &a.completeAsked)
 	bg.Go(func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
-		c := s.wait(5 * time.Second)
-		if c == nil || !c.Completion() {
-			a.post(func() {
-				if current() {
-					a.lspFailed(s)
+		// Each server's, in their order, each sorted as it says: one's
+		// sort texts mean nothing to another's.
+		lists := make([][]lsp.CompletionItem, len(servers))
+		errs := make([]error, len(servers))
+		asked := make([]bool, len(servers))
+		var wg sync.WaitGroup
+		for i, s := range servers {
+			wg.Go(func() {
+				c := s.wait(5 * time.Second)
+				if c == nil || !c.Completion() {
+					return
 				}
+				asked[i] = true
+				// The server knows the text as it is now.
+				c.Open(uri, lang, text)
+				lists[i], errs[i] = c.CompletionAt(ctx, uri, lsp.Position(pos))
+				slices.SortStableFunc(lists[i], func(x, y lsp.CompletionItem) int {
+					return strings.Compare(sortKey(x), sortKey(y))
+				})
 			})
-			return
 		}
-		// The server knows the text as it is now.
-		c.Open(uri, lang, text)
-		items, err := c.CompletionAt(ctx, uri, lsp.Position(pos))
+		wg.Wait()
+		var items []lsp.CompletionItem
+		var stopped *lspServer
+		for i, s := range servers {
+			items = append(items, lists[i]...)
+			// A server that stopped did not say there is none.
+			if errs[i] != nil && stopped == nil && s.state() != lspRunning {
+				stopped = s
+			}
+		}
 		a.post(func() {
 			if !current() {
 				return
 			}
-			// A server that stopped did not say there is none.
-			if err != nil && s.state() != lspRunning {
-				a.lspFailed(s)
+			if !slices.Contains(asked, true) {
+				a.lspFailed(notRunning(servers))
 				return
 			}
-			if err != nil || len(items) == 0 {
+			if len(items) == 0 && stopped != nil {
+				a.lspFailed(stopped)
+				return
+			}
+			if len(items) == 0 {
 				a.tell(note{message: locales.CompletionNone()})
 				return
 			}
-			slices.SortStableFunc(items, func(x, y lsp.CompletionItem) int {
-				return strings.Compare(sortKey(x), sortKey(y))
-			})
 			if len(items) > 500 {
 				items = items[:500]
 			}
@@ -1001,12 +1116,18 @@ func completionIcon(kind int) string {
 	return "code"
 }
 
-// lspFormat formats a document with its language server, when it has one
-// that formats, within limit; it reports false when there is none.
+// lspFormat formats a document with the first of its language servers
+// that runs and formats, within limit; it reports false when there is
+// none.
 func (a *app) lspFormat(d *editor, limit time.Duration, then func()) bool {
-	s := a.lspFor(d.document, false)
-	c := s.live()
-	if c == nil || !c.Formatting() {
+	var c *lsp.Client
+	for _, s := range a.lspFor(d.document, false) {
+		if live := s.live(); live != nil && live.Formatting() {
+			c = live
+			break
+		}
+	}
+	if c == nil {
 		return false
 	}
 	c.Open(serverURI(d.path), languageOf(d.document), d.buf.String())

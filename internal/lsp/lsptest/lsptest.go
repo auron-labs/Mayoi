@@ -20,7 +20,9 @@ import (
 // test/release, and test/held says whether one waits; of hovers and
 // completions, a word "latenothing" or "latebroken" waits as well. The
 // hover and the completions of a word ending "nothing" are none, and of
-// one ending "broken" an error.
+// one ending "broken" an error. Its initializationOptions word is the word
+// it flags in place of "bad", and capabilities what it says it does in
+// place of all it does, as a server that only lints.
 func Serve(in io.Reader, out io.Writer) {
 	r := bufio.NewReader(in)
 	send := func(m any) {
@@ -33,6 +35,8 @@ func Serve(in io.Reader, out io.Writer) {
 	var options struct {
 		HoverContents  json.RawMessage `json:"hoverContents"`
 		FailInitialize string          `json:"failInitialize"`
+		Word           string          `json:"word"`
+		Capabilities   json.RawMessage `json:"capabilities"`
 	}
 	for {
 		n := -1
@@ -91,6 +95,13 @@ func Serve(in io.Reader, out io.Writer) {
 				send(map[string]any{"jsonrpc": "2.0", "id": *m.ID, "error": map[string]any{"code": -32603, "message": options.FailInitialize}})
 				return
 			}
+			if options.Word == "" {
+				options.Word = "bad"
+			}
+			if len(options.Capabilities) > 0 {
+				reply(map[string]any{"capabilities": options.Capabilities})
+				break
+			}
 			reply(map[string]any{"capabilities": map[string]any{
 				"hoverProvider": true, "definitionProvider": true, "completionProvider": map[string]any{},
 				"documentFormattingProvider": true, "textDocumentSync": 1,
@@ -117,10 +128,10 @@ func Serve(in io.Reader, out io.Writer) {
 			texts[p.TextDocument.URI] = text
 			var diags []any
 			for i, line := range strings.Split(text, "\n") {
-				if at := strings.Index(line, "bad"); at >= 0 {
+				if at := strings.Index(line, options.Word); at >= 0 {
 					diags = append(diags, map[string]any{"range": map[string]any{
-						"start": map[string]any{"line": i, "character": at}, "end": map[string]any{"line": i, "character": at + 3},
-					}, "severity": 1, "message": "bad word", "source": "fake"})
+						"start": map[string]any{"line": i, "character": at}, "end": map[string]any{"line": i, "character": at + len(options.Word)},
+					}, "severity": 1, "message": options.Word + " word", "source": "fake"})
 				}
 			}
 			send(map[string]any{"jsonrpc": "2.0", "method": "textDocument/publishDiagnostics",

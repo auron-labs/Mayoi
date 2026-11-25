@@ -196,3 +196,60 @@ func TestLanguageServerRetryOnOpen(t *testing.T) {
 	a.openFile(path, true)
 	hs.until("the server's diagnostics", func() bool { return len(h.diagnosticsOf(path)) == 1 })
 }
+
+// Every server of a document serves it: the problems of each show, the
+// hovers and completions of each are offered, in the servers' order, and
+// Go to Definition and Format Document ask the first that answers them, as
+// a linter that only lints leaves them to the language's own server.
+func TestLanguageServersOfADocument(t *testing.T) {
+	t.Setenv("MAYOI_FAKE_LSP", "1")
+	server := func(id string, options any) map[string]any {
+		return map[string]any{"id": id, "languages": []string{"fake"}, "command": os.Args[0], "args": []string{"-test.run=^$"},
+			"initializationOptions": options}
+	}
+	manifest, _ := json.Marshal(map[string]any{
+		"name": "fake",
+		"contributes": map[string]any{
+			"languages": []any{map[string]any{"id": "fake", "extensions": []string{".fake"}}},
+			"languageServers": []any{
+				server("fake.lint", map[string]any{"word": "ugly", "hoverContents": "from the linter",
+					"capabilities": map[string]any{"textDocumentSync": 1, "hoverProvider": true, "completionProvider": map[string]any{}}}),
+				server("fake.main", map[string]any{}),
+			},
+		},
+	})
+	hs := newHarness(t, false)
+	h := withPlugins(hs, map[string]map[string]string{"fake": {"plugin.json": string(manifest)}})
+	t.Cleanup(stopServers)
+	a := hs.a
+	path := hs.path("a.fake")
+	os.WriteFile(path, []byte("def thing\nso bad\nso ugly\nthing\n"), 0o644)
+	a.openFile(path, true)
+	hs.until("both servers' problems", func() bool { return len(h.diagnosticsOf(path)) == 2 })
+	d := a.activeEditor()
+
+	hs.place(d, 11, 11)
+	a.showHover()
+	hs.until("the hover", func() bool { return a.hover != nil })
+	if text := a.hover.tree.Text; !strings.Contains(text, "from the linter") || !strings.Contains(text, "**hello**") ||
+		strings.Index(text, "from the linter") > strings.Index(text, "**hello**") {
+		t.Fatalf("hover = %q", text)
+	}
+	a.hover = nil
+
+	at := len("def thing\nso bad\nso ugly\n") + 2
+	hs.place(d, at, at)
+	a.goToDefinition()
+	hs.until("the definition", func() bool { _, l, c := caretAt(a); return l == 0 && c == 4 })
+
+	a.complete()
+	hs.until("the completions", func() bool { return a.pluginPick.open })
+	if n := len(a.pluginPick.items); n != 2 {
+		t.Fatalf("%d completions: %+v", n, a.pluginPick.items)
+	}
+	a.closePluginPicker(-1)
+	hs.settle()
+
+	a.formatActive()
+	hs.until("the formatting", func() bool { return strings.HasPrefix(d.buf.String(), "// formatted\n") })
+}

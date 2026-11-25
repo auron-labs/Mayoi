@@ -315,7 +315,9 @@ views as trees of nodes drawn with MyGo's widgets in the sidebar, previews in th
 through `highlight.LexerName`, and snippets. `prefsplugins.go` is the Plugins page of the settings window.
 
 **`internal/lsp`, `lsp.go`.** A language server a plugin declares starts for a folder as a document of its languages
-opens, through `vfs.Command`, so on an SSH host it runs there, and URIs are of the host's paths. The client speaks
+opens, through `vfs.Command`, so on an SSH host it runs there, and URIs are of the host's paths. `selectServers` lists
+every server of a document, in the order in which they answer what only one answers; hovers and completions ask
+them all, and the diagnostics of each are kept apart, by the server. The client speaks
 JSON-RPC over the server's standard input and output, sends whole texts as documents change, and takes diagnostics,
 hovers, definitions, completions and formatting.
 

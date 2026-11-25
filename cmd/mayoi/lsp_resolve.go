@@ -113,6 +113,15 @@ func expandServerCommand(command string, args []string, settings map[string]json
 	if err != nil {
 		return "", nil, err
 	}
+	if args, err = expandServerArgs(args, settings); err != nil {
+		return "", nil, err
+	}
+	return command, args, nil
+}
+
+// expandServerArgs substitutes the settings in a list: an entry that is
+// all of a setting that is a list of strings is its strings.
+func expandServerArgs(args []string, settings map[string]json.RawMessage) ([]string, error) {
 	out := make([]string, 0, len(args))
 	for _, arg := range args {
 		var list []string
@@ -122,11 +131,11 @@ func expandServerCommand(command string, args []string, settings map[string]json
 		}
 		s, err := expandServerArg(arg, settings)
 		if err != nil {
-			return "", nil, err
+			return nil, err
 		}
 		out = append(out, s)
 	}
-	return command, out, nil
+	return out, nil
 }
 
 // serverCommand is the command and arguments of a plain server, with its

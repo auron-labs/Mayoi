@@ -285,9 +285,10 @@ func (a *app) showLanguageServers() {
 	}
 	lspServers.Unlock()
 	if d := a.textEditor(); d != nil && a.root != "" {
-		if _, sc := a.serverFor(d.document); sc != nil &&
-			!slices.ContainsFunc(rows, func(r row) bool { return r.id == sc.ID }) {
-			rows = append(rows, row{sc.ID, nil})
+		for _, ds := range a.serversFor(d.document) {
+			if !slices.ContainsFunc(rows, func(r row) bool { return r.id == ds.contrib.ID }) {
+				rows = append(rows, row{ds.contrib.ID, nil})
+			}
 		}
 	}
 	if len(rows) == 0 {

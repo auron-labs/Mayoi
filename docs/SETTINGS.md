@@ -351,7 +351,7 @@ differ in width lines them up only roughly.
   `{"*": true}` for every language that has a formatter.
 - **`formatters`** chooses the formatter of a language where plugins offer several, by the formatter's id or its
   plugin's name, as `{"typescript": "prettier"}`.
-- **`languageServers`** sets up language servers without a plugin, and takes the place of a plugin's. See
+- **`languageServers`** sets up language servers without a plugin, beside the plugins' or in place of one. See
   [Language servers](#language-servers).
 - **`fileAssociations`** sets the language of files by glob, as `{"*.foo": "yaml", "Jenkinsfile": "groovy"}`. A glob
   without a `/` matches a file's name in any folder; one with a `/`, as `config/*.conf`, matches the end of a path.
@@ -377,13 +377,18 @@ as a plugin's [language server](PLUGINS.md#language-servers) has them.
 "languageServers": [
   // Takes the place of a plugin's server for Go.
   { "id": "gopls.server", "languages": ["go"], "command": "gopls", "args": ["-remote=auto"] },
-  // By glob: the Helm templates, and every `*.tf` file in any folder.
-  { "id": "helm-ls", "files": ["charts/**/templates/*.yaml", "*.tf"], "command": "helm_ls", "args": ["serve"] }
+  // By glob: the Helm templates, alone, which the YAML server would find wrong.
+  { "id": "helm-ls", "files": ["charts/**/templates/*.yaml"], "command": "helm_ls", "args": ["serve"], "exclusive": true },
+  // Beside every other server: spelling mistakes, in every file.
+  { "id": "typos", "files": ["**"], "command": "typos-lsp" }
 ]
 ```
 
-- **Your servers win.** The first entry in the list that serves a document is its server, before any plugin's. An
-  entry with the `id` of a plugin's server replaces that server for every language it had.
+- **Every server of a document serves it,** yours and the plugins': the problems, hovers and completions of each
+  show. Go to Definition, the other jumps and Format Document ask the first that answers them, yours first, in the
+  list's order. An entry with the `id` of a plugin's server replaces that server for every language it had.
+- **`"exclusive": true` keeps a document to the exclusive servers that serve it,** as the Helm templates above are
+  kept from the YAML server.
 - **A glob matches the document's path from the folder,** with `/` also on Windows and over SSH, as search's "files
   to include" does: one without a `/` matches the name in any folder, `**` stands for any folders, `{a,b}` for either,
   and one that matches a folder matches what is in it. A document outside the folder is served by language only.

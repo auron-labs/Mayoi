@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"slices"
 	"strings"
 	"time"
 
@@ -228,7 +229,7 @@ func (a *app) defPointed(c *ui.Context, d *editor, area ui.Element, g geometry, 
 	if !over || px-d.hscroll.X < d.textX || py < float32(len(d.sticky))*a.font.lineH {
 		return false
 	}
-	if cl := a.lspRunningFor(d.document).live(); cl == nil || !cl.Definition() {
+	if !slices.ContainsFunc(a.lspRunningFor(d.document), func(s *lspServer) bool { return s.client.Definition() }) {
 		return false
 	}
 	probe := restProbe{d, px, py, d.hscroll.X, d.vscroll.Y, d.lastView.W, g.height(), snap.Version()}

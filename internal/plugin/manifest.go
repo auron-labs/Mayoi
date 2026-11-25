@@ -213,8 +213,15 @@ type WebviewContrib struct {
 
 // ServerContrib is a language server, started for its languages.
 type ServerContrib struct {
-	ID        string          `json:"id"`
-	Languages []string        `json:"languages"`
+	ID        string   `json:"id"`
+	Languages []string `json:"languages"`
+	// Files are globs of the paths in the folder it serves, of any
+	// language, before another plugin's server of that language. An entry
+	// that is all of a setting of strings is those strings.
+	Files []string `json:"files,omitempty"`
+	// Exclusive keeps the documents it serves from the servers that are
+	// not exclusive.
+	Exclusive bool            `json:"exclusive,omitempty"`
 	Command   string          `json:"command"`
 	Args      []string        `json:"args,omitempty"`
 	Options   json.RawMessage `json:"initializationOptions,omitempty"`

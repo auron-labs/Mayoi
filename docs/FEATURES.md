@@ -1017,6 +1017,8 @@ language servers, and they work on SSH folders with nothing installed on the hos
 - **Selection → Format Document** (⇧⌥F) formats with a plugin, and `formatOnSave` formats as you save.
 - A language server a plugin declares underlines problems, and answers **Go → Go to Definition** (F12),
   **Go → Show Hover** (⌘K ⌘I, Ctrl+K Ctrl+I on Windows and Linux) and **Selection → Complete Word** (⌃Space).
+- A file can have several servers, as a language's own and a linter: the problems, hovers and completions of each
+  show, and the first that can goes to definitions and formats.
 - **Go → Go to Type Definition**, **Go to Source Definition**, **Go to Implementation** (⌘F12, Ctrl+F12 on Windows and
   Linux) and **Find References** (⇧F12) ask the server, when it supports them. References always open in a list.
 - Several definitions are offered in a list: ↑ ↓ choose, Return goes, Esc stays. **Go → Go Back** (⌃-, Alt+Left on

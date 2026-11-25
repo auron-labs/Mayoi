@@ -10,7 +10,8 @@ import (
 // LanguageServer is a language server the person sets up in settings.json,
 // started for the documents of its Languages, or whose path from the
 // folder matches one of its Files (globs, as search's "files to include"),
-// whichever the document meets.
+// whichever the document meets, beside the other servers that serve it;
+// an Exclusive one keeps them from it, but for the exclusive.
 type LanguageServer struct {
 	ID        string          `json:"id"`
 	Command   string          `json:"command"`
@@ -18,6 +19,7 @@ type LanguageServer struct {
 	Options   json.RawMessage `json:"initializationOptions,omitempty"`
 	Languages []string        `json:"languages,omitempty"`
 	Files     []string        `json:"files,omitempty"`
+	Exclusive bool            `json:"exclusive,omitempty"`
 }
 
 // ValidLanguageServers returns the entries of list that can run, in order,

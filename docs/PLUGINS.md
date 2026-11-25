@@ -175,7 +175,7 @@ languages plugins declare.
 | `languages`       | File `extensions` and `filenames`, the Chroma `lexer` that highlights them, and `lineComment`  |
 | `snippets`        | Snippets in VS Code's format, for a `language` or `*`                                          |
 | `terminalLinks`   | A `pattern` of links clicked in a terminal (URLs and paths), which runs `command` with the match |
-| `languageServers` | Language servers: a `command`, its `args` and `initializationOptions`, for `languages`         |
+| `languageServers` | Language servers: a `command`, its `args` and `initializationOptions`, for `languages` or `files` |
 | `agents`          | Coding agents whose sessions the **Sessions** view lists and resumes; see below                 |
 
 #### Keyboard shortcuts
@@ -457,8 +457,15 @@ folder's machine, so it runs on the SSH host of a remote folder. Mayoi shows the
 A definition in several places offers them in a list. **Go → Back** (⌃-, Alt+← on Windows and Linux) and
 **Go → Forward** (⌃⇧-, Alt+→), or the mouse's back and forward buttons, go between the places jumps left.
 
-You can also set up servers yourself, by language or by file glob, in settings.json, with no plugin. They take
-priority over a plugin's, and an entry with the `id` of a plugin's server replaces it. See
+A document can have several servers, as Python's with ty and a linter's: every server of its language, or whose
+`files` match it, serves it. Each one's problems show, **Show Hover** shows what each says, and **Complete Word**
+offers the completions of each, each server's together. Go to Definition and the other jumps, and **Format
+Document**, ask the first server that answers them: yours, in your order, then the plugins' by their `files`, then by
+their languages. A server with `"exclusive": true` keeps the documents it serves from the servers that are not, as
+Ansible's keeps its files from the YAML server's.
+
+You can also set up servers yourself, by language or by file glob, in settings.json, with no plugin. They come
+before a plugin's, and an entry with the `id` of a plugin's server replaces it. See
 [`languageServers`](SETTINGS.md#language-servers).
 
 A server that stops, or cannot start, is started again a few times as documents of its languages open. One that cannot
@@ -483,6 +490,17 @@ is set. `install` is the command that installs the program, said when it is miss
 "settings": { "path": { "type": "string", "default": "gopls" } },
 "languageServers": [{ "id": "gopls.server", "languages": ["go"], "command": "${settings.path}",
   "install": "go install golang.org/x/tools/gopls@latest" }]
+```
+
+A server can serve files by glob, of any language, with `files`, as Ansible's does YAML's: a document its globs match
+is served by it, before the plugins' servers of its language. The globs match from the folder as those of
+[`languageServers`](SETTINGS.md#language-servers) do, and an entry that is all of a setting of `type` `array` is its
+strings, so a person can change them:
+
+```jsonc
+"settings": { "files": { "type": "array", "default": ["**/playbooks/**/*.{yml,yaml}"] } },
+"languageServers": [{ "id": "ansible.server", "languages": [], "files": ["${settings.files}"], "exclusive": true,
+  "command": "gonsible", "args": ["lsp"] }]
 ```
 
 Servers are told a document's language by the protocol's name: `cpp` for C++, `javascriptreact` and
