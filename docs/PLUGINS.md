@@ -44,11 +44,12 @@ status bar), **TODOs** (the folder's TODO, FIXME and HACK comments, in the sideb
 **Go** (`gopls`), **TypeScript** (TypeScript 7's `tsc`, for JavaScript too), **Python** (`ty`),
 **Rust** (`rust-analyzer`), **C/C++** (`clangd`), **Bash** (`bash-language-server`), **JSON**
 (`vscode-json-language-server`), **YAML** (`rlsp-yaml`), **TOML** (`tombi`), **PHP** (`phpantom_lsp`) and **Ansible**
-(`gonsible`), and the linters **Ruff**, for Python, and **oxlint**, for JavaScript and TypeScript, which run beside
-those languages' servers. They start off; turn them on on the **Plugins** page of the settings window, or with
-`"enabled": true` in their settings. A file of a language with no server on offers **Turn On**, once, when its
-program is installed, and says how to install it when it is not. Each server's `path` setting names its program, by
-name or path, when it is not on the path.
+(`gonsible`), the linters **Ruff**, for Python, and **oxlint**, for JavaScript and TypeScript, which run beside those
+languages' servers, and the formatter **oxfmt**, for JavaScript, TypeScript, JSON, CSS, HTML, Vue, Markdown and
+GraphQL. They start off; turn them on on the **Plugins** page of the settings window, or with `"enabled": true` in
+their settings. A file of a language with no server on offers **Turn On**, once, when its program is installed, and
+says how to install it when it is not. Each server's `path` setting names its program, by name or path, when it is
+not on the path.
 
 TypeScript's server is TypeScript 7's own, `tsc --lsp --stdio`, which needs TypeScript 7's `tsc` on the path:
 `npm install -g typescript@7`. Mayoi says so when the `tsc` it finds is an older one. `tsgo` and `tsrs` run the same way.
@@ -60,6 +61,11 @@ Python's server is Astral's ty, `ty server`. Set `path` to `basedpyright-langser
 Ruff's server, `ruff server`, finds Python's problems beside ty's and formats Python, as ty does not. oxlint's,
 `oxlint --lsp`, finds the problems of JavaScript, TypeScript, Vue and Svelte beside TypeScript's server, and reads the
 folder's `.oxlintrc.json`.
+
+oxfmt formats with the folder's `node_modules/.bin/oxfmt`, before the one on the path. A folder with a Prettier or
+Biome configuration at its top, and no `.oxfmtrc.json`, is formatted with Prettier or Biome instead, as oxfmt reads
+neither's settings. The formatter takes the place of a language server's formatting for its languages; `formatOnSave`
+formats with it as you save.
 
 Ansible's server serves the YAML of playbooks, roles, `group_vars`, `host_vars` and inventories in place of the YAML
 server, and its `files` setting lists them by glob: change it when your playbooks are elsewhere.

@@ -1,0 +1,18 @@
+{
+  "name": "oxfmt",
+  "displayName": "oxfmt",
+  "version": "1.0.0",
+  "description": "Formats JavaScript, TypeScript, JSON, CSS, HTML, Vue, Markdown and GraphQL with oxfmt, or with the folder's Prettier or Biome when it is set up for one",
+  "main": "main.ts",
+  "enabled": false,
+  "activation": [
+    "onLanguage:typescript", "onLanguage:javascript", "onLanguage:react", "onLanguage:json", "onLanguage:css",
+    "onLanguage:scss", "onLanguage:html", "onLanguage:vue", "onLanguage:markdown", "onLanguage:graphql"
+  ],
+  "contributes": {
+    "formatters": [{
+      "id": "oxfmt.format", "title": "oxfmt",
+      "languages": ["typescript", "javascript", "react", "json", "css", "scss", "html", "vue", "markdown", "graphql"]
+    }]
+  }
+}

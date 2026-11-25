@@ -41,6 +41,8 @@ needs a `## <version>` section here, or its build fails.
 - An older `tsc` on the path says which version it is and how to install TypeScript 7.
 - Comments in `tsconfig.json`, `.jsonc` and VS Code's settings no longer show as JSON problems.
 - Python now runs Astral's `ty`; set `path` to `basedpyright-langserver` to keep basedpyright.
+- A built-in oxfmt formatter formats JavaScript, TypeScript, JSON, CSS, HTML, Vue, Markdown and GraphQL.
+- oxfmt uses the folder's own Prettier or Biome instead when the folder is set up for one.
 - A file can have several language servers at once, as a language's own and a linter beside it.
 - The problems, hovers and completions of each of a file's servers show together.
 - Go to Definition, the other jumps and **Format Document** use the first of a file's servers that can.

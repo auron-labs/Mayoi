@@ -4,8 +4,11 @@ import (
 	"encoding/json"
 	"io/fs"
 	"os"
+	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
+	"time"
 
 	bundled "mayoi/plugins"
 )
@@ -201,4 +204,53 @@ func TestBundledPlugins(t *testing.T) {
 		data, _ := json.Marshal(h.views["todos.list"])
 		return strings.Contains(string(data), "in brackets")
 	})
+}
+
+// The bundled oxfmt formatter runs the folder's own tools: Prettier where
+// the folder is set up for it, else oxfmt.
+func TestBundledFormatters(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("the tools here are shell scripts")
+	}
+	hs := newHarness(t, false)
+	h := withPlugins(hs, nil)
+	h.reg.Dirs.Bundled = bundledOf(t, "oxfmt")
+	h.reg.Load()
+	turnOnBundled(hs, h)
+	a := hs.a
+	write := func(rel, text string, mode os.FileMode) {
+		path := hs.path(rel)
+		os.MkdirAll(filepath.Dir(path), 0o755)
+		if err := os.WriteFile(path, []byte(text), mode); err != nil {
+			t.Fatal(err)
+		}
+	}
+	// Each tool says how it ran, before the text it read.
+	for _, tool := range []string{"node_modules/.bin/oxfmt", "node_modules/.bin/prettier"} {
+		write(tool, "#!/bin/sh\nprintf '%s %s: ' \"$(basename \"$0\")\" \"$*\"\ncat\n", 0o755)
+	}
+	format := func(rel string) string {
+		write(rel, "x\n", 0o644)
+		a.openFile(hs.path(rel), true)
+		hs.settle()
+		d := a.activeEditor()
+		done := false
+		a.format(d, 10*time.Second, false, func() { done = true })
+		hs.until("the format of "+rel, func() bool { return done })
+		return d.buf.Snapshot().String()
+	}
+	defer func() {
+		if t.Failed() {
+			for _, p := range h.reg.Plugins() {
+				t.Logf("%s %+v %+v", p.Name, p.Stats(), p.Logs())
+			}
+		}
+	}()
+	if got, want := format("src/a.ts"), "oxfmt --stdin-filepath=src/a.ts: x\n"; got != want {
+		t.Errorf("%q, want %q", got, want)
+	}
+	write(".prettierrc", "{}\n", 0o644)
+	if got, want := format("src/b.ts"), "prettier --stdin-filepath src/b.ts: x\n"; got != want {
+		t.Errorf("with .prettierrc: %q, want %q", got, want)
+	}
 }
