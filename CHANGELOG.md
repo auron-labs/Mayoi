@@ -34,6 +34,8 @@ needs a `## <version>` section here, or its build fails.
 - **Toggle Line Comment** (`⌘/`) now works in JSON, GraphQL, Less and `.gitignore` files.
 - In CSS, HTML, XML and Markdown, **Toggle Line Comment** wraps each line in `/* */` or `<!-- -->`.
 - In Vue and Svelte files it comments a line as its script, style or markup part expects.
+- TypeScript now runs TypeScript 7's `tsc --lsp`; set `path` to `typescript-language-server` for 5 or 6.
+- An older `tsc` on the path says which version it is and how to install TypeScript 7.
 - Comments in `tsconfig.json`, `.jsonc` and VS Code's settings no longer show as JSON problems.
 - A file can have several language servers at once, as a language's own and a linter beside it.
 - The problems, hovers and completions of each of a file's servers show together.

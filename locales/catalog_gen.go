@@ -18754,6 +18754,18 @@ func (msgs Messages) LspNoTypeScriptNative() string {
 	return Catalog.Format(msgs.locale, "lspNoTypeScriptNative", nil)
 }
 
+// LspOldTsc says "{command} is TypeScript {version}, which has no server: install TypeScript 7 with npm i -g typescript@7, or set the p…"
+// in the language the app shows.
+func LspOldTsc(command string, version string) string {
+	return In(i18n.Locale()).LspOldTsc(command, version)
+}
+
+// LspOldTsc says "{command} is TypeScript {version}, which has no server: install TypeScript 7 with npm i -g typescript@7, or set the p…"
+// in the language of msgs.
+func (msgs Messages) LspOldTsc(command string, version string) string {
+	return Catalog.Format(msgs.locale, "lspOldTsc", map[string]any{"command": command, "version": version})
+}
+
 // LspNoAnswer says "it didn't answer in time"
 // in the language the app shows.
 func LspNoAnswer() string { return In(i18n.Locale()).LspNoAnswer() }

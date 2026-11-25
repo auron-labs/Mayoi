@@ -41,15 +41,17 @@ On Windows, `~` is `%USERPROFILE%`. With `MAYOI_DATA_DIR` set, these folders are
 
 Mayoi comes with plugins of its own: **Word Count** (the words and reading time of a Markdown or text file, in the
 status bar), **TODOs** (the folder's TODO, FIXME and HACK comments, in the sidebar), and the language servers of
-**Go** (`gopls`), **TypeScript** (`typescript-language-server`, for JavaScript too), **Python** (`basedpyright`),
+**Go** (`gopls`), **TypeScript** (TypeScript 7's `tsc`, for JavaScript too), **Python** (`basedpyright`),
 **Rust** (`rust-analyzer`) and **C/C++** (`clangd`). They start off; turn them on on the **Plugins** page of the
 settings window, or with `"enabled": true` in their settings. A file of a language whose server is off offers
 **Turn On**, once, when its program is installed, and says how to install it when it is not. Each server's `path`
 setting names its program, by name or path, when it is not on the path.
 
-TypeScript's server needs a TypeScript 5 or 6 in the folder's `node_modules`, or its `tsserverPath` setting naming a
-`tsserver.js`. TypeScript 7 has no `tsserver.js` but a server of its own: set `path` to `tsc` or `tsrs`, which then run with
-`--lsp --stdio` while `args` is left as it is. Mayoi says which applies when the server finds no TypeScript.
+TypeScript's server is TypeScript 7's own, `tsc --lsp --stdio`, which needs TypeScript 7's `tsc` on the path:
+`npm install -g typescript@7`. Mayoi says so when the `tsc` it finds is an older one. `tsgo` and `tsrs` run the same way.
+For TypeScript 5 or 6, set `path` to `typescript-language-server`, which needs a TypeScript in the folder's
+`node_modules`, or its `tsserverPath` setting naming a `tsserver.js`; Mayoi says which applies when it finds no
+TypeScript.
 Python's server is basedpyright. Set `path` to `ty` to run `ty server` while `args` is left as it is.
 
 A plugin you install under the name of one Mayoi comes with takes its place; removing it brings Mayoi's back.

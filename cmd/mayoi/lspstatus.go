@@ -58,12 +58,12 @@ func (s *lspServer) classify() lspFailure {
 	return lspFailOther
 }
 
-// tscVersion is what tsc --version says on the folder's machine, as a
-// server's command started with env and unset is there; "" when it could
-// not tell.
+// tscVersion is what program, a tsc, says of --version on the folder's
+// machine, as a server's command started with env and unset is there; ""
+// when it could not tell.
 var tscVersion = tscVersionOnHost
 
-func tscVersionOnHost(ctx context.Context, root string, env, unset []string) string {
+func tscVersionOnHost(ctx context.Context, root, program string, env, unset []string) string {
 	if !remote.Is(root) {
 		select {
 		case <-shellPathReady:
@@ -71,7 +71,7 @@ func tscVersionOnHost(ctx context.Context, root string, env, unset []string) str
 			return ""
 		}
 	}
-	cmd, err := vfs.CommandEnvironment(root, env, unset, nil, "tsc", "--version")
+	cmd, err := vfs.CommandEnvironment(root, env, unset, nil, program, "--version")
 	if err != nil {
 		return ""
 	}
@@ -95,15 +95,20 @@ func tscVersionOnHost(ctx context.Context, root string, env, unset []string) str
 	}
 }
 
-// checkNativeTSC reports whether the folder's tsc is TypeScript 7 or
-// later, "Version 7.0.2" as it says, for so long.
-func (s *lspServer) checkNativeTSC() bool {
+// checkTSC is the version of TypeScript program, a tsc, is on the
+// folder's machine, "7.0.2" of "Version 7.0.2" as it says, for so long;
+// "" when it could not tell.
+func (s *lspServer) checkTSC(program string) string {
 	ctx, cancel := context.WithTimeout(s.ctx, lspCheckTimeout)
 	defer cancel()
-	v := strings.TrimPrefix(tscVersion(ctx, s.root, s.launch.environment(), s.launch.UnsetEnv), "Version ")
+	return strings.TrimPrefix(tscVersion(ctx, s.root, program, s.launch.environment(), s.launch.UnsetEnv), "Version ")
+}
+
+// tscMajor is the major version of TypeScript's version v, 0 for none.
+func tscMajor(v string) int {
 	major, _, _ := strings.Cut(v, ".")
-	n, err := strconv.Atoi(major)
-	return err == nil && n >= 7
+	n, _ := strconv.Atoi(major)
+	return n
 }
 
 // checkProgram reports whether a program is found on the folder's
@@ -151,10 +156,12 @@ func (s *lspServer) reason() string {
 	case lspFailUnchecked:
 		return locales.LspExitUnchecked(s.program(), remote.HostOf(s.root))
 	case lspFailNoTypeScript:
-		if s.nativeTSC {
+		if tscMajor(s.tsc) >= 7 {
 			return locales.LspNoTypeScriptNative()
 		}
 		return locales.LspNoTypeScript()
+	case lspFailOldTSC:
+		return locales.LspOldTsc(s.program(), s.tsc)
 	}
 	if s.err == nil {
 		return ""

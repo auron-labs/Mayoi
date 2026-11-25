@@ -281,7 +281,7 @@ func TestServerSettingLists(t *testing.T) {
 		t.Fatalf("options %s", got)
 	}
 
-	// The bundled TypeScript plugin, with its defaults, runs as before.
+	// The bundled TypeScript plugin's defaults run TypeScript 7's tsc.
 	data, err := os.ReadFile(filepath.Join("..", "..", "plugins", "typescript-language-server", "plugin.json"))
 	if err != nil {
 		t.Fatal(err)
@@ -296,7 +296,7 @@ func TestServerSettingLists(t *testing.T) {
 	}
 	sc := m.Contributes.LanguageServers[0]
 	command, args, err = expandServerCommand(sc.Command, sc.Args, defaults)
-	if err != nil || command != "typescript-language-server" || strings.Join(args, " ") != "--stdio" {
+	if err != nil || command != "tsc" || strings.Join(args, " ") != "--stdio" {
 		t.Fatalf("defaults: %q %q %v", command, args, err)
 	}
 	if got := string(expandServerOptions(sc.Options, defaults)); got != `{"tsserver":{}}` {
@@ -332,8 +332,9 @@ func TestServerProgramArgs(t *testing.T) {
 		explicit map[string]json.RawMessage
 		want     string
 	}{
-		{nil, "typescript-language-server --stdio"},
-		{map[string]json.RawMessage{"path": json.RawMessage(`"tsc"`)}, "tsc --lsp --stdio"},
+		{nil, "tsc --lsp --stdio"},
+		{map[string]json.RawMessage{"path": json.RawMessage(`"typescript-language-server"`)}, "typescript-language-server --stdio"},
+		{map[string]json.RawMessage{"path": json.RawMessage(`"tsgo"`)}, "tsgo --lsp --stdio"},
 		{map[string]json.RawMessage{"path": json.RawMessage(`"/opt/ts/bin/tsc.exe"`)}, "/opt/ts/bin/tsc.exe --lsp --stdio"},
 		{map[string]json.RawMessage{"path": json.RawMessage(`"tsc"`), "args": json.RawMessage(`["--lsp", "--stdio", "--pprofDir", "/tmp"]`)}, "tsc --lsp --stdio --pprofDir /tmp"},
 		{map[string]json.RawMessage{"path": json.RawMessage(`"tsrs"`)}, "tsrs --lsp --stdio"},

@@ -2082,6 +2082,7 @@
   "lspQuitClean": "it quit as it started, without an error",
   "lspNoTypeScript": "there's no TypeScript in this folder; add it with npm i -D typescript, or set the plugin's tsserverPath",
   "lspNoTypeScriptNative": "there's no TypeScript in this folder, and tsc is TypeScript 7, which has its own server: set the plugin's path to tsc to use it",
+  "lspOldTsc": "{command} is TypeScript {version}, which has no server: install TypeScript 7 with npm i -g typescript@7, or set the plugin's path to typescript-language-server",
   "lspNoAnswer": "it didn't answer in time",
   "lspExitUnchecked": "it quit with status 127, and Mayoi couldn't reach {host} to check whether {command} is installed",
   "lspStoppedOf": "{server} stopped",

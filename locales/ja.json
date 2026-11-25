@@ -1854,6 +1854,7 @@
   "lspQuitClean": "起動中にエラーなしで終了しました",
   "lspNoTypeScript": "このフォルダーに TypeScript がありません。npm i -D typescript で追加するか、プラグインの tsserverPath を設定します",
   "lspNoTypeScriptNative": "このフォルダーに TypeScript がなく、tsc は独自のサーバーを持つ TypeScript 7 です。プラグインの path を tsc に設定すると使えます",
+  "lspOldTsc": "{command} は TypeScript {version} で、サーバーを持ちません。npm i -g typescript@7 で TypeScript 7 をインストールするか、プラグインの path を typescript-language-server に設定します",
   "lspNoAnswer": "時間内に応答しませんでした",
   "lspExitUnchecked": "ステータス 127 で終了しました。{host} に接続できず、{command} がインストールされているか確認できませんでした",
   "lspStoppedOf": "{server} が停止しました",

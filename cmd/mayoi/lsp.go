@@ -41,13 +41,13 @@ type lspServer struct {
 	ready   chan struct{} // closed once started, or failed to
 	err     error
 	failure lspFailure
-	// nativeTSC is whether, for lspFailNoTypeScript, the folder's tsc is
-	// TypeScript 7 or later.
-	nativeTSC bool
-	command   string       // the program it ran, once resolved
-	launch    serverLaunch // how it ran, once resolved
-	failedAt  time.Time    // when it could not start
-	starts    int          // since its plugin was last loaded or turned on
+	// tsc is the version of TypeScript a tsc says it is, as "7.0.2", for
+	// lspFailNoTypeScript and lspFailOldTSC; "" when it could not tell.
+	tsc      string
+	command  string       // the program it ran, once resolved
+	launch   serverLaunch // how it ran, once resolved
+	failedAt time.Time    // when it could not start
+	starts   int          // since its plugin was last loaded or turned on
 	// asked is whether a person asked for it to start, as a restart does.
 	asked bool
 	// ctx is cancelled to stop it starting; stopping is set as it is
@@ -69,9 +69,11 @@ const (
 	// there could not be told
 	lspFailUnchecked
 	// typescript-language-server found no TypeScript with a tsserver in the
-	// folder: nativeTSC is whether the tsc of the folder's machine is
-	// TypeScript 7's, which brings its own server
+	// folder: tsc is the version of the folder's machine's tsc, which from
+	// TypeScript 7 brings its own server
 	lspFailNoTypeScript
+	// its program is a tsc before TypeScript 7's, which has no server
+	lspFailOldTSC
 )
 
 // lspStartTimeout is how long a server has to start and answer, and
@@ -338,7 +340,14 @@ func (s *lspServer) start(a *app, prev *lspServer) {
 			case lspFailUnchecked:
 				s.failure = s.check()
 			case lspFailNoTypeScript:
-				s.nativeTSC = s.checkNativeTSC()
+				s.tsc = s.checkTSC("tsc")
+			case lspFailQuit:
+				// TypeScript 5 and 6's tsc ends at --lsp.
+				if s.program() == "tsc" {
+					if v := s.checkTSC(s.command); tscMajor(v) > 0 && tscMajor(v) < 7 {
+						s.failure, s.tsc = lspFailOldTSC, v
+					}
+				}
 			}
 			s.failedAt = time.Now()
 			if s.ctx.Err() == nil && s.current() {

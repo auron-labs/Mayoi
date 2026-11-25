@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"os"
+	"path/filepath"
+	"runtime"
 	"testing"
 	"time"
 
@@ -226,7 +228,7 @@ func TestLanguageServerNoTypeScript(t *testing.T) {
 		version string
 		want    string
 	}{{"", locales.LspNoTypeScript()}, {"Version 7.0.2", locales.LspNoTypeScriptNative()}, {"Version 5.9.3", locales.LspNoTypeScript()}} {
-		tscVersion = func(context.Context, string, []string, []string) string { return c.version }
+		tscVersion = func(context.Context, string, string, []string, []string) string { return c.version }
 		hs := newHarness(t, false)
 		withPlugins(hs, map[string]map[string]string{"fake": {"plugin.json": string(manifest)}})
 		a := hs.a
@@ -242,6 +244,53 @@ func TestLanguageServerNoTypeScript(t *testing.T) {
 		s := serverOf(key)
 		if got, want := s.failMessage(), locales.LspCouldNotStart("fake.fake", c.want); s.failure != lspFailNoTypeScript || got != want {
 			t.Fatalf("tsc %q: failure %d, message %q, want %q", c.version, s.failure, got, want)
+		}
+		stopServers()
+	}
+}
+
+// A tsc before TypeScript 7's, which ends at --lsp, says which it is and
+// how to get one with a server; one of TypeScript 7 that quits says how.
+func TestLanguageServerOldTSC(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("a program needs .exe there")
+	}
+	t.Setenv("MAYOI_FAKE_LSP", "crash")
+	tsc := filepath.Join(t.TempDir(), "tsc")
+	if err := os.Symlink(os.Args[0], tsc); err != nil {
+		t.Fatal(err)
+	}
+	old := tscVersion
+	t.Cleanup(func() { tscVersion = old })
+	for _, c := range []struct {
+		version string
+		failure lspFailure
+		want    string
+	}{
+		{"Version 5.9.3", lspFailOldTSC, locales.LspOldTsc("tsc", "5.9.3")},
+		{"Version 7.0.2", lspFailQuit, locales.LspQuit("exit status 3")},
+		{"", lspFailQuit, locales.LspQuit("exit status 3")},
+	} {
+		asked := ""
+		tscVersion = func(_ context.Context, _, program string, _, _ []string) string {
+			asked = program
+			return c.version
+		}
+		hs := newHarness(t, false)
+		fakeServers(hs, map[string]string{"fake": tsc})
+		a := hs.a
+		path := hs.path("a.fake")
+		os.WriteFile(path, []byte("x\n"), 0o644)
+		a.openFile(path, true)
+		key := serverKey(a.root, "fake.fake")
+		hs.until("the failed start", func() bool {
+			s := serverOf(key)
+			return s != nil && s.state() == lspFailed
+		})
+		hs.settle()
+		s := serverOf(key)
+		if got, want := s.failMessage(), locales.LspCouldNotStart("fake.fake", c.want); s.failure != c.failure || got != want || asked != tsc {
+			t.Fatalf("tsc %q: failure %d, message %q, want %q, asked %q", c.version, s.failure, got, want, asked)
 		}
 		stopServers()
 	}
