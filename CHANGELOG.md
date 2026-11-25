@@ -34,6 +34,7 @@ needs a `## <version>` section here, or its build fails.
 - **Toggle Line Comment** (`⌘/`) now works in JSON, GraphQL, Less and `.gitignore` files.
 - In CSS, HTML, XML and Markdown, **Toggle Line Comment** wraps each line in `/* */` or `<!-- -->`.
 - In Vue and Svelte files it comments a line as its script, style or markup part expects.
+- Comments in `tsconfig.json`, `.jsonc` and VS Code's settings no longer show as JSON problems.
 - A file can have several language servers at once, as a language's own and a linter beside it.
 - The problems, hovers and completions of each of a file's servers show together.
 - Go to Definition, the other jumps and **Format Document** use the first of a file's servers that can.

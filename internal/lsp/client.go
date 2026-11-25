@@ -14,6 +14,7 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"runtime"
 	"strconv"
@@ -571,8 +572,26 @@ func LanguageID(language, uri string) string {
 		return "cpp"
 	case "react":
 		return "javascriptreact"
+	case "json":
+		if commentedJSON(uri) {
+			return "jsonc"
+		}
 	}
 	return language
+}
+
+// commentedJSON reports whether a JSON document takes comments, as
+// tsconfig.json and VS Code's settings do: a JSON server flags them in
+// "json" and not in "jsonc".
+func commentedJSON(uri string) bool {
+	dir, base := path.Split(uri)
+	switch base {
+	case "devcontainer.json", ".devcontainer.json", ".eslintrc.json", ".babelrc.json", "babel.config.json",
+		"typedoc.json", "keybindings.json":
+		return true
+	}
+	return strings.HasSuffix(base, ".jsonc") || strings.HasSuffix(dir, "/.vscode/") ||
+		strings.HasPrefix(base, "tsconfig") || strings.HasPrefix(base, "jsconfig")
 }
 
 // Open tells the server of a document open, or of its new text: the whole

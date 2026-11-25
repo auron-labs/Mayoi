@@ -131,7 +131,8 @@ func TestHoverMarkup(t *testing.T) {
 }
 
 // TestLanguageID: Mayoi's names of languages go to servers as the
-// protocol's identifiers, JSX and TSX by the file.
+// protocol's identifiers, JSX and TSX by the file, and JSON that takes
+// comments as JSONC.
 func TestLanguageID(t *testing.T) {
 	for _, c := range []struct{ language, uri, want string }{
 		{"go", "file:///a/main.go", "go"},
@@ -141,6 +142,12 @@ func TestLanguageID(t *testing.T) {
 		{"typescript", "file:///a/App.tsx", "typescriptreact"},
 		{"typescript", "file:///a/app.ts", "typescript"},
 		{"javascript", "file:///a/app.mjs", "javascript"},
+		{"json", "file:///a/package.json", "json"},
+		{"json", "file:///a/tsconfig.json", "jsonc"},
+		{"json", "file:///a/tsconfig.build.json", "jsonc"},
+		{"json", "file:///a/.vscode/settings.json", "jsonc"},
+		{"json", "file:///a/vscode/settings.json", "json"},
+		{"json", "file:///a/b.jsonc", "jsonc"},
 	} {
 		if got := LanguageID(c.language, c.uri); got != c.want {
 			t.Errorf("LanguageID(%q, %q) = %q, want %q", c.language, c.uri, got, c.want)

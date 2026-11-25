@@ -504,7 +504,8 @@ strings, so a person can change them:
 ```
 
 Servers are told a document's language by the protocol's name: `cpp` for C++, `javascriptreact` and
-`typescriptreact` for `.jsx` and `.tsx` files.
+`typescriptreact` for `.jsx` and `.tsx` files, and `jsonc` for JSON that takes comments, as `tsconfig.json` and
+`.jsonc` files.
 
 Mayoi also asks for type definitions, implementations, and references when the server declares support for them.
 Set `sourceDefinitionCommand` to offer **Go → Go to Source Definition**. Mayoi sends the advertised command through
