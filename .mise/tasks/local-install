@@ -1,0 +1,14 @@
+#!/bin/bash
+# MISE description="build the app and install to the local machine"
+
+git_root="$(git rev-parse --show-toplevel)"
+dist_path="$git_root/dist"
+goos="$(go env GOOS)"
+platform="$goos-$(go env GOARCH)"
+
+rm -rf "$dist_path"
+
+if [ "$goos" = "darwin" ]; then
+    go tool mygo build -o "$dist_path" --sign=- --skip-dmg
+    ditto "$dist_path/darwin-arm64/Mayoi.app"  /Applications/Mayoi.app
+fi
