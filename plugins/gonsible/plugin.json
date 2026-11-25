@@ -1,0 +1,27 @@
+{
+  "name": "gonsible",
+  "displayName": "Ansible",
+  "version": "1.0.0",
+  "description": "Go to Definition, hovers, completions and problems in Ansible playbooks, roles and inventories, with gonsible",
+  "enabled": false,
+  "contributes": {
+    "settings": {
+      "path": { "type": "string", "default": "gonsible", "description": "The gonsible program, by name or path" },
+      "files": {
+        "type": "array",
+        "default": [
+          "**/playbooks/**/*.{yml,yaml}",
+          "**/roles/*/{tasks,handlers,defaults,vars,meta}/**/*.{yml,yaml}",
+          "**/{group_vars,host_vars}",
+          "**/inventory/**/*.{yml,yaml}",
+          "{site,playbook,requirements,galaxy}.{yml,yaml}"
+        ],
+        "description": "The files it serves, by glob from the folder, in place of the YAML server"
+      }
+    },
+    "languageServers": [
+      { "id": "gonsible.server", "languages": [], "files": ["${settings.files}"], "exclusive": true,
+        "command": "${settings.path}", "args": ["lsp"] }
+    ]
+  }
+}

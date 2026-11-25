@@ -34,6 +34,9 @@ needs a `## <version>` section here, or its build fails.
 - **Toggle Line Comment** (`⌘/`) now works in JSON, GraphQL, Less and `.gitignore` files.
 - In CSS, HTML, XML and Markdown, **Toggle Line Comment** wraps each line in `/* */` or `<!-- -->`.
 - In Vue and Svelte files it comments a line as its script, style or markup part expects.
+- New built-in language servers for Bash, JSON, YAML (`rlsp-yaml`), TOML (`tombi`) and PHP (`phpantom_lsp`).
+- A built-in Ansible server, `gonsible`, serves playbooks, roles and inventories in place of the YAML server.
+- Ansible's `files` setting chooses which YAML files go to `gonsible`, by glob.
 - TypeScript now runs TypeScript 7's `tsc --lsp`; set `path` to `typescript-language-server` for 5 or 6.
 - An older `tsc` on the path says which version it is and how to install TypeScript 7.
 - Comments in `tsconfig.json`, `.jsonc` and VS Code's settings no longer show as JSON problems.

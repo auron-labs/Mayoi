@@ -1,0 +1,16 @@
+{
+  "name": "bash-language-server",
+  "displayName": "Bash",
+  "version": "1.0.0",
+  "description": "Go to Definition, hovers, completions and problems in shell scripts, with bash-language-server",
+  "enabled": false,
+  "contributes": {
+    "settings": {
+      "path": { "type": "string", "default": "bash-language-server", "description": "The bash-language-server program, by name or path" }
+    },
+    "languageServers": [
+      { "id": "bash-language-server.server", "languages": ["bash"], "command": "${settings.path}", "args": ["start"],
+        "install": "npm install -g bash-language-server" }
+    ]
+  }
+}

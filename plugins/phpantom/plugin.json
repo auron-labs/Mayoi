@@ -1,0 +1,16 @@
+{
+  "name": "phpantom",
+  "displayName": "PHP",
+  "version": "1.0.0",
+  "description": "Go to Definition, hovers, completions and problems in PHP files, with PHPantom",
+  "enabled": false,
+  "contributes": {
+    "settings": {
+      "path": { "type": "string", "default": "phpantom_lsp", "description": "The phpantom_lsp program, by name or path" }
+    },
+    "languageServers": [
+      { "id": "phpantom.server", "languages": ["php"], "command": "${settings.path}",
+        "install": "cargo install phpantom_lsp --locked" }
+    ]
+  }
+}

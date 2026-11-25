@@ -38,7 +38,7 @@ func TestBundled(t *testing.T) {
 			t.Errorf("%s has no path setting", m.Name)
 		}
 	}
-	if servers != 5 {
+	if servers != 11 {
 		t.Fatalf("%d bundled language servers", servers)
 	}
 }

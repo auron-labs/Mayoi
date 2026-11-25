@@ -1,0 +1,16 @@
+{
+  "name": "tombi",
+  "displayName": "TOML",
+  "version": "1.0.0",
+  "description": "Hovers, completions, problems and formatting in TOML files, with tombi",
+  "enabled": false,
+  "contributes": {
+    "settings": {
+      "path": { "type": "string", "default": "tombi", "description": "The tombi program, by name or path" }
+    },
+    "languageServers": [
+      { "id": "tombi.server", "languages": ["toml"], "command": "${settings.path}", "args": ["lsp"],
+        "install": "npm install -g tombi" }
+    ]
+  }
+}

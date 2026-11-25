@@ -401,8 +401,9 @@ as a plugin's [language server](PLUGINS.md#language-servers) has them.
 
 **`languageServerOptions`** gives a language server `initializationOptions` of your own, by the server's id, without changing
 its plugin. The ids of the bundled servers are `rust-analyzer.server`, `gopls.server`, `clangd.server`,
-`basedpyright.server` and `typescript-language-server.server`. **Plugins → Show Language Servers** and a plugin's
-details in the settings window show the id of every server.
+`basedpyright.server`, `typescript-language-server.server`, `bash-language-server.server`,
+`vscode-json-language-server.server`, `rlsp-yaml.server`, `tombi.server`, `phpantom.server` and `gonsible.server`.
+**Plugins → Show Language Servers** and a plugin's details in the settings window show the id of every server.
 
 ```json
 {
