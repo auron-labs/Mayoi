@@ -346,8 +346,7 @@ func TestServerProgramArgs(t *testing.T) {
 	}
 }
 
-// Python's server is basedpyright, and ty when path names it, while args
-// are left as they are.
+// Python's server is ty, and basedpyright when path names it.
 func TestPythonServerProgramArgs(t *testing.T) {
 	data, err := os.ReadFile(filepath.Join("..", "..", "plugins", "basedpyright", "plugin.json"))
 	if err != nil {
@@ -374,8 +373,8 @@ func TestPythonServerProgramArgs(t *testing.T) {
 		explicit map[string]json.RawMessage
 		want     string
 	}{
-		{nil, "basedpyright-langserver --stdio"},
-		{map[string]json.RawMessage{"path": json.RawMessage(`"ty"`)}, "ty server"},
+		{nil, "ty server"},
+		{map[string]json.RawMessage{"path": json.RawMessage(`"basedpyright-langserver"`)}, "basedpyright-langserver --stdio"},
 		{map[string]json.RawMessage{"path": json.RawMessage(`"/opt/ty/bin/ty"`)}, "/opt/ty/bin/ty server"},
 		{map[string]json.RawMessage{"path": json.RawMessage(`"ty"`), "args": json.RawMessage(`["server", "--help"]`)}, "ty server --help"},
 	} {
