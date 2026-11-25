@@ -46,6 +46,8 @@ needs a `## <version>` section here, or its build fails.
 - Go to Definition, the other jumps and **Format Document** use the first of a file's servers that can.
 - `languageServers` in `settings.json` now run beside the plugins' servers, unless one has the same `id`.
 - `"exclusive": true` keeps a file to that server, as Helm templates from the YAML server.
+- A built-in Ruff server shows Python's lint problems beside `ty`, and formats Python.
+- A built-in oxlint server shows lint problems in JavaScript, TypeScript, Vue and Svelte files.
 
 ## 0.23.4
 

@@ -1,0 +1,16 @@
+{
+  "name": "ruff",
+  "displayName": "Ruff",
+  "version": "1.1.0",
+  "description": "Problems and formatting in Python files, with Ruff, beside Python's own server",
+  "enabled": false,
+  "contributes": {
+    "settings": {
+      "path": { "type": "string", "default": "ruff", "description": "The ruff program, by name or path" }
+    },
+    "languageServers": [
+      { "id": "ruff.server", "languages": ["python"], "command": "${settings.path}", "args": ["server"],
+        "install": "uv tool install ruff" }
+    ]
+  }
+}
