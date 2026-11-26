@@ -989,8 +989,7 @@ func (a *app) trashLabel() string {
 
 // trash moves the files and folders of paths to the trash, but those
 // inside another of them, which go with it; on a host, which has no
-// trash, it deletes them for good, once asked. Several are asked about
-// once, by how many they are.
+// trash, it deletes them for good, once asked, by how many they are.
 func (a *app) trash(paths ...string) {
 	paths = outermost(paths)
 	if remote.Is(paths[0]) {
@@ -1019,17 +1018,6 @@ func (a *app) trash(paths ...string) {
 		}})
 		return
 	}
-	if len(paths) == 1 {
-		a.moveToTrash(paths)
-		return
-	}
-	a.present(&confirm{title: locales.MoveItemsToTrashQuestion(len(paths), trashName()), ok: trashLabel(), danger: true,
-		run: func() { a.moveToTrash(paths) }})
-}
-
-// moveToTrash moves the files and folders of paths to the trash, saying
-// of each that does not go why.
-func (a *app) moveToTrash(paths []string) {
 	for _, path := range paths {
 		if err := a.host.trash(path); err != nil {
 			a.fail("%s", locales.FailMoveTo(filepath.Base(path), trashName(), err.Error()))

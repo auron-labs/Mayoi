@@ -8318,18 +8318,6 @@ func (msgs Messages) MoveToTrashQuestion(name string, trash string) string {
 	return Catalog.Format(msgs.locale, "moveToTrashQuestion", map[string]any{"name": name, "trash": trash})
 }
 
-// MoveItemsToTrashQuestion says "{count, plural, one {Move # item to {trash}?} other {Move # items to {trash}?}}"
-// in the language the app shows.
-func MoveItemsToTrashQuestion(count int, trash string) string {
-	return In(i18n.Locale()).MoveItemsToTrashQuestion(count, trash)
-}
-
-// MoveItemsToTrashQuestion says "{count, plural, one {Move # item to {trash}?} other {Move # items to {trash}?}}"
-// in the language of msgs.
-func (msgs Messages) MoveItemsToTrashQuestion(count int, trash string) string {
-	return Catalog.Format(msgs.locale, "moveItemsToTrashQuestion", map[string]any{"count": count, "trash": trash})
-}
-
 // NameExists says "A file or folder with that name exists."
 // in the language the app shows.
 func NameExists() string { return In(i18n.Locale()).NameExists() }

@@ -74,7 +74,7 @@ JSON and YAML files get SchemaStore's schema by their names, its catalog downloa
 
 ## Explorer refresh, moves and deletes
 
-Users can refresh one folder of the explorer, and what is read inside it, from its menu, locally and on SSH hosts. Dragging a row chosen with others moves all of them, skipping those already there or that would go into themselves, and the files among them open together on the editor. Delete, from the menu or its key, acts on every row chosen after one question that says how many.
+Users can refresh one folder of the explorer, and what is read inside it, from its menu, locally and on SSH hosts. Dragging a row chosen with others moves all of them, skipping those already there or that would go into themselves, and the files among them open together on the editor. Delete, from the menu or its key, acts on every row chosen: locally to the trash at once, on a host after one question that says how many.
 
 - Paths: `cmd/mayoi/sidebar.go`, `cmd/mayoi/explorermove.go`, `cmd/mayoi/explorerselect.go`, `cmd/mayoi/keymap.go`, `internal/workspace/tree.go`
 - Check: `go test ./internal/workspace -run TestRefreshInReadsAFolderAgain` and `go test ./cmd/mayoi -run 'Test(ExplorerRefreshesA|ExplorerDrag|ExplorerDeletes)'`

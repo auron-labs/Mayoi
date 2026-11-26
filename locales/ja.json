@@ -789,7 +789,6 @@
   "moveToPrevColumn": "前の列へ移動",
   "moveToProject": "プロジェクトへ移動",
   "moveToTrashQuestion": "{name} を{trash}に移動しますか?",
-  "moveItemsToTrashQuestion": "{count} 個の項目を{trash}に移動しますか?",
   "nameExists": "同じ名前のファイルまたはフォルダーがあります。",
   "newFileEllipsis": "新しいファイル…",
   "newFileTitle": "新しいファイル",

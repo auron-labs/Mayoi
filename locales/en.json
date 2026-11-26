@@ -1050,7 +1050,6 @@
   "moveToPrevColumn": "Move to Previous Column",
   "moveToProject": "Move to Project",
   "moveToTrashQuestion": "Move {name} to {trash}?",
-  "moveItemsToTrashQuestion": "{count, plural, one {Move # item to {trash}?} other {Move # items to {trash}?}}",
   "nameExists": "A file or folder with that name exists.",
   "newFileEllipsis": "New File…",
   "newFileTitle": "New File",
