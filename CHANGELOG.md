@@ -52,6 +52,8 @@ needs a `## <version>` section here, or its build fails.
 - A built-in oxlint server shows lint problems in JavaScript, TypeScript, Vue and Svelte files.
 - In the JetBrains keymap, `⌃G` (`Alt+J` elsewhere) adds the next match of the word to the selections.
 - In the JetBrains keymap, `⌃⌘G` (`Ctrl+Alt+Shift+J` elsewhere) selects every match of the word.
+- **Go → Go Back** and the mouse back button now return to every file you switched away from.
+- **Go → Go Back** also returns from a jump of ten or more lines within a file, as Go to Line makes.
 
 ## 0.23.4
 

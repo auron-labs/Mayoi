@@ -1087,6 +1087,7 @@ func (a *app) tick() {
 	a.takeIssueHandoff()
 	a.searchTick()
 	a.keepEdited()
+	a.navWatch()
 	if t := a.windowTitle(); t != a.title {
 		a.title = t
 		a.host.setTitle(t)

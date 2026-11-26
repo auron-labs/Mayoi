@@ -2620,6 +2620,7 @@ func (a *app) openFileAt(path string, line int, focus bool) {
 		}
 		if from != nil {
 			a.navPush(from)
+			a.nav.seen = nil
 		}
 		d.goToLine(line+1, 1)
 	}

@@ -26,11 +26,11 @@ Users can toggle carets with Alt-click, select a column with Alt and middle drag
 
 ## Tab names and mouse navigation
 
-Tabs with the same file name show enough of their parent paths to tell them apart. Mouse back and forward buttons navigate history from every pane.
+Tabs with the same file name show enough of their parent paths to tell them apart. Mouse back and forward buttons navigate history from every pane. The history keeps the place left whenever the editor with the keyboard shows another file, by any route, and when the caret jumps ten or more lines through one file without an edit.
 
-- Paths: `cmd/mayoi/tabs.go`, `cmd/mayoi/commands.go`, `cmd/mayoi/editing.go`
-- Check: `go test ./cmd/mayoi -run 'Test(FolderSuffixes|MouseButtonsGoThroughHistory)'`
-- Upstream changes: preserve tab disambiguation and pane-wide history navigation.
+- Paths: `cmd/mayoi/tabs.go`, `cmd/mayoi/commands.go`, `cmd/mayoi/editing.go`, `cmd/mayoi/navhistory.go`, `cmd/mayoi/app.go` (`tick` calls `navWatch`), `cmd/mayoi/diffview.go` (`openFileAt`)
+- Check: `go test ./cmd/mayoi -run 'Test(FolderSuffixes|MouseButtonsGoThroughHistory|BackThroughFilesOpened|BackAcrossTabs|BackFromAJumpInAFile|BackFromATabOfNoFile|NavigationHistory)'`
+- Upstream changes: preserve tab disambiguation, pane-wide history navigation, and the once-a-frame recording of places left; history's own moves and explicit pushes reset `nav.seen` so they don't push again.
 
 ## Word and line deletion
 

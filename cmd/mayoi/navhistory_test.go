@@ -3,8 +3,10 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/egoist/mygo/ui"
@@ -272,11 +274,7 @@ func TestNavigationHistory(t *testing.T) {
 		t.Fatalf("opened at %s:%d", name, l)
 	}
 	// A line put in above the place it left moves it.
-	a.openFile(one, true)
-	hs.settle()
-	a.queueEdit(d, func(d *editor) { d.edit([2]int{0, 0}, textEdit{0, 0, "new\n"}) })
-	hs.settle()
-	a.openFile(two, true)
+	d.edit(d.sel, textEdit{0, 0, "new\n"})
 	hs.settle()
 	a.navGo(-1)
 	hs.settle()
@@ -388,20 +386,16 @@ func TestCmdClickDefinition(t *testing.T) {
 func TestNavigationBackIntoFold(t *testing.T) {
 	hs, d := foldHarness(t, "data.json", foldJSON, false)
 	a := hs.a
-	data, other := hs.path("data.json"), hs.path("other.txt")
+	other := hs.path("other.txt")
 	os.WriteFile(other, []byte("x\n"), 0o644)
 	caretOn(hs, d, 4)
 	a.openFileAt(other, 0, true)
 	hs.settle()
-	a.openFile(data, true)
-	hs.settle()
-	a.run("edit.foldAll")
+	a.foldAllCmd(d)
 	hs.settle()
 	if _, hidden := runAt(a.hiddenRuns(d, d.buf.Snapshot()), 4); !hidden {
 		t.Fatal("line 5 does not fold")
 	}
-	a.openFile(other, true)
-	hs.settle()
 	a.navGo(-1)
 	hs.settle()
 	if name, l, _ := caretAt(a); name != "data.json" || l != 4 {
@@ -511,4 +505,167 @@ func TestMouseButtonsGoThroughHistory(t *testing.T) {
 	hs.settle()
 	hs.key(0, ui.KeyForward)
 	at("three.txt")
+}
+
+// longFiles writes files of forty lines, for places far apart in them.
+func longFiles(hs *harness, names ...string) []string {
+	var lines strings.Builder
+	for i := range 40 {
+		fmt.Fprintf(&lines, "line %d\n", i)
+	}
+	paths := make([]string, len(names))
+	for i, n := range names {
+		paths[i] = hs.path(n)
+		os.WriteFile(paths[i], []byte(lines.String()), 0o644)
+	}
+	return paths
+}
+
+// wantPlace fails unless the caret is on line of the file name.
+func wantPlace(t *testing.T, a *app, what, name string, line int) {
+	t.Helper()
+	if n, l, _ := caretAt(a); n != name || l != line {
+		t.Fatalf("%s: at %s:%d, want %s:%d", what, n, l, name, line)
+	}
+}
+
+// Go Back and Go Forward go through the files opened, as from Quick Open
+// or the Explorer, to the places their carets were, and back and forth
+// again without losing any.
+func TestBackThroughFilesOpened(t *testing.T) {
+	hs := newHarness(t, false)
+	a := hs.a
+	paths := longFiles(hs, "a.txt", "b.txt", "c.txt")
+	a.openFile(paths[0], true)
+	hs.settle()
+	a.goToLine(21, 1)
+	hs.settle()
+	a.openFile(paths[1], true)
+	hs.settle()
+	a.goToLine(31, 1)
+	hs.settle()
+	a.previewFile(paths[2])
+	hs.settle()
+
+	a.navGo(-1)
+	hs.settle()
+	wantPlace(t, a, "back", "b.txt", 30)
+	a.navGo(-1)
+	hs.settle()
+	wantPlace(t, a, "back again", "b.txt", 0)
+	a.navGo(-1)
+	hs.settle()
+	wantPlace(t, a, "back to the first file", "a.txt", 20)
+	a.navGo(1)
+	hs.settle()
+	a.navGo(1)
+	hs.settle()
+	a.navGo(1)
+	hs.settle()
+	wantPlace(t, a, "forward to the last file", "c.txt", 0)
+	a.navGo(-1)
+	hs.settle()
+	wantPlace(t, a, "back once more", "b.txt", 30)
+}
+
+// Showing another tab, and closing one, keep the place left: Go Back
+// goes to it, opening a file whose tab was closed again, and Go Forward
+// returns.
+func TestBackAcrossTabs(t *testing.T) {
+	hs := newHarness(t, false)
+	a := hs.a
+	paths := longFiles(hs, "a.txt", "b.txt")
+	a.openFile(paths[0], true)
+	hs.settle()
+	a.goToLine(21, 1)
+	hs.settle()
+	a.openFile(paths[1], true)
+	hs.settle()
+	a.goToLine(31, 1)
+	hs.settle()
+
+	a.cycleTab(-1)
+	hs.settle()
+	wantPlace(t, a, "the tab shown", "a.txt", 20)
+	a.navGo(-1)
+	hs.settle()
+	wantPlace(t, a, "back to the tab left", "b.txt", 30)
+	a.navGo(1)
+	hs.settle()
+	wantPlace(t, a, "forward", "a.txt", 20)
+
+	a.closeTab(a.column().tabs[1], nil, nil)
+	hs.settle()
+	a.navGo(-1)
+	hs.settle()
+	wantPlace(t, a, "back to the tab closed", "b.txt", 30)
+	a.navGo(1)
+	hs.settle()
+	wantPlace(t, a, "forward from it", "a.txt", 20)
+}
+
+// A jump far through one file, as Go to Line makes, keeps the place it
+// left; arrow keys and an edit that moves the caret as far do not.
+func TestBackFromAJumpInAFile(t *testing.T) {
+	hs := newHarness(t, false)
+	a := hs.a
+	paths := longFiles(hs, "a.txt")
+	a.openFile(paths[0], true)
+	hs.settle()
+	d := a.activeEditor()
+	a.goToLine(21, 1)
+	hs.settle()
+	places := len(a.nav.places)
+	for range 3 {
+		hs.key(0, ui.KeyDown)
+	}
+	a.queueEdit(d, func(d *editor) {
+		at := d.sel[1]
+		text := strings.Repeat("pasted\n", 15)
+		d.edit([2]int{at + len(text), at + len(text)}, textEdit{at, at, text})
+	})
+	hs.settle()
+	wantPlace(t, a, "after the paste", "a.txt", 38)
+	if len(a.nav.places) != places {
+		t.Fatalf("arrow keys and an edit kept %d places", len(a.nav.places)-places)
+	}
+
+	a.goToLine(5, 1)
+	hs.settle()
+	a.navGo(-1)
+	hs.settle()
+	wantPlace(t, a, "back", "a.txt", 38)
+	a.navGo(-1)
+	hs.settle()
+	wantPlace(t, a, "back before the arrow keys", "a.txt", 0)
+	a.navGo(1)
+	hs.settle()
+	a.navGo(1)
+	hs.settle()
+	wantPlace(t, a, "forward", "a.txt", 4)
+}
+
+// From a tab of no file, Go Back goes first to the place of the file
+// left for it.
+func TestBackFromATabOfNoFile(t *testing.T) {
+	hs := newHarness(t, false)
+	a := hs.a
+	paths := longFiles(hs, "a.txt", "b.txt")
+	a.openFile(paths[0], true)
+	hs.settle()
+	a.openFile(paths[1], true)
+	hs.settle()
+	a.goToLine(31, 1)
+	hs.settle()
+	a.newFile()
+	hs.settle()
+	a.navGo(-1)
+	hs.settle()
+	wantPlace(t, a, "back from an untitled tab", "b.txt", 30)
+	a.navGo(-1)
+	hs.settle()
+	wantPlace(t, a, "back again", "b.txt", 0)
+	a.navGo(-1)
+	hs.settle()
+	wantPlace(t, a, "back to the first file", "a.txt", 0)
 }

@@ -8,10 +8,12 @@ import (
 	"mayoi/locales"
 )
 
-// Go Back and Go Forward: the places that jumps to other places left, as
-// Go to Definition and opening a diagnostic do, in the files of a window's
-// folder, from one file to another and from column to column. Vim's ⌃O
-// and ⌃I keep their own list, of the places in a file.
+// Go Back and Go Forward: the places the caret left, in the files of a
+// window's folder, from one file to another and from column to column.
+// Jumps to other places, as Go to Definition and opening a diagnostic,
+// keep the place they leave; so does any way the editor with the keyboard
+// comes to show another file, and a move of the caret far through one.
+// Vim's ⌃O and ⌃I keep their own list, of the places in a file.
 
 // navPlace is a place the caret was: an offset of a file, which the edits
 // of its document move while it is open, and the column it was in.
@@ -22,17 +24,26 @@ type navPlace struct {
 }
 
 // navHistory are the places jumps left, the oldest first; at is the one
-// gone back to, len(places) when none is.
+// gone back to, len(places) when none is. seen is the place of the caret
+// the frame before, in its document's text of version seenVer, nil once
+// the history or a jump kept the place it left.
 type navHistory struct {
-	places []*navPlace
-	at     int
+	places  []*navPlace
+	at      int
+	seen    *navPlace
+	seenVer uint64
 }
 
 // navMax is how many places the history keeps.
 const navMax = 100
 
+// navJump is how many lines the caret goes through a file, as a click or
+// Go to Line far off takes it, for the place it left to be kept; an arrow
+// key's move, or an edit's, is not kept.
+const navJump = 10
+
 // navHere is the place of the caret in the editor that has the keyboard,
-// nil when it shows no file.
+// or of the selection asked of it, nil when it shows no file.
 func (a *app) navHere() *navPlace {
 	d := a.activeEditor()
 	if d == nil || d.path == "" || d.unread() {
@@ -42,7 +53,35 @@ func (a *app) navHere() *navPlace {
 	if col == nil {
 		return nil
 	}
-	return &navPlace{path: d.path, at: min(d.sel[1], d.buf.Snapshot().Len()), col: col.id}
+	at := d.sel[1]
+	if d.pending != nil {
+		at = d.pending[1]
+	}
+	return &navPlace{path: d.path, at: min(at, d.buf.Snapshot().Len()), col: col.id}
+}
+
+// navWatch keeps the place the caret was the frame before, once the
+// editor with the keyboard shows another file, or its caret went navJump
+// lines or more through the same text. It runs once a frame. While no
+// file shows, as a terminal has the keyboard, the last place waits.
+func (a *app) navWatch() {
+	here := a.navHere()
+	if here == nil {
+		return
+	}
+	h := &a.nav
+	seen, ver := h.seen, h.seenVer
+	snap := a.activeEditor().buf.Snapshot()
+	h.seen, h.seenVer = here, snap.Version()
+	if seen == nil {
+		return
+	}
+	if seen.path == here.path {
+		if ver != h.seenVer || abs(snap.LineAt(min(seen.at, snap.Len()))-snap.LineAt(here.at)) < navJump {
+			return
+		}
+	}
+	a.navPush(seen)
 }
 
 // navDoc is the document open at a place's file, nil for none.
@@ -110,10 +149,14 @@ func (a *app) navGo(n int) {
 	for {
 		h.at = min(h.at, len(h.places))
 		if n < 0 && h.at == len(h.places) {
-			// Kept, for Go Forward to come back to.
+			// Kept, for Go Forward to come back to; from a tab of no
+			// file, the place left for it is gone back to first.
 			if cur := a.navHere(); cur != nil {
 				a.navPush(cur)
 				h.at--
+			} else if h.seen != nil {
+				a.navPush(h.seen)
+				h.seen = nil
 			}
 		}
 		to := h.at + n
@@ -158,6 +201,7 @@ func (a *app) navOpen(p *navPlace) bool {
 	}
 	// A file opened again is a new document, whose edits move it now.
 	a.navTrack(p, true)
+	a.nav.seen = nil
 	d.whenRead(func(ed *editor) {
 		at := min(p.at, ed.buf.Snapshot().Len())
 		ed.selectRange(at, at, true)
