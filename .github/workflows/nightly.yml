@@ -1,0 +1,84 @@
+# Builds Mayoi for macOS, Windows and Linux on every push to main, then
+# replaces the prerelease called nightly with one of that build. Builds are
+# ad hoc signed and carry no update manifests, so installed apps never update
+# to a nightly: those follow the Release workflow.
+name: Nightly
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write # the release, and the uploads to it
+
+# A newer push replaces a build that hasn't finished.
+concurrency:
+  group: nightly
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: macOS, os: macos-latest, platform: "darwin/arm64,darwin/amd64" }
+          - { name: Windows, os: ubuntu-latest, platform: "windows/amd64,windows/arm64" }
+          - { name: Linux, os: ubuntu-latest, platform: "linux/amd64,linux/arm64" }
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - name: Install NSIS, for the Windows installers
+        if: matrix.name == 'Windows'
+        # Tries again, as the runner's mirrors at times fail to resolve.
+        run: |
+          for i in 1 2 3; do
+            sudo apt-get -o Acquire::Retries=3 update && sudo apt-get -o Acquire::Retries=3 install -y nsis && exit 0
+            sleep 15
+          done
+          exit 1
+      - name: Build
+        run: go tool mygo build -platform "${{ matrix.platform }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ matrix.name }}
+          path: |
+            build/*/*.dmg
+            build/*/*.deb
+            build/*/*.tar.gz
+            build/*/*-setup-*.exe
+            build/*/install.*
+          if-no-files-found: error
+          compression-level: 0
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: build-*
+          path: dist
+      # Deleted only now that every build has succeeded, so that nightly is
+      # never left without files. --cleanup-tag removes its tag too, which
+      # the new release makes again at this commit.
+      - name: Replace the nightly release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete nightly --repo "$GITHUB_REPOSITORY" --cleanup-tag --yes || true
+          # install.* is the same file from every build that makes it.
+          files="$(find dist -type f | sort)"
+          dup="$(awk -F/ '{print $NF}' <<< "$files" | sort | uniq -d)"
+          for name in $dup; do
+            test "$(find dist -type f -name "$name" -exec sha256sum {} + | cut -d' ' -f1 | sort -u | wc -l)" = 1 \
+              || { echo "::error::the builds made different $name"; exit 1; }
+          done
+          mapfile -t upload < <(awk -F/ '!seen[$NF]++' <<< "$files")
+          gh release create nightly "${upload[@]}" --repo "$GITHUB_REPOSITORY" \
+            --prerelease --target "$GITHUB_SHA" --title "Mayoi nightly" \
+            --notes "Build of main at ${GITHUB_SHA::7}, not signed for updates."
