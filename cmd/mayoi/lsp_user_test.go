@@ -3,10 +3,12 @@ package main
 import (
 	"encoding/json"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
 	"mayoi/internal/plugin"
+	"mayoi/internal/remote"
 	"mayoi/internal/settings"
 )
 
@@ -110,9 +112,16 @@ func TestServerForPathsFromTheFolder(t *testing.T) {
 	}
 	for _, root := range []string{hs.root, "/ssh:host/work/proj", "/wsl:Ubuntu/home/me/proj"} {
 		a.root = root
-		in := &document{path: root + "/charts/app/templates/a.yaml"}
-		out := &document{path: root + "/other/a.yaml"}
-		beside := &document{path: root + "-other/charts/app/templates/a.yaml"}
+		// A folder on this machine has its own separator.
+		join := func(base, rel string) string {
+			if remote.Is(base) {
+				return base + "/" + rel
+			}
+			return filepath.Join(base, filepath.FromSlash(rel))
+		}
+		in := &document{path: join(root, "charts/app/templates/a.yaml")}
+		out := &document{path: join(root, "other/a.yaml")}
+		beside := &document{path: join(root+"-other", "charts/app/templates/a.yaml")}
 		if got := ids(a.serversFor(in)); len(got) != 1 || got[0] != "tpl" {
 			t.Errorf("%s: no server for a file in the folder", root)
 		}

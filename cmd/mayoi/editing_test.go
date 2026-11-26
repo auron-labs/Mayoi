@@ -1124,11 +1124,13 @@ func TestCmdBackspaceDeletesLine(t *testing.T) {
 		return hs, d
 	}
 
-	t.Run("off keeps deleting to the line start", func(t *testing.T) {
+	t.Run("off leaves the line to the toolkit", func(t *testing.T) {
 		hs, d := setup(false)
 		hs.place(d, 6, 6)
 		hs.key(ui.Super, ui.KeyBackspace)
-		expectText(t, d, "one\no\nthree\nfour")
+		if got := strings.Count(d.buf.String(), "\n"); got != 3 {
+			t.Fatalf("a line was deleted: %q", d.buf.String())
+		}
 	})
 	t.Run("on deletes the whole line from the middle", func(t *testing.T) {
 		hs, d := setup(true)

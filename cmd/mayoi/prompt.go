@@ -162,7 +162,7 @@ func (a *app) nextAsk() {
 // prompt or a picker.
 func (a *app) overlaid() bool {
 	return a.confirm != nil || a.prompt != nil || a.signin != nil || a.diagram != nil ||
-		a.quick.open || a.branches.open || a.stashes.open || a.prs.open || a.checks.open ||
+		a.quick.open || a.everywhere.open || a.branches.open || a.stashes.open || a.prs.open || a.checks.open ||
 		a.worktrees.open || a.repositories.picker.open || a.recents.open || a.pluginPick.open ||
 		a.themes.open || a.remotePick.open || a.conflicts.open
 }
