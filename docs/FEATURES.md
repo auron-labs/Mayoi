@@ -1032,6 +1032,8 @@ language servers, and they work on SSH folders with nothing installed on the hos
   has nothing to say, while you drag or hold a modifier key, or with `editorHover` off.
 - An answer that comes after you opened Quick Open or another list leaves it be.
 - **Show Problems** lists every problem plugins found; the status bar counts them.
+- JSON and YAML files get SchemaStore's schema by their names, its catalog downloaded once a day. The status bar
+  shows a file's schema; click it, or run **Choose Schema…**, to choose another or none, kept in `fileSchemas`.
 - **Selection → Insert Snippet…** inserts a snippet of a plugin's.
 - A `.ts` file in `~/.mayoi/scripts` makes each function it exports a command; **Plugins → Run Selection as Script**
   runs the selection once.

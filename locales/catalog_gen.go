@@ -16964,6 +16964,86 @@ func (msgs Messages) CmdPluginsProblems() string {
 	return Catalog.Format(msgs.locale, "cmdPluginsProblems", nil)
 }
 
+// CmdPluginsChooseSchema says "Choose Schema…"
+// in the language the app shows.
+func CmdPluginsChooseSchema() string { return In(i18n.Locale()).CmdPluginsChooseSchema() }
+
+// CmdPluginsChooseSchema says "Choose Schema…"
+// in the language of msgs.
+func (msgs Messages) CmdPluginsChooseSchema() string {
+	return Catalog.Format(msgs.locale, "cmdPluginsChooseSchema", nil)
+}
+
+// SchemaNone says "No Schema"
+// in the language the app shows.
+func SchemaNone() string { return In(i18n.Locale()).SchemaNone() }
+
+// SchemaNone says "No Schema"
+// in the language of msgs.
+func (msgs Messages) SchemaNone() string {
+	return Catalog.Format(msgs.locale, "schemaNone", nil)
+}
+
+// SchemaPlaceholder says "Find a schema for this file"
+// in the language the app shows.
+func SchemaPlaceholder() string { return In(i18n.Locale()).SchemaPlaceholder() }
+
+// SchemaPlaceholder says "Find a schema for this file"
+// in the language of msgs.
+func (msgs Messages) SchemaPlaceholder() string {
+	return Catalog.Format(msgs.locale, "schemaPlaceholder", nil)
+}
+
+// SchemaNoFile says "Schemas are for JSON and YAML files, with the JSON or YAML plugin turned on."
+// in the language the app shows.
+func SchemaNoFile() string { return In(i18n.Locale()).SchemaNoFile() }
+
+// SchemaNoFile says "Schemas are for JSON and YAML files, with the JSON or YAML plugin turned on."
+// in the language of msgs.
+func (msgs Messages) SchemaNoFile() string {
+	return Catalog.Format(msgs.locale, "schemaNoFile", nil)
+}
+
+// SchemaReading says "Reading SchemaStore's schemas…"
+// in the language the app shows.
+func SchemaReading() string { return In(i18n.Locale()).SchemaReading() }
+
+// SchemaReading says "Reading SchemaStore's schemas…"
+// in the language of msgs.
+func (msgs Messages) SchemaReading() string {
+	return Catalog.Format(msgs.locale, "schemaReading", nil)
+}
+
+// SchemaReadFailed says "Could not download SchemaStore's schemas: {error}"
+// in the language the app shows.
+func SchemaReadFailed(error string) string { return In(i18n.Locale()).SchemaReadFailed(error) }
+
+// SchemaReadFailed says "Could not download SchemaStore's schemas: {error}"
+// in the language of msgs.
+func (msgs Messages) SchemaReadFailed(error string) string {
+	return Catalog.Format(msgs.locale, "schemaReadFailed", map[string]any{"error": error})
+}
+
+// SchemaTryAgain says "Try Again"
+// in the language the app shows.
+func SchemaTryAgain() string { return In(i18n.Locale()).SchemaTryAgain() }
+
+// SchemaTryAgain says "Try Again"
+// in the language of msgs.
+func (msgs Messages) SchemaTryAgain() string {
+	return Catalog.Format(msgs.locale, "schemaTryAgain", nil)
+}
+
+// SchemaStoreOff says "SchemaStore's schemas are off. Turn on schemaStore in Settings to list them."
+// in the language the app shows.
+func SchemaStoreOff() string { return In(i18n.Locale()).SchemaStoreOff() }
+
+// SchemaStoreOff says "SchemaStore's schemas are off. Turn on schemaStore in Settings to list them."
+// in the language of msgs.
+func (msgs Messages) SchemaStoreOff() string {
+	return Catalog.Format(msgs.locale, "schemaStoreOff", nil)
+}
+
 // CmdSelFormat says "Format Document"
 // in the language the app shows.
 func CmdSelFormat() string { return In(i18n.Locale()).CmdSelFormat() }

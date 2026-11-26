@@ -2,6 +2,7 @@ package workspace
 
 import (
 	"path"
+	"slices"
 	"strings"
 )
 
@@ -51,6 +52,13 @@ func (g Globs) Match(rel string) bool {
 		}
 	}
 	return false
+}
+
+// MatchFile reports whether rel, a path relative to the root with
+// slashes, matches any of the patterns itself, not by a folder above it.
+func (g Globs) MatchFile(rel string) bool {
+	segs := strings.Split(rel, "/")
+	return slices.ContainsFunc(g, func(pat []string) bool { return matchSegs(pat, segs) })
 }
 
 // matchSegs matches the segments of a pattern to those of a path, `**`

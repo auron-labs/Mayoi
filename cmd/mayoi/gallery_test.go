@@ -8,6 +8,7 @@ package main
 // and open <dir>/index.html.
 
 import (
+	"errors"
 	"fmt"
 	"html"
 	"os"
@@ -434,6 +435,20 @@ var galleryStates = []struct {
 		pick.poll.Done(pick.asked())
 		pick.poll.Keep(pick.asked(), time.Hour, func() {})
 	}},
+	{"schema-picker", func(hs *harness) {
+		galleryCatalog(hs, nil)
+		os.WriteFile(hs.path("web/package.json"), []byte("{}\n"), 0o644)
+		hs.a.openFile(hs.path("web/package.json"), true)
+		hs.settle()
+		hs.a.showSchemaPicker(hs.a.activeEditor().document, "")
+	}},
+	{"schema-picker-failed", func(hs *harness) {
+		galleryCatalog(hs, errors.New("dial tcp: lookup www.schemastore.org: no such host"))
+		os.WriteFile(hs.path("web/package.json"), []byte("{}\n"), 0o644)
+		hs.a.openFile(hs.path("web/package.json"), true)
+		hs.settle()
+		hs.a.showSchemaPicker(hs.a.activeEditor().document, "")
+	}},
 	{"unsaved", func(hs *harness) {
 		hs.a.openFile(hs.path("main.go"), true)
 		hs.settle()
@@ -451,6 +466,22 @@ func commitChecksBox(hs *harness) *checksPicker {
 	hs.until("the work tree", func() bool { return hs.a.git.repo != nil })
 	hs.a.checks = checksPicker{open: true, repoRoot: hs.a.git.repo.Root, hash: "0123456789abcdef0123456789abcdef01234567"}
 	return &hs.a.checks
+}
+
+// galleryCatalog has SchemaStore's catalog read, testCatalog, or its
+// download failed with err.
+func galleryCatalog(hs *harness, err error) {
+	withSchemaCatalog(hs.t, "", offlineCatalog)
+	entries, _ := parseSchemaCatalog([]byte(testCatalog))
+	s := &schemaStore
+	s.Lock()
+	defer s.Unlock()
+	s.read = true
+	if err != nil {
+		s.err, s.failedAt = err, time.Now()
+		return
+	}
+	setSchemaCatalog(entries, time.Now())
 }
 
 func TestGallery(t *testing.T) {

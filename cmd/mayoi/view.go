@@ -1217,6 +1217,7 @@ type statusVisibility struct {
 	indent        bool
 	encoding      bool
 	eol           bool
+	schema        bool
 	language      bool
 }
 
@@ -1314,6 +1315,9 @@ func (a *app) statusFit(c *ui.Context, width float32) statusVisibility {
 		folder()
 		add(&v.lines, measure(locales.LinesCount(n), false))
 		add(&v.eol, measure(eol, false))
+		if label := a.schemaLabel(d.document); label != "" {
+			add(&v.schema, measure(label, false))
+		}
 		add(&v.indent, measure(d.indent.String(), false))
 		add(&v.language, measure(highlight.DisplayName(d.hl.Lexer()), false))
 	}
@@ -1631,6 +1635,9 @@ func (a *app) statusBar(c *ui.Context) {
 				a.editActive(func(d *editor) { reindent(d, indentStyle{size: size}) })()
 			}
 		})
+		if visible.schema {
+			a.schemaStatus(d.document, item)
+		}
 		if visible.encoding {
 			item("enc", d.encoding.label(), "", nil, nil)
 		}

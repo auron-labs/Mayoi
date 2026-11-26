@@ -63,3 +63,11 @@ Ctrl+Enter, on every system as in VS Code, inserts a line break at the caret in 
 - Paths: `cmd/mayoi/find.go`, `cmd/mayoi/markdownfind.go`
 - Check: `go test ./cmd/mayoi -run 'TestFind(CtrlEnterBreaksTheLine|KeepsReturnFromTheKeymap|FindsAMultilineSelection|ShiftEnterGoesBack)'`
 - Upstream changes: keep Ctrl+Enter breaking the line, and the find fields' Return keys away from the keymap, when taking changes to the find widget's keys or fields.
+
+## JSON and YAML schemas
+
+JSON and YAML files get SchemaStore's schema by their names, its catalog downloaded in the background once a day and kept in the cache folder for offline use. Users choose a file's schema, or none, with Choose Schema… or the status bar, kept by glob in `fileSchemas`, which wins over the catalog. Servers declaring `schemas` in their plugin manifest are sent the associations through `workspace/didChangeConfiguration` as they start and whenever the catalog or `fileSchemas` changes; `schemaStore` turns the download off.
+
+- Paths: `cmd/mayoi/schemastore.go`, `cmd/mayoi/schemapicker.go`, `cmd/mayoi/lsp.go`, `cmd/mayoi/pluginpick.go`, `internal/plugin/manifest.go`, `internal/settings/settings.go`, `plugins/vscode-json-language-server/plugin.json`, `plugins/rlsp-yaml/plugin.json`
+- Check: `go test ./cmd/mayoi -run 'Test(SchemaSettings|SchemaCatalogDownloads|ChooseSchema)'`
+- Upstream changes: keep the `schemas` manifest field on the JSON and YAML servers and the settings each server expects: vscode-json-language-server's `json.schemas` with `json.validate.enable`, and rlsp-yaml's full settings object.

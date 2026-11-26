@@ -60,6 +60,8 @@ needs a `## <version>` section here, or its build fails.
 - The language picker can save a `fileAssociations` entry for the file's extension or name.
 - With the VS Code keymap, `Cmd+K M` opens the language picker.
 - JSON and YAML files get SchemaStore's schema by their names, downloaded once a day and kept offline.
+- The status bar shows a JSON or YAML file's schema; click it to choose another.
+- **Choose Schema…** in the command palette lists SchemaStore's schemas for the file, and No Schema.
 - `fileSchemas` in `settings.json` sets the schema of files by glob, over SchemaStore's.
 - Turn off `schemaStore` to download no schemas.
 

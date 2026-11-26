@@ -300,6 +300,7 @@ func (a *app) commandsIn(t locales.Messages) []command {
 	// Quitting as Cmd+Q does, which asks first (quitApp).
 	cmds = append(cmds, command{"file.quit", t.CmdFileQuit(), "CmdOrCtrl+Q", func() { a.host.quitApp() }})
 	cmds = append(cmds, command{"plugins.problems", t.CmdPluginsProblems(), "", a.showProblems})
+	cmds = append(cmds, command{"plugins.chooseSchema", t.CmdPluginsChooseSchema(), "", a.openSchemaPicker})
 	cmds = append(cmds, a.pluginCommands(t, cmds)...)
 	for i := range cmds {
 		cmds[i].accel = platformAccel(cmds[i].id, cmds[i].accel)

@@ -394,9 +394,13 @@ type app struct {
 	worktrees  worktreePicker    // the box that switches worktrees
 	recents    recentPicker      // the box of the recent folders
 	pluginPick pluginPicker      // the box of a plugin's window.pick
-	themes     themePicker       // the box of the color themes
-	remotePick remotePicker      // the box that connects to a host
-	conflicts  conflictsList     // the box of the files in conflict
+	// schemaPick is picksOpened as Choose Schema… opened the box last,
+	// and schemaShown the schema the status bar shows.
+	schemaPick  int
+	schemaShown schemaShown
+	themes      themePicker   // the box of the color themes
+	remotePick  remotePicker  // the box that connects to a host
+	conflicts   conflictsList // the box of the files in conflict
 	// pluginSeen is what the plugins were last told of the documents:
 	// each one's version, and the editor in front.
 	pluginSeen pluginSeen

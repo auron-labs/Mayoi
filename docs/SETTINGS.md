@@ -126,7 +126,7 @@ takes its default.
 | `languageServers`       | none          | Language servers of your own, by language or by file glob   | Only this file                                 |
 | `languageServerOptions`       | none          | Each language server's `initializationOptions`, by its id   | Only this file                                 |
 | `fileAssociations`      | none          | The language of files by glob, as `{"*.foo": "yaml"}`         | Only this file                                 |
-| `fileSchemas`           | none          | The JSON schema of JSON and YAML files by glob, `""` for none | Only this file                                 |
+| `fileSchemas`           | none          | The JSON schema of JSON and YAML files by glob, `""` for none | **Choose Schema…**, or the schema in the status bar |
 | `schemaStore`           | `true`        | `true`, `false`                                             | **Settings → Editor**                          |
 
 ### Language
@@ -363,8 +363,10 @@ differ in width lines them up only roughly.
 - **`fileSchemas`** sets the JSON schema of JSON and YAML files by glob, as
   `{"config/*.json": "https://json.schemastore.org/eslintrc.json"}`, `""` for no schema. A glob matches from the start
   of a folder's or file's name at any depth, so `config/app.json` matches `config/app.json` and `web/config/app.json`.
-  It wins over SchemaStore's schemas. The JSON and YAML servers take a change at once. A schema a JSON file names in `$schema`, or a YAML file in a
-  `# yaml-language-server: $schema=` line, wins over it. In YAML, `""` is not taken: the YAML server keeps SchemaStore's.
+  It wins over SchemaStore's schemas. **Choose Schema…**, in the command palette or from the schema in the status bar,
+  writes the file's path in the folder. The JSON and YAML servers take a change at once. A schema a JSON file names in
+  `$schema`, or a YAML file in a `# yaml-language-server: $schema=` line, wins over it. In YAML, `""` is not taken:
+  the YAML server keeps SchemaStore's.
 - **`schemaStore`** gives JSON and YAML files [SchemaStore](https://www.schemastore.org)'s schemas by their names, as
   `package.json` and `.github/workflows/*.yml`. Mayoi downloads its catalog in the background once a day, keeps it in
   its cache folder and uses the copy it has while offline; the YAML server reads the catalog itself. Turn it off to

@@ -39,6 +39,11 @@ type pluginPicker struct {
 	list        ui.ListState
 	shook       time.Time
 	done        func(i int) // the item's index, -1 for none
+	// note says how the items are, under them, from noteAfter after the
+	// box shows: as a list still to come.
+	note      string
+	noteAfter time.Duration
+	noteFrom  time.Time
 }
 
 // openPluginPicker shows a plugin's items; done gets the index of the one
@@ -128,21 +133,35 @@ func (a *app) pluginPickerView(c *ui.Context) {
 						a.post(func() { choose(sel) })
 					}
 				})
-				if len(pk.results) == 0 {
-					ui.Text(c, locales.PluginPickNoMatches()).FontSize(13).TextColor(p.muted).Padding(12, 16)
-				} else if len(pk.results) > 200 {
+				if pk.note != "" && pk.noteFrom.IsZero() {
+					pk.noteFrom = c.Now().Add(pk.noteAfter)
+				}
+				noted := pk.note != "" && !c.Now().Before(pk.noteFrom)
+				if pk.note != "" && !noted {
+					c.After(pk.noteFrom.Sub(c.Now()))
+				}
+				switch {
+				case len(pk.results) == 0:
+					if pk.note == "" {
+						ui.Text(c, locales.PluginPickNoMatches()).FontSize(13).TextColor(p.muted).Padding(12, 16)
+					}
+				case len(pk.results) > 200:
 					if pk.moved {
 						pk.list.ScrollIntoView(pk.sel)
 					}
 					ui.List(c.Key("plugin-pick-large-results"), &pk.list, len(pk.results), func(i int) {
 						a.pluginPickRow(c, i, pk.results[i])
 					}).Height(380).Padding(6)
-				} else {
+				default:
 					ui.Scroll(c.Key("plugin-pick-results")).MaxHeight(380).Padding(6).Children(func() {
 						for i, m := range pk.results {
 							a.pluginPickRow(c, i, m)
 						}
 					})
+				}
+				// After the items, so that it moves none as it shows.
+				if noted {
+					ui.Text(c, pk.note).FontSize(13).TextColor(p.muted).Padding(12, 16).Wrap()
 				}
 				pk.moved = false
 				a.quickFooter(c, false, locales.QuickChooseAction(), "", false, false)

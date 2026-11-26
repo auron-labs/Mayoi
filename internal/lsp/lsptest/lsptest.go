@@ -22,14 +22,16 @@ import (
 // hover and the completions of a word ending "nothing" are none, and of
 // one ending "broken" an error. Its initializationOptions word is the word
 // it flags in place of "bad", and capabilities what it says it does in
-// place of all it does, as a server that only lints.
+// place of all it does, as a server that only lints. test/snapshot
+// answers what it was greeted with, its last document, navigation and
+// settings, those of the last workspace/didChangeConfiguration.
 func Serve(in io.Reader, out io.Writer) {
 	r := bufio.NewReader(in)
 	send := func(m any) {
 		data, _ := json.Marshal(m)
 		fmt.Fprintf(out, "Content-Length: %d\r\n\r\n%s", len(data), data)
 	}
-	var initialize, document, navigation json.RawMessage
+	var initialize, document, navigation, configuration json.RawMessage
 	texts := map[string]string{} // by URI
 	var late func()              // the answer held back
 	var options struct {
@@ -156,8 +158,11 @@ func Serve(in io.Reader, out io.Writer) {
 			}
 		case "workspace/symbol":
 			reply(workspaceSymbols(initialize, m.Params))
+		case "workspace/didChangeConfiguration":
+			configuration = append(json.RawMessage(nil), m.Params...)
 		case "test/snapshot":
-			reply(map[string]any{"initialize": initialize, "document": document, "navigation": navigation})
+			reply(map[string]any{"initialize": initialize, "document": document, "navigation": navigation,
+				"configuration": configuration})
 		case "test/noReply":
 			// A response timeout must not disconnect an otherwise healthy client.
 		case "textDocument/definition":
