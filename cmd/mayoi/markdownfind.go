@@ -187,7 +187,7 @@ func (a *app) previewFindView(c *ui.Context, v *viewer) {
 		}
 	}
 	a.findBoxView(c, findBox{
-		n: len(m.found), cur: m.findCur, err: m.findErr,
+		n: len(m.found), cur: m.findCur, err: m.findErr, lines: true,
 		step: func(by int) { a.stepPreview(m, by) },
 	})
 }

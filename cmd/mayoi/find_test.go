@@ -211,3 +211,56 @@ func TestFindShiftEnterGoesBack(t *testing.T) {
 		t.Errorf("Shift+Return after replacing went to match %d; want 2", f.cur)
 	}
 }
+
+// TestFindCtrlEnterBreaksTheLine: Ctrl+Return breaks the line of the
+// query and of the replacement where the caret is, Return still stepping,
+// so that a query typed across lines finds and replaces across them, a
+// regular expression's \n too.
+func TestFindCtrlEnterBreaksTheLine(t *testing.T) {
+	hs, d := editHarness(t, "lines.txt", "a\ncb\nx\na\ncb\n")
+	a, tt := hs.a, hs.tt
+	a.run("edit.replace")
+	hs.settle()
+	f := &a.find
+	tt.Type("ab")
+	tt.Key(0, ui.KeyLeft)
+	tt.Key(ui.Ctrl, ui.KeyEnter)
+	tt.Type("c")
+	hs.settle()
+	if f.query != "a\ncb" {
+		t.Fatalf("query = %q; want the line broken at the caret", f.query)
+	}
+	if len(f.matches) != 2 {
+		t.Fatalf("%d matches; want 2", len(f.matches))
+	}
+	tt.Key(0, ui.KeyEnter)
+	hs.settle()
+	if f.query != "a\ncb" || f.cur != 1 {
+		t.Fatalf("Return left query %q at match %d; want it stepping to 1", f.query, f.cur)
+	}
+
+	tt.Click(locales.FindReplace())
+	tt.Type("1")
+	tt.Key(ui.Ctrl, ui.KeyEnter)
+	hs.settle()
+	tt.Type("2")
+	hs.settle()
+	if f.with != "1\n2" {
+		t.Fatalf("replacement = %q; want the line broken after 1", f.with)
+	}
+	a.replaceAll(d)
+	if got := d.buf.Snapshot().String(); got != "1\n2\nx\n1\n2\n" {
+		t.Fatalf("replaced to %q", got)
+	}
+	a.run("edit.undo")
+	hs.settle()
+	if got := d.buf.Snapshot().String(); got != "a\ncb\nx\na\ncb\n" {
+		t.Fatalf("one undo of Replace All left %q", got)
+	}
+
+	f.regex, f.query, f.stale = true, `b\nx`, true
+	hs.settle()
+	if len(f.matches) != 1 {
+		t.Fatalf("regex %q: %d matches; want 1 across the line", f.query, len(f.matches))
+	}
+}

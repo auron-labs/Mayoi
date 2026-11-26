@@ -54,6 +54,7 @@ needs a `## <version>` section here, or its build fails.
 - In the JetBrains keymap, `⌃⌘G` (`Ctrl+Alt+Shift+J` elsewhere) selects every match of the word.
 - **Go → Go Back** and the mouse back button now return to every file you switched away from.
 - **Go → Go Back** also returns from a jump of ten or more lines within a file, as Go to Line makes.
+- `Ctrl+Enter` breaks the line in find and replace, to find and replace text across lines.
 
 ## 0.23.4
 

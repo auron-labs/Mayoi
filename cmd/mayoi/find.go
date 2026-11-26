@@ -53,6 +53,11 @@ type findState struct {
 	countFor string
 	// lineH is the height of a line of the fields, measured once.
 	lineH float32
+	// breakIn is the field Ctrl+Return breaks the line of, as the view is
+	// built next, and breakAt where its caret goes after the break, -1
+	// until then: the key comes where the caret cannot be read.
+	breakIn *string
+	breakAt int
 }
 
 func (f *findState) pattern() string {
@@ -433,6 +438,7 @@ func (a *app) findView(c *ui.Context, d *editor) {
 	}
 	a.findBoxView(c, findBox{
 		n: len(f.matches), cur: f.cur, err: f.err,
+		lines:      true,
 		step:       func(by int) { a.step(d, by) },
 		replaceOne: func(by int) { a.replaceOne(d, by) },
 		replaceAll: func() { a.replaceAll(d) },
@@ -440,12 +446,14 @@ func (a *app) findView(c *ui.Context, d *editor) {
 }
 
 // findBox is what the find widget finds in: its n matches, cur the
-// current one, err why the query is invalid, step going to the match by
-// after, and replaceOne, going on by after, and replaceAll, nil for text
-// that cannot be replaced.
+// current one, err why the query is invalid, lines whether a match may
+// take more than one line, step going to the match by after, and
+// replaceOne, going on by after, and replaceAll, nil for text that cannot
+// be replaced.
 type findBox struct {
 	n, cur     int
 	err        string
+	lines      bool
 	step       func(by int)
 	replaceOne func(by int)
 	replaceAll func()
@@ -493,14 +501,19 @@ func (a *app) findBoxView(c *ui.Context, b findBox) {
 				if in.Focused() {
 					field.Border(1, p.accentDim)
 				}
-				if in.Changed() {
+				if f.breakLine(c, in, &f.query) || in.Changed() {
 					f.stale = true
 				}
 				// The input keeps Return, Shift or not, so no Shortcut sees
-				// it: a text area would break the line, and find steps.
+				// it: a text area would break the line, and find steps;
+				// Ctrl+Return breaks it, where a match may take lines.
 				in.OnTextKey(func(k ui.TextKey) bool {
 					if k.Key != ui.KeyEnter {
 						return false
+					}
+					if k.Mods == ui.Ctrl && b.lines {
+						f.breakIn, f.breakAt = &f.query, -1
+						return true
 					}
 					if b.n == 0 && f.query != "" {
 						f.shook = c.Now()
@@ -554,10 +567,16 @@ func (a *app) findBoxView(c *ui.Context, b findBox) {
 				if in.Focused() {
 					field.Border(1, p.accentDim)
 				}
-				// Return replaces the match and goes on, Shift+Return back.
+				f.breakLine(c, in, &f.with)
+				// Return replaces the match and goes on, Shift+Return back,
+				// and Ctrl+Return breaks the line.
 				in.OnTextKey(func(k ui.TextKey) bool {
 					if k.Key != ui.KeyEnter {
 						return false
+					}
+					if k.Mods == ui.Ctrl {
+						f.breakIn, f.breakAt = &f.with, -1
+						return true
 					}
 					b.replaceOne(enterStepMods(k.Mods))
 					return true
@@ -579,6 +598,28 @@ func (a *app) findBoxView(c *ui.Context, b findBox) {
 	if box.OverlayShortcut(0, ui.KeyEscape) || box.Shortcut(0, ui.KeyEscape) {
 		a.closeFind()
 	}
+}
+
+// breakLine breaks the line of text, the field in of find, at its
+// selection after Ctrl+Return, and puts the caret after the break once the
+// field has the text, as the view is built again. It reports whether it
+// changed text.
+func (f *findState) breakLine(c *ui.Context, in ui.Element, text *string) bool {
+	if f.breakIn != text {
+		return false
+	}
+	if f.breakAt >= 0 {
+		in.SetTextSelection(f.breakAt, f.breakAt)
+		f.breakIn = nil
+		return false
+	}
+	runes := []rune(*text)
+	s, e := in.TextSelection()
+	s, e = min(s, len(runes)), min(e, len(runes))
+	*text = string(runes[:s]) + "\n" + string(runes[e:])
+	f.breakAt = s + 1
+	c.Invalidate()
+	return true
 }
 
 // enterStep is which way the Enter submitting in goes: back to the

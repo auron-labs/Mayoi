@@ -55,3 +55,11 @@ Users can choose Mayoi, VS Code, or JetBrains shortcuts without restarting. Pers
 - Paths: `cmd/mayoi/keypresets.go`, `cmd/mayoi/keymap.go`, `cmd/mayoi/prefskeys.go`, `internal/settings/settings.go`
 - Check: `go test ./cmd/mayoi -run 'Test(KeyPresets|Keymap|UserKeysWinOverAKeymap|JetBrainsNextOccurrence)'`
 - Upstream changes: preserve preset precedence, active shortcuts in settings, and editor focus.
+
+## Line breaks in find
+
+Ctrl+Enter, on every system as in VS Code, inserts a line break at the caret in the find and replace fields, where matches may span lines: the editor and the Markdown preview. Return and Shift+Return still step and replace, and a diff's find keeps Ctrl+Enter stepping because it matches line by line.
+
+- Paths: `cmd/mayoi/find.go`, `cmd/mayoi/markdownfind.go`
+- Check: `go test ./cmd/mayoi -run 'TestFind(CtrlEnterBreaksTheLine|FindsAMultilineSelection|ShiftEnterGoesBack)'`
+- Upstream changes: keep Ctrl+Enter breaking the line when taking changes to the find widget's keys or fields.
