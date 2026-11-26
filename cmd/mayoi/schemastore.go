@@ -282,18 +282,39 @@ func schemasChanged() {
 	if plugins == nil {
 		return
 	}
-	for _, a := range plugins.apps() {
-		a.post(a.invalidate)
-	}
+	plugins.onMain(func() {
+		for _, a := range plugins.apps() {
+			a.invalidate()
+		}
+	})
 }
+
+// ownGlobs are the globs of the person's schemas, those of a single file
+// first, which win over those of many, each in order.
+func ownGlobs(own map[string]string) []string {
+	globs := slices.DeleteFunc(slices.Sorted(maps.Keys(own)), func(g string) bool { return strings.HasPrefix(g, "!") })
+	slices.SortStableFunc(globs, func(x, y string) int {
+		switch {
+		case fileGlob(x) && !fileGlob(y):
+			return -1
+		case fileGlob(y) && !fileGlob(x):
+			return 1
+		}
+		return 0
+	})
+	return globs
+}
+
+// fileGlob reports whether a glob is a file's path, without wildcards.
+func fileGlob(g string) bool { return !strings.ContainsAny(g, "*?[{") }
 
 // jsonSchemaSettings are the settings vscode-json-language-server takes
 // as json.schemas: the catalog's globs of JSON files, when on, each but
 // the person's globs, which have theirs, as the server gives a file every
-// schema that matches it. "" for a glob is no schema.
+// schema that matches it; and a glob of the person's of many files but
+// their files with schemas of their own. "" for a glob is no schema.
 func jsonSchemaSettings(entries []schemaEntry, own map[string]string, on bool) map[string]any {
-	globs := slices.Sorted(maps.Keys(own))
-	globs = slices.DeleteFunc(globs, func(g string) bool { return strings.HasPrefix(g, "!") })
+	globs := ownGlobs(own)
 	var schemas []any
 	if on {
 		for _, e := range entries {
@@ -309,7 +330,7 @@ func jsonSchemaSettings(entries []schemaEntry, own map[string]string, on bool) m
 	}
 	for _, g := range globs {
 		if url := own[g]; url != "" {
-			schemas = append(schemas, map[string]any{"fileMatch": []string{g}, "url": url})
+			schemas = append(schemas, map[string]any{"fileMatch": append([]string{g}, fileExclusions(g, url, own)...), "url": url})
 		}
 	}
 	// Each change of the settings replaces them all: validation is off
@@ -317,6 +338,21 @@ func jsonSchemaSettings(entries []schemaEntry, own map[string]string, on bool) m
 	return map[string]any{"json": map[string]any{
 		"schemas": schemas, "validate": map[string]any{"enable": true}, "format": map[string]any{"enable": true},
 	}}
+}
+
+// fileExclusions are the "!" globs that keep the files the person gave
+// another schema from glob, of url, a glob of many files.
+func fileExclusions(glob, url string, own map[string]string) []string {
+	if fileGlob(glob) {
+		return nil
+	}
+	var out []string
+	for _, g := range ownGlobs(own) {
+		if fileGlob(g) && own[g] != url {
+			out = append(out, "!"+g)
+		}
+	}
+	return out
 }
 
 // yamlSchemaSettings are the settings rlsp-yaml takes: its
@@ -337,19 +373,26 @@ func yamlSchemaSettings(options json.RawMessage, own map[string]string, on bool)
 			schemas[url] = globs
 		}
 	}
-	for _, g := range slices.Sorted(maps.Keys(own)) {
-		url := own[g]
-		if url == "" {
-			continue
+	add := func(url string, globs ...string) {
+		list, _ := schemas[url].([]any)
+		if g, ok := schemas[url].(string); ok {
+			list = []any{g}
 		}
-		switch globs := schemas[url].(type) {
-		case string:
-			schemas[url] = []any{globs, g}
-		case []any:
-			schemas[url] = append(slices.Clip(globs), g)
-		default:
-			schemas[url] = []any{g}
+		for _, g := range globs {
+			list = append(slices.Clip(list), g)
 		}
+		schemas[url] = list
+	}
+	// "" is no choice: the server reads SchemaStore's schema all the same.
+	taken := maps.Clone(own)
+	maps.DeleteFunc(taken, func(_, url string) bool { return url == "" })
+	globs := ownGlobs(taken)
+	for _, g := range globs {
+		add(taken[g], g)
+	}
+	// After the globs, as the last that matches wins.
+	for _, g := range globs {
+		add(taken[g], fileExclusions(g, taken[g], taken)...)
 	}
 	settings["schemas"] = schemas
 	if !on {

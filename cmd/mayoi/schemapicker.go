@@ -169,7 +169,13 @@ func (a *app) showSchemaPicker(doc *document, query string) {
 			return
 		}
 		if ch := choices[i]; ch.retry {
-			refreshSchemaCatalog(true, true, func() { a.post(func() { a.showSchemaPicker(doc, "") }) })
+			refreshSchemaCatalog(true, true, func() {
+				a.post(func() {
+					if pk := &a.pluginPick; pk.open && a.picksOpened == a.schemaPick {
+						a.showSchemaPicker(doc, pk.query)
+					}
+				})
+			})
 			a.showSchemaPicker(doc, "")
 		} else {
 			a.chooseSchema(key, lang, ch.url)
@@ -211,12 +217,13 @@ func (a *app) chooseSchema(glob, lang, url string) {
 
 // fileSchema is the schema of the file at match, the path in its folder,
 // or its whole path without its first slash, for one outside it; of
-// language "json" or "yaml": the person's, by the first of their globs in
-// order that matches, else the first of the catalog that does when on.
-// url is "" for none; chosen tells it is the person's.
+// language "json" or "yaml": the person's, its own path's before a glob
+// of many files, else the first of the catalog that matches when on. url
+// is "" for none; chosen tells it is the person's.
 func fileSchema(match, lang string, own map[string]string, entries []schemaEntry, on bool) (url string, chosen bool) {
-	for _, g := range slices.Sorted(maps.Keys(own)) {
-		if serverGlobs([]string{g}).MatchFile(match) {
+	for _, g := range ownGlobs(own) {
+		// The YAML server takes "" for no choice.
+		if (own[g] != "" || lang != "yaml") && serverGlobs([]string{g}).MatchFile(match) {
 			return own[g], true
 		}
 	}

@@ -71,6 +71,19 @@ func TestSchemaSettings(t *testing.T) {
 		t.Fatalf("json settings with the catalog off: %s", got)
 	}
 
+	// A file's own schema wins over a glob of many of the person's.
+	own = map[string]string{"config/*.json": "https://example.com/x.json", "config/app.json": "", "config/b.json": "https://example.com/x.json"}
+	got, _ = json.Marshal(jsonSchemaSettings(nil, own, false)["json"].(map[string]any)["schemas"])
+	if want := `[{"fileMatch":["config/b.json"],"url":"https://example.com/x.json"},` +
+		`{"fileMatch":["config/*.json","!config/app.json"],"url":"https://example.com/x.json"}]`; string(got) != want {
+		t.Fatalf("json schemas of a file's own and a glob's: %s", got)
+	}
+	own = map[string]string{"deploy/*.yaml": "https://example.com/x.json", "deploy/app.yaml": "https://example.com/y.json", "deploy/none.yaml": ""}
+	got, _ = json.Marshal(yamlSchemaSettings(nil, own, true))
+	if want := `{"schemas":{"https://example.com/x.json":["deploy/*.yaml","!deploy/app.yaml"],"https://example.com/y.json":["deploy/app.yaml"]}}`; string(got) != want {
+		t.Fatalf("yaml schemas of a file's own and a glob's: %s", got)
+	}
+
 	options := json.RawMessage(`{"httpProxy":"http://proxy:3128","schemas":{"https://example.com/app.json":"deploy/*.yaml"}}`)
 	own = map[string]string{"a.yaml": "https://example.com/app.json", "b.yaml": "https://example.com/b.json", "c.yaml": ""}
 	got, _ = json.Marshal(yamlSchemaSettings(options, own, true))

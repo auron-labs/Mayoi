@@ -36,6 +36,10 @@ func TestFileSchema(t *testing.T) {
 		{"settings.json", "yaml", nil, true, "", false},
 		{"package.json", "json", map[string]string{"package.json": ""}, true, "", true},
 		{"a/config/app.json", "json", map[string]string{"config/*.json": "https://example.com/app.json"}, true, "https://example.com/app.json", true},
+		{"config/app.json", "json", map[string]string{"config/*.json": "https://example.com/x.json", "config/app.json": "https://example.com/y.json"}, true,
+			"https://example.com/y.json", true},
+		{"config/app.json", "json", map[string]string{"config/*.json": "https://example.com/x.json", "config/app.json": ""}, true, "", true},
+		{"settings.yaml", "yaml", map[string]string{"settings.yaml": ""}, true, "https://example.com/settings.json", false},
 	} {
 		url, chosen := fileSchema(c.path, c.lang, c.own, entries, c.on)
 		if url != c.url || chosen != c.chosen {
@@ -197,6 +201,9 @@ func TestChooseSchemaStates(t *testing.T) {
 	if want := map[string]string{"ci.yaml": "https://example.com/settings.json"}; !reflect.DeepEqual(a.settings.FileSchemas, want) {
 		t.Fatalf("fileSchemas = %v", a.settings.FileSchemas)
 	}
+	s := a.lspRunningFor(a.activeEditor().document)[0]
+	want := `{"schemas":{"https://example.com/settings.json":["ci.yaml"]}}`
+	hs.until("the choice sent", func() bool { return schemaSettingsOf(t, s) == want })
 	a.openSchemaPicker()
 	hs.settle()
 	if pk.items[0].Label != "Settings" || pk.items[1].Label != "No Schema" {
