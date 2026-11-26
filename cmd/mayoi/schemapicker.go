@@ -19,6 +19,7 @@ import (
 // settings, the catalog or the file change.
 type schemaShown struct {
 	path  string
+	lang  string
 	gen   [2]uint64
 	label string // "" for a file whose servers take no schemas
 }
@@ -59,8 +60,8 @@ func (a *app) schemaOf(d *document) (url string, chosen bool) {
 // when its servers take none.
 func (a *app) schemaLabel(d *document) string {
 	_, catalog := schemaCatalog()
-	gen := [2]uint64{a.settings.Gen(), catalog}
-	if sh := &a.schemaShown; sh.path == d.path && sh.gen == gen {
+	gen, lang := [2]uint64{a.settings.Gen(), catalog}, languageOf(d)
+	if sh := &a.schemaShown; sh.path == d.path && sh.lang == lang && sh.gen == gen {
 		return sh.label
 	}
 	label := ""
@@ -72,7 +73,7 @@ func (a *app) schemaLabel(d *document) string {
 			label = schemaName(url)
 		}
 	}
-	a.schemaShown = schemaShown{path: d.path, gen: gen, label: label}
+	a.schemaShown = schemaShown{path: d.path, lang: lang, gen: gen, label: label}
 	return label
 }
 

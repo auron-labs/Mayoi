@@ -215,3 +215,33 @@ func TestChooseSchemaStates(t *testing.T) {
 		t.Fatalf("fileSchemas = %v", a.settings.FileSchemas)
 	}
 }
+
+// A file given JSON in the language picker shows its schema in the status
+// bar, and given another language again, none.
+func TestSchemaFollowsTheLanguage(t *testing.T) {
+	t.Setenv("MAYOI_FAKE_LSP", "1")
+	file := filepath.Join(t.TempDir(), "catalog.json")
+	os.WriteFile(file, []byte(testCatalog), 0o644)
+	withSchemaCatalog(t, file, offlineCatalog)
+	manifest, _ := json.Marshal(map[string]any{"name": "fake-json", "contributes": map[string]any{
+		"languageServers": []any{map[string]any{"id": "fake-json.server", "languages": []string{"json"}, "schemas": "json",
+			"command": os.Args[0], "args": []string{"-test.run=^$"}}},
+	}})
+	hs := newHarness(t, false)
+	withPlugins(hs, map[string]map[string]string{"fake-json": {"plugin.json": string(manifest)}})
+	t.Cleanup(stopServers)
+	a := hs.a
+	os.WriteFile(hs.path("data.conf"), []byte("{}\n"), 0o644)
+	a.openFile(hs.path("data.conf"), true)
+	hs.settle()
+	d := a.activeEditor().document
+	if slices.Contains(hs.tt.Texts(), "No Schema") {
+		t.Fatal("a schema for a file of no JSON")
+	}
+	a.setDocumentLanguage(d, nil, "json")
+	a.languageChanged(d)
+	hs.until("the file's schema in the status bar", func() bool { return slices.Contains(hs.tt.Texts(), "No Schema") })
+	a.setDocumentLanguage(d, nil, "yaml")
+	a.languageChanged(d)
+	hs.until("no schema in the status bar", func() bool { return !slices.Contains(hs.tt.Texts(), "No Schema") })
+}
