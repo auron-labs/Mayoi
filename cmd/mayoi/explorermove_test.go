@@ -4,8 +4,11 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
+
+	"github.com/egoist/mygo/ui"
 
 	"mayoi/internal/remote"
 	"mayoi/locales"
@@ -134,8 +137,8 @@ func TestExplorerDragRefusesBadMoves(t *testing.T) {
 
 	// What another explorer drags, or search and source control, which
 	// drag no tree, moves nothing here.
-	a.dropInTree(&treeDrag{path: hs.path("README.md"), from: &app{}}, hs.path("web"))
-	a.dropInTree(treeSource(dragItem{file: &fileDrag{path: hs.path("README.md")}}), hs.path("web"))
+	a.dropInTree(a.treePaths(&treeDrag{path: hs.path("README.md"), from: &app{}}), hs.path("web"))
+	a.dropInTree(a.treePaths(dragItem{file: &fileDrag{path: hs.path("README.md")}}), hs.path("web"))
 	if !onDisk(hs.path("README.md")) || a.fails != fails {
 		t.Fatal("a drag from elsewhere moved a file")
 	}
@@ -232,5 +235,40 @@ func TestExplorerDragSurvivesWheel(t *testing.T) {
 			tt.Release(x+20, y+20)
 			hs.settle()
 		})
+	}
+}
+
+// Several chosen on a host move together, one at a time: of two of a
+// name, the second stays, saying why, and goes over nothing.
+func TestExplorerDragMovesRemoteSelection(t *testing.T) {
+	hs, conn, dir := remoteHarness(t)
+	a := hs.a
+	if _, err := conn.Run(nil, `mkdir -p "$1/dest" "$1/lib" && printf 'lib\n' > "$1/lib/a.txt"`, dir); err != nil {
+		t.Fatal(err)
+	}
+	a.files.Open.Add(hs.root + "/src")
+	a.files.Open.Add(hs.root + "/lib")
+	a.tree.Refresh()
+	hs.until("dest and lib/a.txt", func() bool { return hs.tt.HasText("dest") && textCount(hs, "a.txt") == 2 })
+	for _, name := range []string{"main.go", "a.txt"} {
+		mustClick(t, hs, ui.Cmd, name)
+	}
+	// The a.txt of src, the row after src's.
+	x, _ := moveRowAt(t, hs, "a.txt")
+	_, y := moveRowAt(t, hs, "src")
+	hs.tt.ClickAtWith(ui.Cmd, x, y+explorerRowH)
+	hs.settle()
+	if got := explorerSelected(hs); len(got) != 3 {
+		t.Fatalf("chosen %q", got)
+	}
+	dragRow(t, hs, "main.go", "dest")
+	toasted(hs, locales.FailMove("a.txt", locales.ErrNameExists()))
+	hs.until("the moves", func() bool { return len(a.moving) == 0 })
+	if out, err := conn.Run(nil, `test -f "$1/dest/main.go" && cat "$1/dest/a.txt"; ls "$1/lib" "$1/src"`, dir); err != nil || !strings.HasPrefix(string(out), "lib\n") || strings.Count(string(out), "a.txt") != 1 {
+		t.Fatalf("on the host %q: %v", out, err)
+	}
+	hs.until("the moved rows", func() bool { return textCount(hs, "a.txt") == 2 })
+	if got := explorerSelected(hs); !slices.Equal(got, []string{"dest/a.txt", "dest/main.go", "src/a.txt"}) {
+		t.Fatalf("chosen %q", got)
 	}
 }

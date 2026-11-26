@@ -400,14 +400,23 @@ func (a *app) fileTree(c *ui.Context) {
 			kept = path
 		}
 		// A file drags to the columns and to rows of the explorer, a folder
-		// to rows alone; both drag out to other apps as a copy.
+		// to rows alone; both drag out to other apps as a copy. Chosen with
+		// others, it drags them too: the files of them open with it.
 		src := &treeDrag{path: path, from: a}
 		var value any = src
 		if !isDir {
-			value = dragItem{file: &fileDrag{path: path}, tree: src}
+			value = dragItem{file: &fileDrag{path: path, more: func() []string {
+				var files []string
+				for _, p := range a.explorerPicked(path) {
+					if p != path && !t.IsDir(p) {
+						files = append(files, p)
+					}
+				}
+				return files
+			}}, tree: src}
 		}
 		if !editing {
-			a.dragValue(row, value, func() []string { return []string{path} })
+			a.dragValue(row, value, func() []string { return a.explorerPicked(path) })
 		}
 		if row.Dragging() {
 			dragged = path
@@ -422,15 +431,16 @@ func (a *app) fileTree(c *ui.Context) {
 			srcs := slices.Clone(paths)
 			action = func() { a.copyPathsInto(srcs, into) }
 		}
-		// A file or a folder of the explorer moves into it.
+		// A file or a folder of the explorer moves into it, with those
+		// chosen with it.
 		if v, ok := ui.Drop[treeTake](row); ok {
-			if s := treeSource(v); s != nil {
-				action = func() { a.dropInTree(s, into) }
+			if paths := a.treePaths(v); paths != nil {
+				action = func() { a.dropInTree(paths, into) }
 			}
 		}
 		moveOver := false
 		if v, ok := a.treeDragOver(row); ok {
-			moveOver = a.canMove(treeSource(v), into)
+			moveOver = a.canMove(a.treePaths(v), into)
 		}
 		if row.FileDragOver() || moveOver {
 			row.Background(p.accent.Alpha(0.16)).Radius(4)
@@ -593,8 +603,9 @@ func (a *app) fileTree(c *ui.Context) {
 	if selection != "" {
 		for i := range a.files.Rows() {
 			if a.files.Item(i) == selection {
-				if a.selectInTree != "" && a.fileRow != i {
-					// Following the document shown chooses its row alone.
+				if a.selectInTree != "" && a.fileRow != i && !a.explorerSel.Has(selection) {
+					// Following the document shown chooses its row alone;
+					// rows moved together stay chosen together.
 					a.clearExplorerSelection()
 				}
 				a.fileRow = i

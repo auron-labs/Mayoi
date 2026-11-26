@@ -8,6 +8,8 @@ import (
 	"testing"
 
 	"github.com/egoist/mygo/ui"
+
+	"mayoi/locales"
 )
 
 // explorerSelected are the paths of the rows chosen together, in the
@@ -249,8 +251,9 @@ func TestExplorerCopiesSelection(t *testing.T) {
 	}
 }
 
-// A row dragged moves alone, chosen with others or not, which then stop
-// being chosen; the rows chosen show it.
+// A row dragged with others chosen moves them all, which stay chosen
+// where they went; one not chosen moves alone, and the others stop being
+// chosen.
 func TestExplorerDragWithSelection(t *testing.T) {
 	hs := newHarness(t, true)
 	a := hs.a
@@ -259,17 +262,86 @@ func TestExplorerDragWithSelection(t *testing.T) {
 	if a.explorerSel.Len() != 2 {
 		t.Fatalf("chose %q", explorerSelected(hs))
 	}
-	if !hs.tt.HasText("main.go") {
-		t.Fatal("no row")
-	}
+	// The first chosen, not the row chosen last.
 	dragRow(t, hs, "main.go", "web")
-	if !onDisk(hs.path("web/main.go")) || !onDisk(hs.path("README.md")) {
-		t.Fatal("the drag did not move main.go alone")
+	if !onDisk(hs.path("web/main.go")) || !onDisk(hs.path("web/README.md")) || onDisk(hs.path("README.md")) {
+		t.Fatal("the drag did not move both into web")
+	}
+	hs.settle()
+	if got := explorerSelected(hs); !slices.Equal(got, []string{"web/main.go", "web/README.md"}) {
+		t.Fatalf("chosen %q", got)
+	}
+	// Below the rows, both into the workspace's folder.
+	x0, y0 := moveRowAt(t, hs, "README.md")
+	_, ly := moveRowAt(t, hs, "go.mod")
+	hs.drag(x0, y0, x0, ly+80)
+	if !onDisk(hs.path("main.go")) || !onDisk(hs.path("README.md")) || onDisk(hs.path("web/main.go")) {
+		t.Fatal("the drag did not move both back")
+	}
+	hs.settle()
+	if got := explorerSelected(hs); !slices.Equal(got, []string{"main.go", "README.md"}) {
+		t.Fatalf("chosen %q", got)
+	}
+	dragRow(t, hs, "go.mod", "web")
+	if !onDisk(hs.path("web/go.mod")) || !onDisk(hs.path("README.md")) || !onDisk(hs.path("main.go")) {
+		t.Fatal("the drag did not move go.mod alone")
 	}
 	if a.explorerSel.Len() != 0 {
 		t.Fatalf("still chosen %q", explorerSelected(hs))
 	}
 	if a.fails != 0 {
 		t.Fatalf("%d failures", a.fails)
+	}
+}
+
+// Of the rows dragged together, one in a folder chosen goes with it, one
+// already where it is dropped stays, and one dropped into itself stays,
+// saying why, while the others move.
+func TestExplorerDragSelectionSkips(t *testing.T) {
+	hs := newHarness(t, true)
+	a := hs.a
+	a.files.Open.Add(hs.path("internal"))
+	a.files.Open.Add(hs.path("web"))
+	hs.settle()
+	for _, name := range []string{"internal", "a", "index.html", "go.mod"} {
+		mustClick(t, hs, ui.Cmd, name)
+	}
+	dragRow(t, hs, "go.mod", "style.css")
+	if !onDisk(hs.path("web/internal/a/a.go")) || onDisk(hs.path("web/a")) || !onDisk(hs.path("web/go.mod")) || !onDisk(hs.path("web/index.html")) {
+		t.Fatal("the drag did not move internal and go.mod into web")
+	}
+	if a.fails != 0 {
+		t.Fatalf("%d failures", a.fails)
+	}
+
+	a.clearExplorerSelection()
+	a.fileRow = -1
+	mustClick(t, hs, ui.Cmd, "README.md")
+	mustClick(t, hs, ui.Cmd, "web")
+	dragRow(t, hs, "README.md", "a")
+	toasted(hs, locales.FailMove("web", locales.ErrMoveIntoItself()))
+	if !onDisk(hs.path("web/internal/a/README.md")) || onDisk(hs.path("README.md")) {
+		t.Fatal("README.md did not move into web/internal/a")
+	}
+}
+
+// The files of the rows chosen open together where they are dropped on
+// the editor.
+func TestExplorerDragSelectionOpens(t *testing.T) {
+	hs := newHarness(t, true)
+	a := hs.a
+	a.openFile(hs.path("go.mod"), true)
+	hs.settle()
+	mustClick(t, hs, ui.Cmd, "README.md")
+	mustClick(t, hs, ui.Cmd, "main.go")
+	mustClick(t, hs, ui.Cmd, "web")
+	x0, y0 := moveRowAt(t, hs, "README.md")
+	body, ok := hs.tt.Find("Editor go.mod")
+	if !ok {
+		t.Fatalf("no editor: %q", hs.tt.Texts())
+	}
+	hs.drag(x0, y0, body.X+body.W/2, body.Y+body.H/2)
+	if got := tabNames(a.cols[0]); len(a.cols[0].tabs) != 3 || !strings.Contains(got, "README.md") || !strings.Contains(got, "main.go") {
+		t.Fatalf("tabs %q", got)
 	}
 }

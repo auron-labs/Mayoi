@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"path/filepath"
+	"slices"
 
 	"mayoi/internal/bg"
 	"mayoi/internal/remote"
@@ -15,67 +16,106 @@ import (
 // A file or a folder dragged from the explorer onto a row of it moves
 // into the row's folder, or the folder of the row's file; onto the
 // folder's row at the top, or below the rows, into the workspace's
-// folder. It moves within its project alone, never over a file or a
-// folder of its name, nor into itself, and its open documents follow it
-// as they follow a rename.
+// folder. Dragged with the rows chosen with it, all of them move. Each
+// moves within its project alone, never over a file or a folder of its
+// name, nor into itself, and its open documents follow it as they follow
+// a rename.
 
 // treeRootDrop makes e move a file or a folder of the explorer dropped on
 // it into the workspace's folder, setting action to, and reports whether
 // one that would is over it.
 func (a *app) treeRootDrop(e ui.Element, action *func()) bool {
 	if v, ok := ui.Drop[treeTake](e); ok {
-		if s := treeSource(v); s != nil {
-			*action = func() { a.dropInTree(s, a.root) }
+		if paths := a.treePaths(v); paths != nil {
+			*action = func() { a.dropInTree(paths, a.root) }
 		}
 	}
 	v, ok := a.treeDragOver(e)
-	return ok && a.canMove(treeSource(v), a.root)
+	return ok && a.canMove(a.treePaths(v), a.root)
 }
 
-// canMove reports whether s, dropped into dir, would move: it is of this
-// explorer, not in dir already, and dir is neither it nor in it.
-func (a *app) canMove(s *treeDrag, dir string) bool {
-	return s != nil && s.from == a && dir != "" && dir != s.path && dir != remote.Dir(s.path) &&
-		!remote.Contains(s.path, dir) && remote.HostOf(dir) == remote.HostOf(s.path)
+// treePaths are the files and folders of this explorer that v drags: its
+// row's, or those chosen with it, but those inside another of them, which
+// go with that one. nil for what was dragged from elsewhere.
+func (a *app) treePaths(v treeTake) []string {
+	s := treeSource(v)
+	if s == nil || s.from != a {
+		return nil
+	}
+	return outermost(a.explorerPicked(s.path))
 }
 
-// dropInTree moves s, dropped on the explorer, into dir. Dropped where it
-// is, as on its own row or among its neighbors, it stays, saying nothing.
-func (a *app) dropInTree(s *treeDrag, dir string) {
-	if s == nil || s.from != a || dir == "" || dir == s.path || dir == remote.Dir(s.path) {
-		return
-	}
-	if remote.Contains(s.path, dir) {
-		a.fail("%s", locales.FailMove(filepath.Base(s.path), locales.ErrMoveIntoItself()))
-		return
-	}
-	if remote.HostOf(dir) != remote.HostOf(s.path) {
-		return
-	}
-	a.moveInto(s.path, dir)
+// canMove reports whether any of paths, dropped into dir, would move: it
+// is not in dir already, and dir is neither it nor in it.
+func (a *app) canMove(paths []string, dir string) bool {
+	return dir != "" && slices.ContainsFunc(paths, func(path string) bool {
+		return dir != path && dir != remote.Dir(path) && !remote.Contains(path, dir) && remote.HostOf(dir) == remote.HostOf(path)
+	})
 }
 
-// moveInto moves the file or the folder at path into dir, keeping its
-// name, unless another of that name is there. On a host it moves in the
-// background, once at a time.
-func (a *app) moveInto(path, dir string) {
-	to := remote.Join(dir, filepath.Base(path))
-	if !remote.Is(path) {
-		a.moved(path, to, moveEntry(path, to))
+// dropInTree moves paths, dropped on the explorer, into dir. One dropped
+// where it is, as on its own row or among its neighbors, stays, saying
+// nothing; one dropped into itself stays, saying why, and the others move.
+func (a *app) dropInTree(paths []string, dir string) {
+	if dir == "" {
 		return
 	}
-	if a.moving[path] {
+	var move []string
+	for _, path := range paths {
+		switch {
+		case dir == path || dir == remote.Dir(path) || remote.HostOf(dir) != remote.HostOf(path):
+		case remote.Contains(path, dir):
+			a.fail("%s", locales.FailMove(filepath.Base(path), locales.ErrMoveIntoItself()))
+		default:
+			move = append(move, path)
+		}
+	}
+	a.moveInto(move, dir)
+}
+
+// moveInto moves the files and folders of paths into dir, keeping their
+// names, but each that another of its name is there. On a host they move
+// in the background, one at a time, and one moving already does not move
+// again: one at a time also keeps two of a name from going over each
+// other.
+func (a *app) moveInto(paths []string, dir string) {
+	if !remote.Is(dir) {
+		// All move before any is followed, here and on a host, so that
+		// the folders read again after the first hold the others too.
+		errs := make([]error, len(paths))
+		for i, path := range paths {
+			errs[i] = moveEntry(path, remote.Join(dir, filepath.Base(path)))
+		}
+		for i, path := range paths {
+			a.moved(path, remote.Join(dir, filepath.Base(path)), errs[i])
+		}
+		return
+	}
+	paths = slices.DeleteFunc(slices.Clone(paths), func(path string) bool { return a.moving[path] })
+	if len(paths) == 0 {
 		return
 	}
 	if a.moving == nil {
 		a.moving = map[string]bool{}
 	}
-	a.moving[path] = true
+	for _, path := range paths {
+		a.moving[path] = true
+	}
 	bg.Go(func() {
-		err := moveEntry(path, to)
+		errs := make([]error, len(paths))
+		for i, path := range paths {
+			errs[i] = moveEntry(path, remote.Join(dir, filepath.Base(path)))
+		}
 		a.post(func() {
-			delete(a.moving, path)
-			a.moved(path, to, err)
+			for i, path := range paths {
+				delete(a.moving, path)
+				a.moved(path, remote.Join(dir, filepath.Base(path)), errs[i])
+			}
+			// The folder, read ahead before the moves, is read again, as
+			// loading, unlike a poll: the rows chosen that went into it
+			// stay chosen until they show.
+			a.tree.Load(dir)
+			a.tree.RefreshIn(dir)
 		})
 	})
 }

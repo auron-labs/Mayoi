@@ -94,7 +94,9 @@ func (a *app) pruneExplorerSelection(view explorerTree) {
 	if sel.Len() == 0 {
 		return
 	}
-	if a.fileRow < 0 || a.fileRow >= a.files.Rows() {
+	// A row about to be chosen, as one moved, which the list lets go of
+	// as its file goes, keeps the others.
+	if a.fileRow < 0 && a.selectInTree == "" {
 		sel.Clear()
 		a.explorerAnchor = ""
 		return
@@ -137,7 +139,7 @@ func (a *app) pruneExplorerSelection(view explorerTree) {
 		sel.Clear()
 		return
 	}
-	if !sel.Has(a.files.Item(a.fileRow)) {
+	if a.fileRow < 0 || a.fileRow >= a.files.Rows() || !sel.Has(a.files.Item(a.fileRow)) {
 		// The row chosen closed or went: the last row chosen takes its place.
 		last := -1
 		for path := range sel.All() {
@@ -165,6 +167,19 @@ func (a *app) explorerPicked(path string) []string {
 		}
 	}
 	return picked
+}
+
+// outermost are paths, in the tree's order, but those inside another of
+// them, which that order puts after the one they are in.
+func outermost(paths []string) []string {
+	var out []string
+	for _, p := range paths {
+		if n := len(out); n > 0 && remote.Contains(out[n-1], p) {
+			continue
+		}
+		out = append(out, p)
+	}
+	return out
 }
 
 // explorerMulti reports whether path is one of several rows chosen.
@@ -226,8 +241,9 @@ func (a *app) explorerSelectionDraw(pt *ui.Painter, r ui.Rect, depth int) {
 // explorerSelectionInput takes what chooses several rows in a frame of the
 // explorer: a row Shift or Cmd clicked, with mods, which gives the tree
 // the keyboard; Shift with Up, Down, Home and End, from the anchor; and a
-// row dragged, which alone moves, and so is chosen alone. The list's own
-// keys and a plain click choose a row alone.
+// row dragged, which moves with the rows chosen with it, or, not one of
+// them, alone, and so is chosen alone. The list's own keys and a plain
+// click choose a row alone.
 func (a *app) explorerSelectionInput(out ui.Element, view explorerTree, picked string, mods ui.Modifiers, dragged string) {
 	if out.Changed() {
 		a.clearExplorerSelection()
@@ -256,7 +272,7 @@ func (a *app) explorerSelectionInput(out ui.Element, view explorerTree, picked s
 			a.files.List.ScrollIntoView(to)
 		}
 	}
-	if dragged != "" && a.explorerSel.Len() > 0 {
+	if dragged != "" && a.explorerSel.Len() > 0 && !a.explorerSel.Has(dragged) {
 		a.clearExplorerSelection()
 		if i := a.explorerRowOf(dragged); i >= 0 {
 			a.fileRow = i

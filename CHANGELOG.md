@@ -65,6 +65,8 @@ needs a `## <version>` section here, or its build fails.
 - `fileSchemas` in `settings.json` sets the schema of files by glob, over SchemaStore's.
 - Turn off `schemaStore` to download no schemas.
 - **Refresh** in a folder's menu in the explorer reads that folder again, with the folders open in it.
+- Dragging one of several chosen files and folders in the explorer moves them all, and they stay chosen.
+- Dropped on the editor, the chosen files open together.
 
 ## 0.23.4
 
