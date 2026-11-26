@@ -322,6 +322,24 @@ func (t *Tree) Refresh() {
 	}
 }
 
+// RefreshIn reads dir, and the directories read so far inside it, again:
+// of a remote tree, at one round trip.
+func (t *Tree) RefreshIn(dir string) {
+	var dirs []string
+	for d := range t.children {
+		if remote.Contains(dir, d) && !t.loading[d] {
+			dirs = append(dirs, d)
+		}
+	}
+	if t.remote {
+		t.lookAgain(dirs)
+		return
+	}
+	for _, d := range dirs {
+		t.reload(d)
+	}
+}
+
 // sortEntries are the paths of a directory's entries, directories first,
 // then files, each by name, as the file managers sort them, and the
 // directories among them.

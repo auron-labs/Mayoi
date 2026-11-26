@@ -515,3 +515,56 @@ func TestExplorerMarksLinks(t *testing.T) {
 		t.Fatal("a chain through a link is not marked")
 	}
 }
+
+// chooseRowMenu chooses item of the menu of the explorer's row of name.
+func chooseRowMenu(t *testing.T, hs *harness, name, item string) {
+	t.Helper()
+	if err := hs.tt.RightClick(name); err != nil {
+		t.Fatal(err)
+	}
+	hs.settle()
+	if err := hs.tt.ChooseMenuItem(item); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// A folder's Refresh reads it, and the folders read inside it, again, and
+// no other.
+func TestExplorerRefreshesAFolder(t *testing.T) {
+	hs := newHarness(t, true)
+	a, tt := hs.a, hs.tt
+	inner := hs.path("internal/a")
+	a.files.Open.Add(hs.path("internal"))
+	a.files.Open.Add(inner)
+	hs.until("internal/a read", func() bool { return a.tree.Loaded(inner) })
+	// What the watcher misses.
+	a.tree.Close()
+	for _, name := range []string{"internal/a/new.go", "new.txt"} {
+		if err := os.WriteFile(hs.path(name), nil, 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	chooseRowMenu(t, hs, "internal", locales.Refresh())
+	hs.until("the new file", func() bool { return tt.HasText("new.go") })
+	if tt.HasText("new.txt") {
+		t.Fatal("the workspace's folder was read again")
+	}
+}
+
+func TestExplorerRefreshesARemoteFolder(t *testing.T) {
+	hs, conn, dir := remoteHarness(t)
+	a, tt := hs.a, hs.tt
+	src := hs.root + "/src"
+	a.files.Open.Add(src)
+	hs.until("src open", func() bool { return tt.HasText("a.txt") })
+	// No polls, nor inotifywait: only a refresh sees the host change.
+	a.tree.Close()
+	if _, err := conn.Run(nil, `printf 'x\n' > "$1/src/new.txt" && printf 'x\n' > "$1/other.txt"`, dir); err != nil {
+		t.Fatal(err)
+	}
+	chooseRowMenu(t, hs, "src", locales.Refresh())
+	hs.until("the new file", func() bool { return tt.HasText("new.txt") })
+	if tt.HasText("other.txt") {
+		t.Fatal("the workspace's folder was read again")
+	}
+}

@@ -71,3 +71,11 @@ JSON and YAML files get SchemaStore's schema by their names, its catalog downloa
 - Paths: `cmd/mayoi/schemastore.go`, `cmd/mayoi/schemapicker.go`, `cmd/mayoi/lsp.go`, `cmd/mayoi/pluginpick.go`, `internal/plugin/manifest.go`, `internal/settings/settings.go`, `plugins/vscode-json-language-server/plugin.json`, `plugins/rlsp-yaml/plugin.json`
 - Check: `go test ./cmd/mayoi -run 'Test(SchemaSettings|SchemaCatalogDownloads|ChooseSchema)'`
 - Upstream changes: keep the `schemas` manifest field on the JSON and YAML servers and the settings each server expects: vscode-json-language-server's `json.schemas` with `json.validate.enable`, and rlsp-yaml's full settings object.
+
+## Explorer refresh, moves and deletes
+
+Users can refresh one folder of the explorer, and what is read inside it, from its menu, locally and on SSH hosts.
+
+- Paths: `cmd/mayoi/sidebar.go`, `internal/workspace/tree.go`
+- Check: `go test ./internal/workspace -run TestRefreshInReadsAFolderAgain` and `go test ./cmd/mayoi -run 'TestExplorerRefreshesA'`
+- Upstream changes: keep the folder menu's **Refresh** and `Tree.RefreshIn` when taking explorer or tree changes.

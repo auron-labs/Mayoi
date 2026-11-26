@@ -472,6 +472,11 @@ func (a *app) fileTree(c *ui.Context) {
 			if isDir && m.Item(locales.FindInFolderEllipsis()).Chosen() {
 				action = func() { a.searchInFolder(t.Rel(path)) }
 			}
+			// A compact row is read again from its first folder, which
+			// holds the others.
+			if isDir && m.Item(locales.Refresh()).Chosen() {
+				action = func() { t.RefreshIn(entry.first) }
+			}
 			m.Separator()
 			if _, changed := a.repositoryForPath(path).git.entries[path]; changed && !isDir {
 				if m.Item(locales.CmdGitOpenChanges()).Chosen() {
@@ -667,6 +672,9 @@ func (a *app) fileTree(c *ui.Context) {
 		}
 		if m.Item(locales.OpenInTerminal()).Chosen() {
 			action = func() { a.openTerminal(a.root) }
+		}
+		if m.Item(locales.Refresh()).Chosen() {
+			action = func() { a.tree.Refresh() }
 		}
 		m.Separator()
 		if m.Item(locales.PasteLabel()).Disabled(len(a.clipboardSources()) == 0).Chosen() {

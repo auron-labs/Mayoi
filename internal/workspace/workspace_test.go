@@ -203,3 +203,29 @@ func TestRemoteEventNamesTheSlashFolder(t *testing.T) {
 		t.Fatalf("pending %#v, want %q", tree.pending, root)
 	}
 }
+
+func TestRefreshInReadsAFolderAgain(t *testing.T) {
+	root := t.TempDir()
+	mkfiles(t, root, "src/lib/a.go", "other/b.go")
+	m := make(mainThread, 64)
+	// No watcher: only a refresh sees what changes on disk.
+	tree := &Tree{Root: root, post: m.post, children: map[string][]string{}, dirs: map[string]bool{root: true},
+		links: map[string]bool{}, loading: map[string]bool{}, watched: map[string]bool{}}
+	src, lib, other := filepath.Join(root, "src"), filepath.Join(root, "src", "lib"), filepath.Join(root, "other")
+	for _, d := range []string{root, src, lib, other} {
+		tree.Load(d)
+		m.wait(t, func() bool { return tree.Loaded(d) })
+	}
+	mkfiles(t, root, "new.go", "src/lib/new.go", "other/new.go")
+	tree.RefreshIn(src)
+	if !tree.Loading(src) || !tree.Loading(lib) || tree.Loading(root) || tree.Loading(other) {
+		t.Fatalf("reading src %v, lib %v, root %v, other %v", tree.Loading(src), tree.Loading(lib), tree.Loading(root), tree.Loading(other))
+	}
+	m.wait(t, func() bool { return !tree.Loading(src) && !tree.Loading(lib) })
+	if !slices.Contains(tree.Children(lib), filepath.Join(lib, "new.go")) {
+		t.Fatalf("lib holds %v", tree.Children(lib))
+	}
+	if slices.Contains(tree.Children(other), filepath.Join(other, "new.go")) || len(tree.Children(root)) != 2 {
+		t.Fatal("a folder outside src was read again")
+	}
+}

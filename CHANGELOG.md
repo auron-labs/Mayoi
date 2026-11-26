@@ -64,6 +64,7 @@ needs a `## <version>` section here, or its build fails.
 - **Choose Schema…** in the command palette lists SchemaStore's schemas for the file, and No Schema.
 - `fileSchemas` in `settings.json` sets the schema of files by glob, over SchemaStore's.
 - Turn off `schemaStore` to download no schemas.
+- **Refresh** in a folder's menu in the explorer reads that folder again, with the folders open in it.
 
 ## 0.23.4
 
