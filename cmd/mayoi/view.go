@@ -1650,7 +1650,7 @@ func (a *app) statusBar(c *ui.Context) {
 			}
 		})
 		if visible.language {
-			item("lang", highlight.DisplayName(d.hl.Lexer()), "", nil, nil)
+			item("lang", highlight.DisplayName(d.hl.Lexer()), a.withKey(locales.LanguagePick(), "view.languageMode"), nil, a.openLanguagePicker)
 		}
 	})
 }

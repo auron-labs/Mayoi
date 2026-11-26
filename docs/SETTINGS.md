@@ -356,7 +356,8 @@ differ in width lines them up only roughly.
 - **`fileAssociations`** sets the language of files by glob, as `{"*.foo": "yaml", "Jenkinsfile": "groovy"}`. A glob
   without a `/` matches a file's name in any folder; one with a `/`, as `config/*.conf`, matches the end of a path.
   A language is a name or alias of the syntax highlighter in any case, and an entry that names none is ignored. It
-  decides the highlighting and the language servers, before a plugin's languages. A folder can't set it.
+  decides the highlighting and the language servers, before a plugin's languages. A folder can't set it. The
+  language picker in the status bar adds an entry with **Configure File Association for “*.ext”…**.
 
 ```json
 {

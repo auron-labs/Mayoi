@@ -774,18 +774,15 @@ func languageOf(d *document) string {
 	}
 	// The person's file associations come before a plugin's language.
 	if l := highlight.Associated(d.path); l != nil {
-		return strings.ToLower(strings.ReplaceAll(highlight.Name(l), " ", ""))
+		return highlight.ID(l)
 	}
 	if id := pluginLanguage(d.path); id != "" {
 		return id
 	}
-	var name string
 	if d.hl != nil {
-		name = highlight.Name(d.hl.Lexer())
-	} else {
-		name = highlight.Name(highlight.Lexer(d.path))
+		return highlight.ID(d.hl.Lexer())
 	}
-	return strings.ToLower(strings.ReplaceAll(name, " ", ""))
+	return highlight.ID(highlight.Lexer(d.path))
 }
 
 // prefsPlugins is the settings window's section of the plugins.

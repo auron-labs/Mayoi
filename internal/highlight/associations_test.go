@@ -1,6 +1,7 @@
 package highlight
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/alecthomas/chroma/v2"
@@ -49,5 +50,18 @@ func TestAssociationsBeatThePluginName(t *testing.T) {
 	SetAssociations(nil)
 	if got := Name(Lexer("x.foo")); got != "Python" {
 		t.Errorf("after clearing %q", got)
+	}
+}
+
+// Each language to choose comes back from its ID, as a file's language
+// is kept, and its name, as the setting has it.
+func TestLanguagesRoundTrip(t *testing.T) {
+	for _, l := range Languages() {
+		if got := Named(ID(l)); got == nil || Name(got) != Name(l) {
+			t.Errorf("%q: by ID %q, %v", Name(l), ID(l), got)
+		}
+		if got := Named(strings.ToLower(Name(l))); got == nil || Name(got) != Name(l) {
+			t.Errorf("%q: by name, %v", Name(l), got)
+		}
 	}
 }

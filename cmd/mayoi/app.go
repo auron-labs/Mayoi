@@ -17,7 +17,6 @@ import (
 
 	"mayoi/internal/bg"
 	"mayoi/internal/git"
-	"mayoi/internal/highlight"
 	"mayoi/internal/keymap"
 	"mayoi/internal/mon"
 	"mayoi/internal/remote"
@@ -702,9 +701,7 @@ func (a *app) saveDocElse(d *document, then, cancelled func()) {
 			}
 			a.dropKept(d)
 			d.path, d.markdown = path, false
-			d.language, d.languageOwner, d.lexerOwner = "", "", nil
-			d.hl.Close()
-			d.hl = highlight.New(highlight.Lexer(path), a.invalidate)
+			a.detectLanguage(d)
 			a.saveDocElse(d, then, cancelled)
 			if a.tree != nil {
 				a.tree.Watch(path)
@@ -785,9 +782,7 @@ func (a *app) saveDocAs(d *document, path string) {
 		return
 	}
 	d.path, d.markdown = path, false
-	d.language, d.languageOwner, d.lexerOwner = "", "", nil
-	d.hl.Close()
-	d.hl = highlight.New(highlight.Lexer(path), a.invalidate)
+	a.detectLanguage(d)
 	a.saveDoc(d, nil)
 }
 

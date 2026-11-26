@@ -56,6 +56,9 @@ needs a `## <version>` section here, or its build fails.
 - **Go → Go Back** also returns from a jump of ten or more lines within a file, as Go to Line makes.
 - `Ctrl+Enter` breaks the line in find and replace, to find and replace text across lines.
 - Fix `Shift+Enter` in find adding a line to the file with the JetBrains keymap.
+- Click the language in the status bar or run **Change Language Mode…** to set the file's language.
+- The language picker can save a `fileAssociations` entry for the file's extension or name.
+- With the VS Code keymap, `Cmd+K M` opens the language picker.
 
 ## 0.23.4
 

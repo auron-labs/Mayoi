@@ -34,7 +34,7 @@ var associations atomic.Pointer[[]association]
 func SetAssociations(m map[string]string) {
 	var list []association
 	for pattern, name := range m {
-		l := lexerNamed(name)
+		l := Named(name)
 		globs := workspace.ParseGlobs(pattern)
 		if l == nil || len(globs) == 0 {
 			continue
@@ -80,9 +80,9 @@ func Associated(path string) chroma.Lexer {
 	return nil
 }
 
-// lexerNamed returns the lexer of a language by the name or alias Chroma
-// has for it, or Mayoi's own for Markdown and Vue, nil for none.
-func lexerNamed(name string) chroma.Lexer {
+// Named returns the lexer of a language by the name or alias Chroma has
+// for it, or by its ID, or Mayoi's own for Markdown and Vue, nil for none.
+func Named(name string) chroma.Lexer {
 	name = strings.ToLower(strings.TrimSpace(name))
 	switch name {
 	case "markdown", "md":
@@ -95,7 +95,43 @@ func lexerNamed(name string) chroma.Lexer {
 		l = lexers.Get(strings.ReplaceAll(name, " ", ""))
 	}
 	if l == nil {
+		// An ID drops the spaces of a name, which Chroma's own lookups keep.
+		for _, x := range lexers.GlobalLexerRegistry.Lexers {
+			if ID(x) == name {
+				l = x
+				break
+			}
+		}
+	}
+	if l == nil {
 		return nil
 	}
 	return chroma.Coalesce(l)
+}
+
+// ID returns the language of a lexer as plugins and language servers know
+// it: its name in lower case, without spaces, as "go" or "plaintext".
+func ID(l chroma.Lexer) string {
+	return strings.ToLower(strings.ReplaceAll(Name(l), " ", ""))
+}
+
+// Languages are the lexers a person can choose for a file, by their names
+// to show in order: Chroma's, and Mayoi's own for Markdown and Vue.
+func Languages() []chroma.Lexer {
+	list := make([]chroma.Lexer, 0, len(lexers.GlobalLexerRegistry.Lexers))
+	for _, l := range lexers.GlobalLexerRegistry.Lexers {
+		switch ID(l) {
+		case "markdown":
+			l = markdown()
+		case "vue":
+			l = vue()
+		default:
+			l = chroma.Coalesce(l)
+		}
+		list = append(list, l)
+	}
+	slices.SortFunc(list, func(a, b chroma.Lexer) int {
+		return strings.Compare(strings.ToLower(DisplayName(a)), strings.ToLower(DisplayName(b)))
+	})
+	return list
 }

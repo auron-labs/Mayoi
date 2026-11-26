@@ -35,6 +35,7 @@ type pluginPicker struct {
 	shown       string
 	stale       bool
 	icon        *ui.SVG
+	first       int // the item chosen as it opens, and as the query empties
 	list        ui.ListState
 	shook       time.Time
 	done        func(i int) // the item's index, -1 for none
@@ -92,6 +93,9 @@ func (a *app) pluginPickerView(c *ui.Context) {
 			pk.results = workspace.Fuzzy(pk.labels, q, 200)
 		}
 		pk.shown, pk.stale, pk.sel = pk.query, false, 0
+		if q == "" && pk.first > 0 {
+			pk.sel, pk.moved = pk.first, true
+		}
 	}
 	// Return on nothing found shakes the box, as the palette does.
 	choose := func(i int) {

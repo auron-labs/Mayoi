@@ -117,8 +117,18 @@ var blockComments = map[string][2]string{
 // commentFor returns the line comment of a document's language, "" when
 // it has none.
 func commentFor(d *document) string {
-	if c := pluginComment(d.path); c != "" {
-		return c
+	// A language chosen for the file, rather than the one a plugin gives
+	// its name.
+	if d.language == "" {
+		if c := pluginComment(d.path); c != "" {
+			return c
+		}
+	} else if p := d.lexerOwner; p != nil {
+		for _, l := range p.Contributes.Languages {
+			if strings.EqualFold(l.ID, d.language) && l.Comment != "" {
+				return l.Comment
+			}
+		}
 	}
 	if d.hl != nil {
 		if c := lineComments[highlight.Name(d.hl.Lexer())]; c != "" {

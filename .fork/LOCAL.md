@@ -42,11 +42,11 @@ Word deletion stops at punctuation and line boundaries. macOS users can opt into
 
 ## File associations
 
-Users can set languages by file name or glob for highlighting and language server selection. Explicit associations take precedence over plugin associations.
+Users can set languages by file name or glob for highlighting and language server selection. Explicit associations take precedence over plugin associations. The status bar's language opens a picker that sets the file's language for the session, goes back to Auto Detect, or writes an association for the file's extension or name, which every open matching file takes at once.
 
-- Paths: `cmd/mayoi/associations.go`, `cmd/mayoi/plugins.go`, `internal/highlight/associations.go`, `internal/settings/settings.go`
-- Check: `go test ./internal/highlight ./internal/settings -run 'Test(Associations|FileAssociations)'`
-- Upstream changes: keep explicit associations and their precedence.
+- Paths: `cmd/mayoi/associations.go`, `cmd/mayoi/languagepicker.go`, `cmd/mayoi/plugins.go`, `internal/highlight/associations.go`, `internal/settings/settings.go`
+- Check: `go test ./internal/highlight ./internal/settings -run 'Test(Associations|FileAssociations|LanguagesRoundTrip)'` and `go test ./cmd/mayoi -run 'Test(LanguagePicker|AssociationGlobs)'`
+- Upstream changes: keep explicit associations and their precedence, and the picker's command `view.languageMode` with the VS Code keymap's `cmd+k m`.
 
 ## Keymap presets
 

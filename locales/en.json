@@ -57,6 +57,12 @@
   "busyCreatingWorktree": "Creating worktree {name}…",
   "cmdGitSwitchWorktree": "Switch Worktree…",
   "cmdViewSelectTheme": "Color Theme…",
+  "cmdViewChangeLanguage": "Change Language Mode…",
+  "languagePick": "Select Language Mode",
+  "languageAutoDetect": "Auto Detect",
+  "languageCurrent": "{language}, current",
+  "languageAssociate": "Configure File Association for “{glob}”…",
+  "languageAssociatePick": "Select a language for “{glob}”",
   "@diffSummary": {
     "placeholders": {
       "files": {},

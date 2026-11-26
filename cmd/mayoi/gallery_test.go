@@ -52,6 +52,11 @@ var galleryStates = []struct {
 		ed.sync, ed.readingAt = syncLoading, hs.tt.Now().Add(-readingShows)
 	}},
 	{"file-error", func(hs *harness) { hs.a.openFile(hs.path("missing.go"), true) }},
+	{"language-picker", func(hs *harness) {
+		hs.a.openFile(hs.path("main.go"), true)
+		hs.settle()
+		hs.a.openLanguagePicker()
+	}},
 	{"file-symbols", func(hs *harness) {
 		hs.a.openFile(hs.path("main.go"), true)
 		hs.settle()

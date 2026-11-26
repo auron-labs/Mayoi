@@ -279,6 +279,7 @@ func (a *app) commandsIn(t locales.Messages) []command {
 		{"view.appearance.light", t.CmdViewAppearanceLight(), "", func() { a.setAppearance("light") }},
 		{"view.appearance.dark", t.CmdViewAppearanceDark(), "", func() { a.setAppearance("dark") }},
 		{"view.selectTheme", t.CmdViewSelectTheme(), "", a.openThemePicker},
+		{"view.languageMode", t.CmdViewChangeLanguage(), "", a.openLanguagePicker},
 		{"view.theme.mayoi", "Mayoi", "", func() { a.setTheme("") }},
 		{"view.theme.matrix", t.CmdViewThemeMatrix(), "", func() { a.setTheme(themeMatrix) }},
 		{"view.theme.claude", "Claude", "", func() { a.setTheme(themeClaude) }},

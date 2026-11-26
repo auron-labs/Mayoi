@@ -48,6 +48,7 @@ var keyPresets = map[string]map[string]presetKey{
 		"file.saveAll":       {other: "ctrl+k s"},
 		"view.previewToSide": both("cmd+k v"),
 		"view.selectTheme":   both("cmd+k cmd+t"),
+		"view.languageMode":  both("cmd+k m"),
 		"view.nextColumn":    both("cmd+k cmd+right"),
 		"view.prevColumn":    both("cmd+k cmd+left"),
 	},

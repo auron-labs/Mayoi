@@ -614,6 +614,66 @@ func (msgs Messages) CmdViewSelectTheme() string {
 	return Catalog.Format(msgs.locale, "cmdViewSelectTheme", nil)
 }
 
+// CmdViewChangeLanguage says "Change Language Mode…"
+// in the language the app shows.
+func CmdViewChangeLanguage() string { return In(i18n.Locale()).CmdViewChangeLanguage() }
+
+// CmdViewChangeLanguage says "Change Language Mode…"
+// in the language of msgs.
+func (msgs Messages) CmdViewChangeLanguage() string {
+	return Catalog.Format(msgs.locale, "cmdViewChangeLanguage", nil)
+}
+
+// LanguagePick says "Select Language Mode"
+// in the language the app shows.
+func LanguagePick() string { return In(i18n.Locale()).LanguagePick() }
+
+// LanguagePick says "Select Language Mode"
+// in the language of msgs.
+func (msgs Messages) LanguagePick() string {
+	return Catalog.Format(msgs.locale, "languagePick", nil)
+}
+
+// LanguageAutoDetect says "Auto Detect"
+// in the language the app shows.
+func LanguageAutoDetect() string { return In(i18n.Locale()).LanguageAutoDetect() }
+
+// LanguageAutoDetect says "Auto Detect"
+// in the language of msgs.
+func (msgs Messages) LanguageAutoDetect() string {
+	return Catalog.Format(msgs.locale, "languageAutoDetect", nil)
+}
+
+// LanguageCurrent says "{language}, current"
+// in the language the app shows.
+func LanguageCurrent(language string) string { return In(i18n.Locale()).LanguageCurrent(language) }
+
+// LanguageCurrent says "{language}, current"
+// in the language of msgs.
+func (msgs Messages) LanguageCurrent(language string) string {
+	return Catalog.Format(msgs.locale, "languageCurrent", map[string]any{"language": language})
+}
+
+// LanguageAssociate says "Configure File Association for “{glob}”…"
+// in the language the app shows.
+func LanguageAssociate(glob string) string { return In(i18n.Locale()).LanguageAssociate(glob) }
+
+// LanguageAssociate says "Configure File Association for “{glob}”…"
+// in the language of msgs.
+func (msgs Messages) LanguageAssociate(glob string) string {
+	return Catalog.Format(msgs.locale, "languageAssociate", map[string]any{"glob": glob})
+}
+
+// LanguageAssociatePick says "Select a language for “{glob}”"
+// in the language the app shows.
+func LanguageAssociatePick(glob string) string { return In(i18n.Locale()).LanguageAssociatePick(glob) }
+
+// LanguageAssociatePick says "Select a language for “{glob}”"
+// in the language of msgs.
+func (msgs Messages) LanguageAssociatePick(glob string) string {
+	return Catalog.Format(msgs.locale, "languageAssociatePick", map[string]any{"glob": glob})
+}
+
 // ScmStashes says "Stashes"
 // in the language the app shows.
 func ScmStashes() string { return In(i18n.Locale()).ScmStashes() }

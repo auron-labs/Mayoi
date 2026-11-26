@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/alecthomas/chroma/v2"
-	"github.com/alecthomas/chroma/v2/lexers"
 
 	"mayoi/internal/highlight"
 	"mayoi/internal/plugin"
@@ -14,10 +13,15 @@ import (
 
 func resolvePluginLanguage(owner *plugin.Plugin, name string) (string, chroma.Lexer, *plugin.Plugin) {
 	name = strings.ToLower(name)
-	if lexer := owner.Lexer(name); lexer != nil {
-		return name, lexer, owner
+	// A language the plugin declares is its own, with a lexer or without.
+	if owner != nil {
+		for _, l := range owner.Contributes.Languages {
+			if strings.EqualFold(l.ID, name) {
+				return name, owner.Lexer(name), owner
+			}
+		}
 	}
-	if lexer := lexers.Get(name); lexer != nil {
+	if lexer := highlight.Named(name); lexer != nil {
 		return name, lexer, nil
 	}
 	return "plaintext", nil, nil
@@ -45,7 +49,7 @@ func (a *app) refreshDocumentLexer(d *document) {
 			}
 		}
 		if lexer == nil {
-			lexer = lexers.Get(d.language)
+			lexer = highlight.Named(d.language)
 		}
 	} else if p, language := pluginLanguageOf(d.path); language != nil {
 		owner, lexer = p, p.Lexer(language.ID)

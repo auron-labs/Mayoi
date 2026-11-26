@@ -74,6 +74,8 @@ Closing a changed file saves it without asking. Untitled files wait for ⌘S. Tu
 - Cut (⌘X) cuts the selection, or the entire line at the caret when nothing is selected. Undo restores it in one step.
 - Home goes to the first non-blank character of the line.
 - The status bar shows the file's indentation and line endings, and you can change either from there.
+- A click on the file's language in the status bar, or **Change Language Mode…**, gives it another language until
+  it closes, or saves a file association for its extension or name.
 
 ### Multiple cursors
 
