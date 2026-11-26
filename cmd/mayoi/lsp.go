@@ -424,6 +424,12 @@ func (s *lspServer) start(a *app, prev *lspServer) {
 	}
 	s.client = c
 	s.log("info", "started "+s.contrib.ID)
+	// Before the documents open, so that they are checked with them.
+	if s.contrib.Schemas != "" {
+		loadSchemaCatalog()
+		s.sendSchemas(c)
+		refreshSchemaCatalog(schemaStoreOn(), false, nil)
+	}
 	// The documents open of its languages, in each window of the folder.
 	a.post(func() {
 		if !s.current() {

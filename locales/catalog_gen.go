@@ -18310,6 +18310,46 @@ func (msgs Messages) PrefDescFileAssociations() string {
 	return Catalog.Format(msgs.locale, "prefDescFileAssociations", nil)
 }
 
+// PrefTitleFileSchemas says "File schemas"
+// in the language the app shows.
+func PrefTitleFileSchemas() string { return In(i18n.Locale()).PrefTitleFileSchemas() }
+
+// PrefTitleFileSchemas says "File schemas"
+// in the language of msgs.
+func (msgs Messages) PrefTitleFileSchemas() string {
+	return Catalog.Format(msgs.locale, "prefTitleFileSchemas", nil)
+}
+
+// PrefDescFileSchemas says "The JSON schema of JSON and YAML files by glob, as \"config/*.json\": \"https://…\", over SchemaStore's. Edit them in s…"
+// in the language the app shows.
+func PrefDescFileSchemas() string { return In(i18n.Locale()).PrefDescFileSchemas() }
+
+// PrefDescFileSchemas says "The JSON schema of JSON and YAML files by glob, as \"config/*.json\": \"https://…\", over SchemaStore's. Edit them in s…"
+// in the language of msgs.
+func (msgs Messages) PrefDescFileSchemas() string {
+	return Catalog.Format(msgs.locale, "prefDescFileSchemas", nil)
+}
+
+// PrefTitleSchemaStore says "SchemaStore Schemas"
+// in the language the app shows.
+func PrefTitleSchemaStore() string { return In(i18n.Locale()).PrefTitleSchemaStore() }
+
+// PrefTitleSchemaStore says "SchemaStore Schemas"
+// in the language of msgs.
+func (msgs Messages) PrefTitleSchemaStore() string {
+	return Catalog.Format(msgs.locale, "prefTitleSchemaStore", nil)
+}
+
+// PrefDescSchemaStore says "Check JSON and YAML files against SchemaStore's schemas by their names, its catalog downloaded once a day."
+// in the language the app shows.
+func PrefDescSchemaStore() string { return In(i18n.Locale()).PrefDescSchemaStore() }
+
+// PrefDescSchemaStore says "Check JSON and YAML files against SchemaStore's schemas by their names, its catalog downloaded once a day."
+// in the language of msgs.
+func (msgs Messages) PrefDescSchemaStore() string {
+	return Catalog.Format(msgs.locale, "prefDescSchemaStore", nil)
+}
+
 // ThemeAboutPlugin says "From the plugin {plugin}"
 // in the language the app shows.
 func ThemeAboutPlugin(plugin string) string { return In(i18n.Locale()).ThemeAboutPlugin(plugin) }

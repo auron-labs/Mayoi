@@ -221,10 +221,14 @@ type ServerContrib struct {
 	Files []string `json:"files,omitempty"`
 	// Exclusive keeps the documents it serves from the servers that are
 	// not exclusive.
-	Exclusive bool            `json:"exclusive,omitempty"`
-	Command   string          `json:"command"`
-	Args      []string        `json:"args,omitempty"`
-	Options   json.RawMessage `json:"initializationOptions,omitempty"`
+	Exclusive bool `json:"exclusive,omitempty"`
+	// Schemas is how the server takes the schemas of files, which Mayoi
+	// sends it as its settings change: "json" as vscode-json-language-server
+	// takes json.schemas, "yaml" as rlsp-yaml takes schemas; "" for none.
+	Schemas string          `json:"schemas,omitempty"`
+	Command string          `json:"command"`
+	Args    []string        `json:"args,omitempty"`
+	Options json.RawMessage `json:"initializationOptions,omitempty"`
 	// SourceDefinitionCommand takes a document URI and position and returns locations.
 	SourceDefinitionCommand string `json:"sourceDefinitionCommand,omitempty"`
 	// Resolve prepares a launch description, using workspace/settings JSON on

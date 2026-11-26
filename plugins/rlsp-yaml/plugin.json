@@ -9,7 +9,7 @@
       "path": { "type": "string", "default": "rlsp-yaml", "description": "The rlsp-yaml program, by name or path" }
     },
     "languageServers": [
-      { "id": "rlsp-yaml.server", "languages": ["yaml"], "command": "${settings.path}",
+      { "id": "rlsp-yaml.server", "languages": ["yaml"], "command": "${settings.path}", "schemas": "yaml",
         "install": "cargo install rlsp-yaml" }
     ]
   }

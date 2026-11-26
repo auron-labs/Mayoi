@@ -853,6 +853,12 @@ func (m *mayoi) reload(p settings.Prefs) {
 	if plugins != nil {
 		plugins.syncPrefs()
 		plugins.toggled(old.Plugins, p.Plugins)
+		if !maps.Equal(p.FileSchemas, old.FileSchemas) || p.SchemaStore != old.SchemaStore {
+			schemasChanged()
+			if p.SchemaStore && !old.SchemaStore {
+				refreshSchemaCatalog(true, false, nil)
+			}
+		}
 		// A file's language picks its server, so a change of either restarts them.
 		if associationsChanged || !reflect.DeepEqual(p.LanguageServers, old.LanguageServers) {
 			plugins.restartServers()

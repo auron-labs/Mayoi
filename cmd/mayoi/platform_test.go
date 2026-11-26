@@ -46,6 +46,9 @@ func TestMain(m *testing.M) {
 	// The previews' pictures of the web are not fetched, but by the tests
 	// of them, from servers of their own.
 	markdownRemote.get = func(string) ([]byte, error) { return nil, errors.New("offline") }
+	// Nor SchemaStore's catalog, kept nowhere but by the tests of it.
+	fetchSchemaCatalog = func(context.Context) ([]byte, error) { return nil, errors.New("offline") }
+	schemaCatalogFile = func() string { return "" }
 	// Nor the index of plugins, for the language servers to offer.
 	fetchServerIndex = func(context.Context, *http.Client) ([]plugin.IndexEntry, error) { return nil, errors.New("offline") }
 	// Nor is GitHub asked, by the gh of the machine, of the repositories

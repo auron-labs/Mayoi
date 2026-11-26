@@ -10,7 +10,7 @@
     },
     "languageServers": [
       { "id": "vscode-json-language-server.server", "languages": ["json"], "command": "${settings.path}", "args": ["--stdio"],
-        "initializationOptions": { "provideFormatter": true },
+        "initializationOptions": { "provideFormatter": true }, "schemas": "json",
         "install": "npm install -g vscode-langservers-extracted" }
     ]
   }

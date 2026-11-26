@@ -354,6 +354,13 @@ type Prefs struct {
 	// as "Jenkinsfile" or "*.foo", or a path with a slash. They win over
 	// the plugins' languages.
 	FileAssociations map[string]string `json:"fileAssociations,omitempty"`
+	// FileSchemas choose the JSON schema of JSON and YAML files, by glob,
+	// as fileAssociations' globs match: a schema's URL, or "" for none.
+	// They win over SchemaStore's.
+	FileSchemas map[string]string `json:"fileSchemas,omitempty"`
+	// SchemaStore gives JSON and YAML files SchemaStore's schemas by their
+	// names, its catalog downloaded once a day.
+	SchemaStore bool `json:"schemaStore"`
 	// PluginSources are the plugins installed from Git and where each came
 	// from, as ~/.mayoi/plugins/plugins.json has them, which Mayoi keeps
 	// here for settings sync to bring to the person's other machines.
@@ -616,7 +623,7 @@ func Default() *Settings {
 			FontSize: 13, FontFamily: "monospace", FontWeight: 400, LineHeight: 1.55, TabSize: 4,
 			AutoSave: true, Blame: true, EditorHover: true, SearchFollowSymlinks: true, TerminalCopyOnSelect: true, TerminalBackendHcShowInHerdr: true, PreviewMermaid: true, PreviewMath: true,
 			DiffAlignedRows: true, DiffContext: 3, DiffSyncScroll: true, MergeAutoApply: true,
-			UsageStats: true, ConfirmBeforeQuit: true,
+			UsageStats: true, ConfirmBeforeQuit: true, SchemaStore: true,
 		},
 	}
 }

@@ -521,6 +521,12 @@ strings, so a person can change them:
   "command": "gonsible", "args": ["lsp"] }]
 ```
 
+A server that takes JSON schemas by file says how with `schemas`: `"json"` sends it, through
+`workspace/didChangeConfiguration`, the `json.schemas` of SchemaStore's catalog and of
+[`fileSchemas`](SETTINGS.md#plugins), as vscode-json-language-server takes them; `"yaml"` sends its
+`initializationOptions` with `fileSchemas` in `schemas`, by URL, as rlsp-yaml takes them. It is sent them as it
+starts, and again when the catalog or `fileSchemas` changes.
+
 Servers are told a document's language by the protocol's name: `cpp` for C++, `javascriptreact` and
 `typescriptreact` for `.jsx` and `.tsx` files, and `jsonc` for JSON that takes comments, as `tsconfig.json` and
 `.jsonc` files.
