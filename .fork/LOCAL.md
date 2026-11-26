@@ -53,5 +53,5 @@ Users can set languages by file name or glob for highlighting and language serve
 Users can choose Mayoi, VS Code, or JetBrains shortcuts without restarting. Personal bindings override presets, Vim mode works with each preset, and Keyboard Shortcuts reflects the active preset. Cmd shortcuts on macOS leave the editor caret ready for input.
 
 - Paths: `cmd/mayoi/keypresets.go`, `cmd/mayoi/keymap.go`, `cmd/mayoi/prefskeys.go`, `internal/settings/settings.go`
-- Check: `go test ./cmd/mayoi -run 'Test(KeyPresets|Keymap|UserKeysWinOverAKeymap)'`
+- Check: `go test ./cmd/mayoi -run 'Test(KeyPresets|Keymap|UserKeysWinOverAKeymap|JetBrainsNextOccurrence)'`
 - Upstream changes: preserve preset precedence, active shortcuts in settings, and editor focus.

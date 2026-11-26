@@ -146,3 +146,19 @@ func TestKeymapSettingAppliesLive(t *testing.T) {
 		t.Errorf("after choosing JetBrains: %q", got)
 	}
 }
+
+// JetBrains' ⌃G adds the next match of the word to the selections, going
+// round, and ⌃⌘G selects them all, in the editor's text.
+func TestJetBrainsNextOccurrence(t *testing.T) {
+	onSystem(t, "darwin")
+	hs, d := editHarness(t, "a.txt", "foo bar foo foo")
+	hs.a.keys = layerKeys(keymapJetBrains, nil)
+	hs.place(d, 12, 12)
+	hs.key(ui.Ctrl, ui.KeyG)
+	expectSpans(t, d, [2]int{12, 15})
+	hs.key(ui.Ctrl, ui.KeyG)
+	expectSpans(t, d, [2]int{0, 3}, [2]int{12, 15})
+	hs.place(d, 1, 1)
+	hs.key(ui.Ctrl|ui.Super, ui.KeyG)
+	expectSpans(t, d, [2]int{0, 3}, [2]int{8, 11}, [2]int{12, 15})
+}

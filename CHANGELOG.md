@@ -50,6 +50,8 @@ needs a `## <version>` section here, or its build fails.
 - `"exclusive": true` keeps a file to that server, as Helm templates from the YAML server.
 - A built-in Ruff server shows Python's lint problems beside `ty`, and formats Python.
 - A built-in oxlint server shows lint problems in JavaScript, TypeScript, Vue and Svelte files.
+- In the JetBrains keymap, `⌃G` (`Alt+J` elsewhere) adds the next match of the word to the selections.
+- In the JetBrains keymap, `⌃⌘G` (`Ctrl+Alt+Shift+J` elsewhere) selects every match of the word.
 
 ## 0.23.4
 
