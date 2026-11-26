@@ -264,3 +264,29 @@ func TestFindCtrlEnterBreaksTheLine(t *testing.T) {
 		t.Fatalf("regex %q: %d matches; want 1 across the line", f.query, len(f.matches))
 	}
 }
+
+// TestFindKeepsReturnFromTheKeymap: a keymap's Insert Line Below, on
+// Ctrl+Return in VS Code's off macOS and Shift+Return in JetBrains',
+// leaves the text find is over be while find has the keyboard.
+func TestFindKeepsReturnFromTheKeymap(t *testing.T) {
+	onSystem(t, "linux")
+	for _, preset := range []string{keymapVSCode, keymapJetBrains} {
+		hs, d := editHarness(t, "keys.txt", "a\nb\na\nb\n")
+		a, tt := hs.a, hs.tt
+		a.keys = layerKeys(preset, nil)
+		a.run("edit.find")
+		hs.settle()
+		tt.Type("a")
+		tt.Key(ui.Ctrl, ui.KeyEnter)
+		tt.Type("b")
+		hs.settle()
+		tt.Key(ui.Shift, ui.KeyEnter)
+		hs.settle()
+		if got := d.buf.Snapshot().String(); got != "a\nb\na\nb\n" {
+			t.Errorf("%s: the keys in find edited the text to %q", preset, got)
+		}
+		if f := &a.find; f.query != "a\nb" || f.cur != 1 {
+			t.Errorf("%s: query %q at match %d; want a\\nb, back to 1", preset, f.query, f.cur)
+		}
+	}
+}

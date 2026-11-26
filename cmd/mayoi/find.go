@@ -496,7 +496,7 @@ func (a *app) findBoxView(c *ui.Context, b findBox) {
 			field := ui.Row(c).Grow(1).MinHeight(findFieldH).Padding(0, 4, 0, 8).Gap(2).AlignItems(ui.Start).Radius(5).
 				Background(p.editor).Border(1, p.border).Transition(fieldFocus)
 			field.Children(func() {
-				in := a.textKeys(ui.TextAreaBase(c.Key("find-query"), &f.query)).Bind(&f.input).Grow(1).FontSize(findFieldSize).
+				in := a.findKeys(ui.TextAreaBase(c.Key("find-query"), &f.query)).Bind(&f.input).Grow(1).FontSize(findFieldSize).
 					Padding(padY, 0).Lines(1, 6).Placeholder(locales.FindLabel()).Label(locales.FindLabel())
 				if in.Focused() {
 					field.Border(1, p.accentDim)
@@ -562,7 +562,7 @@ func (a *app) findBoxView(c *ui.Context, b findBox) {
 			field := ui.Row(c).Grow(1).MinHeight(findFieldH).Padding(0, 8).AlignItems(ui.Start).Radius(5).
 				Background(p.editor).Border(1, p.border).Transition(fieldFocus)
 			field.Children(func() {
-				in := a.textKeys(ui.TextAreaBase(c.Key("find-with"), &f.with)).Grow(1).FontSize(findFieldSize).
+				in := a.findKeys(ui.TextAreaBase(c.Key("find-with"), &f.with)).Grow(1).FontSize(findFieldSize).
 					Padding(padY, 0).Lines(1, 6).Placeholder(locales.FindReplace()).Label(locales.FindReplace())
 				if in.Focused() {
 					field.Border(1, p.accentDim)
@@ -598,6 +598,27 @@ func (a *app) findBoxView(c *ui.Context, b findBox) {
 	if box.OverlayShortcut(0, ui.KeyEscape) || box.Shortcut(0, ui.KeyEscape) {
 		a.closeFind()
 	}
+}
+
+// findKeys is textKeys for a field of find, which keeps Return, with
+// Shift or Ctrl or alone, from the keymap: a keymap's Insert Line Below on
+// one of them, as JetBrains' and VS Code's off macOS, would edit the text
+// find is over. A chord begun still ends with it.
+func (a *app) findKeys(in ui.Element) ui.Element {
+	if a.chording() {
+		in.ReadOnly(true)
+	}
+	if in.Focused() {
+		a.keyFocus = placeInput
+	}
+	return in.HandleInput(func(ev ui.InputEvent) bool {
+		if ev.Kind == ui.InputKeyDown && ev.Key == ui.KeyEnter && len(a.chord) == 0 &&
+			(ev.Mods == 0 || ev.Mods == ui.Shift || ev.Mods == ui.Ctrl) {
+			a.seeKey(ev)
+			return false
+		}
+		return a.keyEvent(ev, placeInput)
+	})
 }
 
 // breakLine breaks the line of text, the field in of find, at its

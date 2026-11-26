@@ -58,8 +58,8 @@ Users can choose Mayoi, VS Code, or JetBrains shortcuts without restarting. Pers
 
 ## Line breaks in find
 
-Ctrl+Enter, on every system as in VS Code, inserts a line break at the caret in the find and replace fields, where matches may span lines: the editor and the Markdown preview. Return and Shift+Return still step and replace, and a diff's find keeps Ctrl+Enter stepping because it matches line by line.
+Ctrl+Enter, on every system as in VS Code, inserts a line break at the caret in the find and replace fields, where matches may span lines: the editor and the Markdown preview. Return and Shift+Return still step and replace, and a diff's find keeps Ctrl+Enter stepping because it matches line by line. The find fields keep these Return keys from keymap presets, whose Insert Line Below would otherwise edit the document.
 
 - Paths: `cmd/mayoi/find.go`, `cmd/mayoi/markdownfind.go`
-- Check: `go test ./cmd/mayoi -run 'TestFind(CtrlEnterBreaksTheLine|FindsAMultilineSelection|ShiftEnterGoesBack)'`
-- Upstream changes: keep Ctrl+Enter breaking the line when taking changes to the find widget's keys or fields.
+- Check: `go test ./cmd/mayoi -run 'TestFind(CtrlEnterBreaksTheLine|KeepsReturnFromTheKeymap|FindsAMultilineSelection|ShiftEnterGoesBack)'`
+- Upstream changes: keep Ctrl+Enter breaking the line, and the find fields' Return keys away from the keymap, when taking changes to the find widget's keys or fields.
