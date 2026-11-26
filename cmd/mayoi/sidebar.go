@@ -450,8 +450,8 @@ func (a *app) fileTree(c *ui.Context) {
 				return
 			}
 			a.filesMenuBelow = false
-			// The menu of a row chosen with others copies them all, and
-			// renames or deletes none; of another row, it is that row's
+			// The menu of a row chosen with others copies and deletes them
+			// all, and renames none; of another row, it is that row's
 			// alone, which the others stop being chosen with.
 			multi := a.explorerMulti(path)
 			if !multi {
@@ -529,8 +529,8 @@ func (a *app) fileTree(c *ui.Context) {
 			if m.Item(locales.RenameEllipsis()).Disabled(multi).Chosen() {
 				action = func() { a.renameInTree(path) }
 			}
-			if m.Item(a.trashLabel()).Disabled(multi).Chosen() {
-				action = func() { a.trash(path) }
+			if m.Item(a.trashLabel()).Chosen() {
+				action = func() { a.trash(paths...) }
 			}
 		})
 		row.Children(func() {
@@ -987,29 +987,53 @@ func (a *app) trashLabel() string {
 	return trashLabel()
 }
 
-func (a *app) trash(path string) {
-	if remote.Is(path) {
-		a.present(&confirm{title: locales.DeleteQuestion(filepath.Base(path)),
-			message: locales.DeleteRemoteDetail(remote.HostOf(path)),
-			ok:      locales.ButtonDelete(), danger: true, run: func() {
-				go func() {
-					err := vfs.RemoveAll(path)
-					a.post(func() {
+// trash moves the files and folders of paths to the trash, but those
+// inside another of them, which go with it; on a host, which has no
+// trash, it deletes them for good, once asked. Several are asked about
+// once, by how many they are.
+func (a *app) trash(paths ...string) {
+	paths = outermost(paths)
+	if remote.Is(paths[0]) {
+		host := remote.HostOf(paths[0])
+		title, message := locales.DeleteQuestion(filepath.Base(paths[0])), locales.DeleteRemoteDetail(host)
+		if len(paths) > 1 {
+			title, message = locales.DeleteItemsQuestion(len(paths)), locales.DeleteRemoteItemsDetail(len(paths), host)
+		}
+		a.present(&confirm{title: title, message: message, ok: locales.ButtonDelete(), danger: true, run: func() {
+			go func() {
+				errs := make([]error, len(paths))
+				for i, path := range paths {
+					errs[i] = vfs.RemoveAll(path)
+				}
+				a.post(func() {
+					for i, err := range errs {
 						if err != nil {
-							a.fail("%s", locales.FailDelete(filepath.Base(path), err.Error()))
-							return
+							a.fail("%s", locales.FailDelete(filepath.Base(paths[i]), err.Error()))
 						}
-						a.tree.Refresh()
-						a.indexRead.Invalidate()
-						a.indexed = time.Time{}
-					})
-				}()
-			}})
+					}
+					a.tree.Refresh()
+					a.indexRead.Invalidate()
+					a.indexed = time.Time{}
+				})
+			}()
+		}})
 		return
 	}
-	if err := a.host.trash(path); err != nil {
-		a.fail("%s", locales.FailMoveTo(filepath.Base(path), trashName(), err.Error()))
+	if len(paths) == 1 {
+		a.moveToTrash(paths)
 		return
+	}
+	a.present(&confirm{title: locales.MoveItemsToTrashQuestion(len(paths), trashName()), ok: trashLabel(), danger: true,
+		run: func() { a.moveToTrash(paths) }})
+}
+
+// moveToTrash moves the files and folders of paths to the trash, saying
+// of each that does not go why.
+func (a *app) moveToTrash(paths []string) {
+	for _, path := range paths {
+		if err := a.host.trash(path); err != nil {
+			a.fail("%s", locales.FailMoveTo(filepath.Base(path), trashName(), err.Error()))
+		}
 	}
 	a.tree.Refresh()
 	a.indexRead.Invalidate()

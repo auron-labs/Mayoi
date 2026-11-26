@@ -226,12 +226,10 @@ func TestExplorerCopiesSelection(t *testing.T) {
 	if got := a.services.ReadClipboard(); got != "go.mod\nREADME.md" {
 		t.Fatalf("Copy Relative Path copied %q", got)
 	}
-	for _, item := range []string{"Rename…", a.trashLabel()} {
-		tt.RightClick("go.mod")
-		hs.settle()
-		if err := tt.ChooseMenuItem(item); err == nil || !strings.Contains(err.Error(), "disabled") {
-			t.Fatalf("%s with several chosen: %v", item, err)
-		}
+	tt.RightClick("go.mod")
+	hs.settle()
+	if err := tt.ChooseMenuItem("Rename…"); err == nil || !strings.Contains(err.Error(), "disabled") {
+		t.Fatalf("Rename… with several chosen: %v", err)
 	}
 	a.runBinding("renameFile", nil, placeExplorer)
 	hs.key(0, ui.KeyF2)
@@ -343,5 +341,65 @@ func TestExplorerDragSelectionOpens(t *testing.T) {
 	hs.drag(x0, y0, body.X+body.W/2, body.Y+body.H/2)
 	if got := tabNames(a.cols[0]); len(a.cols[0].tabs) != 3 || !strings.Contains(got, "README.md") || !strings.Contains(got, "main.go") {
 		t.Fatalf("tabs %q", got)
+	}
+}
+
+// Delete with several chosen asks once, by how many, and trashes them
+// all, but those in a folder chosen, which go with it.
+func TestExplorerDeletesSelection(t *testing.T) {
+	hs := newHarness(t, true)
+	a := hs.a
+	a.files.Open.Add(hs.path("internal"))
+	hs.settle()
+	for _, name := range []string{"internal", "a", "go.mod", "README.md"} {
+		mustClick(t, hs, ui.Cmd, name)
+	}
+	chooseRowMenu(t, hs, "go.mod", a.trashLabel())
+	hs.settle()
+	if a.confirm == nil || a.confirm.title != locales.MoveItemsToTrashQuestion(3, trashName()) {
+		t.Fatalf("asked %+v", a.confirm)
+	}
+	if len(hs.h.trashed) != 0 {
+		t.Fatalf("trashed %q before asking", hs.h.trashed)
+	}
+	a.confirm.run()
+	if want := []string{hs.path("internal"), hs.path("go.mod"), hs.path("README.md")}; !slices.Equal(hs.h.trashed, want) {
+		t.Fatalf("trashed %q, want %q", hs.h.trashed, want)
+	}
+
+	// The key does as the menu does.
+	a.confirm, hs.h.trashed = nil, nil
+	hs.settle()
+	a.clearExplorerSelection()
+	a.fileRow = -1
+	mustClick(t, hs, ui.Cmd, "web")
+	mustClick(t, hs, ui.Cmd, "main.go")
+	a.runBinding("deleteFile", nil, placeExplorer)
+	if a.confirm == nil || a.confirm.title != locales.MoveItemsToTrashQuestion(2, trashName()) {
+		t.Fatalf("asked %+v", a.confirm)
+	}
+	a.confirm.run()
+	if want := []string{hs.path("web"), hs.path("main.go")}; !slices.Equal(hs.h.trashed, want) {
+		t.Fatalf("trashed %q, want %q", hs.h.trashed, want)
+	}
+}
+
+func TestExplorerDeletesRemoteSelection(t *testing.T) {
+	hs, conn, dir := remoteHarness(t)
+	a := hs.a
+	mustClick(t, hs, ui.Cmd, "src")
+	mustClick(t, hs, ui.Cmd, "main.go")
+	chooseRowMenu(t, hs, "main.go", a.trashLabel())
+	hs.settle()
+	if a.confirm == nil || a.confirm.title != locales.DeleteItemsQuestion(2) {
+		t.Fatalf("asked %+v", a.confirm)
+	}
+	a.confirm.run()
+	hs.until("both gone", func() bool { return !hs.tt.HasText("main.go") && !hs.tt.HasText("src") })
+	if _, err := conn.Run(nil, `! test -e "$1/src" && ! test -e "$1/main.go"`, dir); err != nil {
+		t.Fatalf("still on the host: %v", err)
+	}
+	if a.fails != 0 {
+		t.Fatalf("%d failures", a.fails)
 	}
 }

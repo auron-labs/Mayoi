@@ -74,8 +74,8 @@ JSON and YAML files get SchemaStore's schema by their names, its catalog downloa
 
 ## Explorer refresh, moves and deletes
 
-Users can refresh one folder of the explorer, and what is read inside it, from its menu, locally and on SSH hosts. Dragging a row chosen with others moves all of them, skipping those already there or that would go into themselves, and the files among them open together on the editor.
+Users can refresh one folder of the explorer, and what is read inside it, from its menu, locally and on SSH hosts. Dragging a row chosen with others moves all of them, skipping those already there or that would go into themselves, and the files among them open together on the editor. Delete, from the menu or its key, acts on every row chosen after one question that says how many.
 
-- Paths: `cmd/mayoi/sidebar.go`, `cmd/mayoi/explorermove.go`, `cmd/mayoi/explorerselect.go`, `internal/workspace/tree.go`
-- Check: `go test ./internal/workspace -run TestRefreshInReadsAFolderAgain` and `go test ./cmd/mayoi -run 'Test(ExplorerRefreshesA|ExplorerDrag)'`
-- Upstream changes: keep the folder menu's **Refresh** and `Tree.RefreshIn`, and moves of every row chosen (`treePaths`, `outermost`), when taking explorer or tree changes.
+- Paths: `cmd/mayoi/sidebar.go`, `cmd/mayoi/explorermove.go`, `cmd/mayoi/explorerselect.go`, `cmd/mayoi/keymap.go`, `internal/workspace/tree.go`
+- Check: `go test ./internal/workspace -run TestRefreshInReadsAFolderAgain` and `go test ./cmd/mayoi -run 'Test(ExplorerRefreshesA|ExplorerDrag|ExplorerDeletes)'`
+- Upstream changes: keep the folder menu's **Refresh** and `Tree.RefreshIn`, and moves and deletes of every row chosen (`treePaths`, `outermost`, `trash`), when taking explorer or tree changes.

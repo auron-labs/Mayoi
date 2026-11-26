@@ -4976,6 +4976,16 @@ func (msgs Messages) DeleteQuestion(name string) string {
 	return Catalog.Format(msgs.locale, "deleteQuestion", map[string]any{"name": name})
 }
 
+// DeleteItemsQuestion says "{count, plural, one {Delete # item?} other {Delete # items?}}"
+// in the language the app shows.
+func DeleteItemsQuestion(count int) string { return In(i18n.Locale()).DeleteItemsQuestion(count) }
+
+// DeleteItemsQuestion says "{count, plural, one {Delete # item?} other {Delete # items?}}"
+// in the language of msgs.
+func (msgs Messages) DeleteItemsQuestion(count int) string {
+	return Catalog.Format(msgs.locale, "deleteItemsQuestion", map[string]any{"count": count})
+}
+
 // DeleteRemoteDetail says "It is deleted from {host} for good: a remote folder has no trash."
 // in the language the app shows.
 func DeleteRemoteDetail(host string) string { return In(i18n.Locale()).DeleteRemoteDetail(host) }
@@ -4984,6 +4994,18 @@ func DeleteRemoteDetail(host string) string { return In(i18n.Locale()).DeleteRem
 // in the language of msgs.
 func (msgs Messages) DeleteRemoteDetail(host string) string {
 	return Catalog.Format(msgs.locale, "deleteRemoteDetail", map[string]any{"host": host})
+}
+
+// DeleteRemoteItemsDetail says "{count, plural, one {It is deleted from {host} for good: a remote folder has no trash.} other {They are deleted from …"
+// in the language the app shows.
+func DeleteRemoteItemsDetail(count int, host string) string {
+	return In(i18n.Locale()).DeleteRemoteItemsDetail(count, host)
+}
+
+// DeleteRemoteItemsDetail says "{count, plural, one {It is deleted from {host} for good: a remote folder has no trash.} other {They are deleted from …"
+// in the language of msgs.
+func (msgs Messages) DeleteRemoteItemsDetail(count int, host string) string {
+	return Catalog.Format(msgs.locale, "deleteRemoteItemsDetail", map[string]any{"count": count, "host": host})
 }
 
 // DeletedOnDisk says "Deleted on disk"
@@ -8294,6 +8316,18 @@ func MoveToTrashQuestion(name string, trash string) string {
 // in the language of msgs.
 func (msgs Messages) MoveToTrashQuestion(name string, trash string) string {
 	return Catalog.Format(msgs.locale, "moveToTrashQuestion", map[string]any{"name": name, "trash": trash})
+}
+
+// MoveItemsToTrashQuestion says "{count, plural, one {Move # item to {trash}?} other {Move # items to {trash}?}}"
+// in the language the app shows.
+func MoveItemsToTrashQuestion(count int, trash string) string {
+	return In(i18n.Locale()).MoveItemsToTrashQuestion(count, trash)
+}
+
+// MoveItemsToTrashQuestion says "{count, plural, one {Move # item to {trash}?} other {Move # items to {trash}?}}"
+// in the language of msgs.
+func (msgs Messages) MoveItemsToTrashQuestion(count int, trash string) string {
+	return Catalog.Format(msgs.locale, "moveItemsToTrashQuestion", map[string]any{"count": count, "trash": trash})
 }
 
 // NameExists says "A file or folder with that name exists."

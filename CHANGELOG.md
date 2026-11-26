@@ -67,6 +67,8 @@ needs a `## <version>` section here, or its build fails.
 - **Refresh** in a folder's menu in the explorer reads that folder again, with the folders open in it.
 - Dragging one of several chosen files and folders in the explorer moves them all, and they stay chosen.
 - Dropped on the editor, the chosen files open together.
+- **Move to Trash** and its key act on every chosen file and folder, after asking once how many.
+- On an SSH host, **Delete Permanently…** deletes every chosen file and folder after one question.
 
 ## 0.23.4
 

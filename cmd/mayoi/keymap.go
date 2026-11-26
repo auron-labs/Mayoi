@@ -418,9 +418,8 @@ func (a *app) runBinding(name string, args json.RawMessage, where keyPlace) {
 	case "editor.action.indentUsingSpaces":
 		a.openQuick(">Indent Using ")
 	case "deleteFile", "moveFileToTrash":
-		// One file or folder at a time: none while several are chosen.
-		if path := a.explorerChoice(); path != "" && !a.explorerMulti(path) {
-			a.trash(path)
+		if path := a.explorerChoice(); path != "" {
+			a.trash(a.explorerPicked(path)...)
 		}
 	case "renameFile":
 		if path := a.explorerChoice(); path != "" && !a.explorerMulti(path) {
