@@ -1864,6 +1864,7 @@
   "lspOfferInstall": "インストール",
   "lspOfferTurnOn": "{detect} がインストールされています。定義へ移動などのために {name} プラグインをオンにしますか?",
   "lspMissing": "{name} には {detect} が必要ですが、インストールされていません。インストール: {command}",
+  "lspMissingDownload": "{name} には {detect} が必要ですが、インストールされていません。",
   "lspInstallFailed": "{name} をインストールできませんでした: {err}",
   "cmdLanguageServers": "言語サーバーを表示",
   "lspCouldNotStart": "{server} を起動できませんでした: {reason}",

@@ -240,6 +240,9 @@ type ServerContrib struct {
 	// Install is the shell command that installs the server's program,
 	// which Mayoi says when the program is not found.
 	Install string `json:"install,omitempty"`
+	// Download is where a release binary of the server is downloaded from,
+	// which Mayoi does in preference to Install on a machine it has one for.
+	Download *ServerDownload `json:"download,omitempty"`
 	// ProgramArgs are the arguments of a program by its name, as "tsc"
 	// serves with ["--lsp", "--stdio"], in place of Args when the command
 	// starts it and no setting of Args is set.
@@ -247,6 +250,37 @@ type ServerContrib struct {
 	// LocalResolve prepares a launch using a script shipped with the plugin.
 	// Remote workspaces keep using Command or Resolve.
 	LocalResolve *LocalServerResolver `json:"localResolve,omitempty"`
+}
+
+// ServerDownload is a server's release archive, or binary: URL, with {os}
+// and {arch} the machine's as OS and Arch name them. Those are maps from
+// "linux", "darwin" and "windows", and "x86_64" and "aarch64", to what the
+// URL calls them; a machine one lacks is one there is no download for, and
+// without the map the name is as it is. Bin is the program's path in an
+// archive (.tar.gz, .tgz, .tar.xz, .zip); a URL of a .gz or of another
+// file is the program itself.
+type ServerDownload struct {
+	URL  string            `json:"url"`
+	OS   map[string]string `json:"os,omitempty"`
+	Arch map[string]string `json:"arch,omitempty"`
+	Bin  string            `json:"bin,omitempty"`
+}
+
+// Resolve is the URL and the program's path in the archive for a machine
+// of os and arch; ok is false when there is no download for it.
+func (d *ServerDownload) Resolve(os, arch string) (url, bin string, ok bool) {
+	if d.OS != nil {
+		if os, ok = d.OS[os]; !ok {
+			return "", "", false
+		}
+	}
+	if d.Arch != nil {
+		if arch, ok = d.Arch[arch]; !ok {
+			return "", "", false
+		}
+	}
+	fill := strings.NewReplacer("{os}", os, "{arch}", arch).Replace
+	return fill(d.URL), fill(d.Bin), true
 }
 
 type ServerResolver struct {

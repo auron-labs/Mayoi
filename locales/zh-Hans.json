@@ -1864,6 +1864,7 @@
   "lspOfferInstall": "安装",
   "lspOfferTurnOn": "已安装 {detect}。要开启 {name} 插件来使用转到定义等功能吗？",
   "lspMissing": "{name} 需要 {detect}，但它还没有安装。安装命令：{command}",
+  "lspMissingDownload": "{name} 需要 {detect}，但它还没有安装。",
   "lspInstallFailed": "无法安装 {name}：{err}",
   "cmdLanguageServers": "显示语言服务器",
   "lspCouldNotStart": "无法启动 {server}：{reason}",

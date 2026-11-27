@@ -2092,6 +2092,7 @@
   "lspOfferInstall": "Install",
   "lspOfferTurnOn": "{detect} is installed. Turn on the {name} plugin for Go to Definition and more?",
   "lspMissing": "{name} needs {detect}, which isn't installed. Install it with {command}",
+  "lspMissingDownload": "{name} needs {detect}, which isn't installed.",
   "lspInstallFailed": "Could not install {name}: {err}",
   "cmdLanguageServers": "Show Language Servers",
   "lspCouldNotStart": "Couldn't start {server}: {reason}",

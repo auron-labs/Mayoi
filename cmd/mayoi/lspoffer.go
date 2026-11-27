@@ -249,8 +249,13 @@ func (a *app) offerServer(d *document) {
 				case found && !a.offered(lang):
 					a.tell(note{message: locales.LspOfferTurnOn(name, p.Title()), label: locales.RunningTurnOn(),
 						action: func() { plugins.setEnabled(p.Name, true) }})
-				case !found && sc.Install != "" && !a.offered("missing:"+lang):
-					a.tell(note{message: locales.LspMissing(p.Title(), name, sc.Install)})
+				case !found && (sc.Install != "" || sc.Download != nil) && !a.offered("missing:"+lang):
+					message := locales.LspMissingDownload(p.Title(), name)
+					if sc.Install != "" {
+						message = locales.LspMissing(p.Title(), name, sc.Install)
+					}
+					a.tell(note{message: message, label: locales.LspOfferInstall(),
+						action: func() { a.installServerProgram(p, sc, name) }})
 				}
 			})
 		}()

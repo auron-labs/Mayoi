@@ -18848,6 +18848,18 @@ func (msgs Messages) LspMissing(name string, detect string, command string) stri
 	return Catalog.Format(msgs.locale, "lspMissing", map[string]any{"name": name, "detect": detect, "command": command})
 }
 
+// LspMissingDownload says "{name} needs {detect}, which isn't installed."
+// in the language the app shows.
+func LspMissingDownload(name string, detect string) string {
+	return In(i18n.Locale()).LspMissingDownload(name, detect)
+}
+
+// LspMissingDownload says "{name} needs {detect}, which isn't installed."
+// in the language of msgs.
+func (msgs Messages) LspMissingDownload(name string, detect string) string {
+	return Catalog.Format(msgs.locale, "lspMissingDownload", map[string]any{"name": name, "detect": detect})
+}
+
 // LspInstallFailed says "Could not install {name}: {err}"
 // in the language the app shows.
 func LspInstallFailed(name string, err string) string {
