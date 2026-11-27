@@ -41,9 +41,11 @@ type document struct {
 	languageOwner string // retain the selected declaration across plugin reloads
 	lexerOwner    *plugin.Plugin
 	lenses        []codeLensBatch
-	id            int
-	path          string // absolute; "" for an untitled document
-	title         string // an untitled document's name
+	// lspSyms are the symbols its language server listed.
+	lspSyms serverSymbols
+	id      int
+	path    string // absolute; "" for an untitled document
+	title   string // an untitled document's name
 	// number is the number of an untitled document's name, and kept the
 	// file that keeps its text as the app quits, of version keptVersion.
 	number int
@@ -143,6 +145,9 @@ type editor struct {
 	// typedRune is the rune the text area typed at the caret, until the
 	// frame that follows takes it.
 	typedRune string
+	// wordMarks are the runs of the text the language server says have the
+	// name at the caret.
+	wordMarks lspMarks
 	// closers are the offsets of the closing brackets and quotes the
 	// editor put after the caret, which typing them steps over.
 	closers []int

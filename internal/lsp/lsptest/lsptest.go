@@ -52,6 +52,7 @@ func Serve(in io.Reader, out io.Writer) {
 			// modifiers' bits.
 			Words map[string][2]uint32 `json:"words"`
 		} `json:"semantic"`
+		FlatSymbols bool `json:"flatSymbols"`
 	}
 	results := 0 // the semantic tokens answers made
 	previous := map[string][]uint32{}
@@ -80,9 +81,9 @@ func Serve(in io.Reader, out io.Writer) {
 		}
 		json.Unmarshal(body, &m)
 		reply := func(result any) { send(map[string]any{"jsonrpc": "2.0", "id": *m.ID, "result": result}) }
-		// answer replies by the word at the place asked of, held back when
-		// it starts "late", none or an error by its end.
-		answer := func(result any) {
+		// holdable replies by the word at the place asked of, held back
+		// when it starts prefix, none or an error by its end.
+		holdable := func(prefix string, result any) {
 			name := wordAt(texts, m.Params)
 			id := *m.ID
 			respond := func() {
@@ -95,12 +96,13 @@ func Serve(in io.Reader, out io.Writer) {
 					send(map[string]any{"jsonrpc": "2.0", "id": id, "result": result})
 				}
 			}
-			if strings.HasPrefix(name, "late") && late == nil {
+			if strings.HasPrefix(name, prefix) && late == nil {
 				late = respond
 				return
 			}
 			respond()
 		}
+		answer := func(result any) { holdable("late", result) }
 		switch m.Method {
 		case "initialize":
 			initialize = append(json.RawMessage(nil), m.Params...)
@@ -124,11 +126,12 @@ func Serve(in io.Reader, out io.Writer) {
 				"hoverProvider": true, "definitionProvider": true, "completionProvider": map[string]any{},
 				"documentFormattingProvider": true, "textDocumentSync": 1,
 				"typeDefinitionProvider": map[string]any{}, "implementationProvider": true, "referencesProvider": true,
-				"workspaceSymbolProvider": true,
-				"renameProvider":          map[string]any{"prepareProvider": true},
-				"codeActionProvider":      map[string]any{"resolveProvider": true, "codeActionKinds": []string{"quickfix", "refactor"}},
-				"signatureHelpProvider":   map[string]any{"triggerCharacters": []string{"(", ","}, "retriggerCharacters": []string{")"}},
-				"executeCommandProvider":  map[string]any{"commands": []string{"fake.sourceDefinition", "fake.applyEdit"}},
+				"workspaceSymbolProvider":   true,
+				"renameProvider":            map[string]any{"prepareProvider": true},
+				"codeActionProvider":        map[string]any{"resolveProvider": true, "codeActionKinds": []string{"quickfix", "refactor"}},
+				"documentHighlightProvider": true, "documentSymbolProvider": true,
+				"signatureHelpProvider":  map[string]any{"triggerCharacters": []string{"(", ","}, "retriggerCharacters": []string{")"}},
+				"executeCommandProvider": map[string]any{"commands": []string{"fake.sourceDefinition", "fake.applyEdit"}},
 			}
 			if options.Semantic != nil {
 				caps["semanticTokensProvider"] = map[string]any{"full": map[string]any{"delta": true}, "legend": map[string]any{
@@ -208,6 +211,10 @@ func Serve(in io.Reader, out io.Writer) {
 		case "textDocument/signatureHelp":
 			navigation = m.Params
 			reply(signatureHelp(texts, m.Params))
+		case "textDocument/documentHighlight":
+			holdable("hold", documentHighlights(texts, m.Params))
+		case "textDocument/documentSymbol":
+			reply(documentSymbols(texts, m.Params, options.FlatSymbols))
 		case "workspace/symbol":
 			reply(workspaceSymbols(initialize, m.Params))
 		case "workspace/didChangeConfiguration":
@@ -351,6 +358,78 @@ func signatureHelp(texts map[string]string, params json.RawMessage) any {
 		help["activeSignature"] = 1
 	}
 	return help
+}
+
+// documentHighlights are the whole-word occurrences of the word at a place
+// in the document's text, a write where "def " comes before it and else a
+// read, one letter words as well. The answer of a word "hold" waits as one
+// "late" does.
+func documentHighlights(texts map[string]string, params json.RawMessage) any {
+	var p struct {
+		TextDocument struct {
+			URI string `json:"uri"`
+		} `json:"textDocument"`
+	}
+	json.Unmarshal(params, &p)
+	word := wordAt(texts, params)
+	out := []any{}
+	for i, line := range strings.Split(texts[p.TextDocument.URI], "\n") {
+		letter := func(i int) bool {
+			return i >= 0 && i < len(line) && (line[i] >= 'a' && line[i] <= 'z' || line[i] >= '0' && line[i] <= '9')
+		}
+		for at := 0; word != "" && at+len(word) <= len(line); at++ {
+			if line[at:at+len(word)] != word || letter(at-1) || letter(at+len(word)) {
+				continue
+			}
+			kind := 2
+			if strings.HasSuffix(line[:at], "def ") {
+				kind = 3
+			}
+			out = append(out, map[string]any{"kind": kind, "range": map[string]any{
+				"start": map[string]any{"line": i, "character": at}, "end": map[string]any{"line": i, "character": at + len(word)}}})
+		}
+	}
+	return out
+}
+
+// documentSymbols are the lines of the document's text that start "sym ",
+// each a function named by the rest of its line: one indented is a child
+// of the one before it, unless flat, which gives them as symbol
+// information.
+func documentSymbols(texts map[string]string, params json.RawMessage, flat bool) any {
+	var p struct {
+		TextDocument struct {
+			URI string `json:"uri"`
+		} `json:"textDocument"`
+	}
+	json.Unmarshal(params, &p)
+	at := func(line, col int) map[string]any {
+		return map[string]any{"line": line, "character": col}
+	}
+	var out []any
+	var last map[string]any
+	for i, line := range strings.Split(texts[p.TextDocument.URI], "\n") {
+		indent := len(line) - len(strings.TrimLeft(line, " "))
+		name, ok := strings.CutPrefix(line[indent:], "sym ")
+		if !ok {
+			continue
+		}
+		start, end := at(i, indent+4), at(i, indent+4+len(name))
+		if flat {
+			out = append(out, map[string]any{"name": name, "kind": 12, "containerName": "pkg",
+				"location": map[string]any{"uri": p.TextDocument.URI, "range": map[string]any{"start": at(i, 0), "end": end}}})
+			continue
+		}
+		sym := map[string]any{"name": name, "kind": 12, "detail": "()", "children": []any{},
+			"range": map[string]any{"start": at(i, 0), "end": end}, "selectionRange": map[string]any{"start": start, "end": end}}
+		if indent == 0 || last == nil {
+			out = append(out, sym)
+			last = sym
+			continue
+		}
+		last["children"] = append(last["children"].([]any), sym)
+	}
+	return out
 }
 
 // workspaceSymbols are the symbols of the fake workspace whose names hold

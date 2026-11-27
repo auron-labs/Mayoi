@@ -18,6 +18,9 @@ type decorations struct {
 	version     uint64
 	sel         [2]int
 	first, last int
+	// marks is the serial of the server's runs of the word these were found
+	// with.
+	marks int
 
 	levels []int // the indent levels of lines first up to last
 	// The guide of the block the caret is in: its level, and its lines.
@@ -43,10 +46,11 @@ const (
 // decorate finds the decorations of lines first up to last of a snapshot.
 func (a *app) decorate(d *editor, snap ui.TextSnapshot, first, last int) *decorations {
 	dc := &d.deco
-	if dc.version == snap.Version() && dc.sel == d.sel && dc.first == first && dc.last == last && dc.levels != nil {
+	a.lspHighlight(d, snap)
+	if dc.version == snap.Version() && dc.sel == d.sel && dc.first == first && dc.last == last && dc.marks == d.wordMarks.serial && dc.levels != nil {
 		return dc
 	}
-	dc.version, dc.sel, dc.first, dc.last = snap.Version(), d.sel, first, last
+	dc.version, dc.sel, dc.first, dc.last, dc.marks = snap.Version(), d.sel, first, last, d.wordMarks.serial
 	unit := max(d.indent.cols(), 1)
 	// The lines in view and those around them that blank lines are
 	// measured against, read at once.
@@ -191,11 +195,20 @@ func matchBracket(snap ui.TextSnapshot, caret int) (at, pair int, ok bool) {
 func isWordRune(r rune) bool { return r == '_' || unicode.IsLetter(r) || unicode.IsDigit(r) }
 
 // findWords finds, on the lines in view, the other occurrences of the
-// word at the caret, or of the text selected on one line.
+// word at the caret, or of the text selected on one line: those the
+// language server found, when it did for this caret and text.
 func (a *app) findWords(d *editor, snap ui.TextSnapshot, first, last int) {
 	dc := &d.deco
 	if a.find.open && len(a.find.matches) > 0 {
 		return // find shows its matches instead
+	}
+	if spans := d.wordMarks.words(snap, d.sel); spans != nil {
+		for _, s := range spans {
+			if line := snap.LineAt(s[0]); line >= first && line <= last && len(dc.words) < 400 {
+				dc.words = append(dc.words, a.runeRectOf(snap, s[0], s[1]))
+			}
+		}
+		return
 	}
 	a0, b0 := min(d.sel[0], d.sel[1]), max(d.sel[0], d.sel[1])
 	n := snap.Len()

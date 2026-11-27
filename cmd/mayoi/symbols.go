@@ -18,8 +18,11 @@ type symbolCache struct {
 	// markdown is whether the symbols are the headings of a Markdown text,
 	// which the language of the document may change without its text.
 	markdown bool
-	symbols  []symbols.Symbol
-	names    []string
+	// server is the serial of the server's symbols they are, 0 for the
+	// heuristics'.
+	server  int
+	symbols []symbols.Symbol
+	names   []string
 }
 
 // markdownOf reports whether a document reads as Markdown, whose symbols
@@ -30,15 +33,23 @@ func markdownOf(d *editor) bool {
 
 // symbolsOf returns the symbols of a document, and their names as the
 // queries of the lists that show them match: the one place go to symbol
-// and the box of a file's name read them from.
+// and the box of a file's name read them from. They are the language
+// server's when it lists them, else those the text's lines make.
 func (a *app) symbolsOf(d *editor) ([]symbols.Symbol, []string) {
 	if d == nil {
 		return nil, nil
 	}
 	sc := &a.quick.syms
 	version, markdown := d.buf.Version(), markdownOf(d)
-	if sc.doc != d.id || sc.version != version || sc.markdown != markdown || sc.symbols == nil {
-		found := symbols.Find(d.buf.Snapshot(), markdown)
+	var found []symbols.Symbol
+	var server int
+	if !markdown {
+		found, server = a.lspSymbols(d)
+	}
+	if sc.doc != d.id || sc.version != version || sc.markdown != markdown || sc.server != server || sc.symbols == nil {
+		if found == nil {
+			found = symbols.Find(d.buf.Snapshot(), markdown)
+		}
 		if found == nil {
 			found = []symbols.Symbol{}
 		}
@@ -46,7 +57,7 @@ func (a *app) symbolsOf(d *editor) ([]symbols.Symbol, []string) {
 		for i, s := range found {
 			names[i] = s.Name
 		}
-		sc.doc, sc.version, sc.markdown = d.id, version, markdown
+		sc.doc, sc.version, sc.markdown, sc.server = d.id, version, markdown, server
 		sc.symbols, sc.names = found, names
 	}
 	return sc.symbols, sc.names

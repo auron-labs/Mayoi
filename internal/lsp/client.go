@@ -115,7 +115,8 @@ type Client struct {
 		WorkspaceSymbol                            bool
 		Rename, PrepareRename                      bool
 		CodeAction, ResolveCodeAction              bool
-		SignatureHelp                              bool
+		SignatureHelp, DocumentHighlight           bool
+		DocumentSymbol                             bool
 		// SignatureTriggers and SignatureRetriggers are the characters
 		// that ask for signature help, and ask again while it shows.
 		SignatureTriggers, SignatureRetriggers []string
@@ -249,6 +250,8 @@ func Start(ctx context.Context, opts Options) (*Client, error) {
 					"isPreferredSupport": true,
 					"resolveSupport":     map[string]any{"properties": []string{"edit"}},
 				},
+				"documentHighlight": map[string]any{},
+				"documentSymbol":    map[string]any{"hierarchicalDocumentSymbolSupport": true},
 				"signatureHelp": map[string]any{
 					"contextSupport": true,
 					"signatureInformation": map[string]any{
@@ -303,6 +306,8 @@ func Start(ctx context.Context, opts Options) (*Client, error) {
 			} `json:"executeCommandProvider"`
 			CompletionProvider         json.RawMessage `json:"completionProvider"`
 			SignatureHelpProvider      json.RawMessage `json:"signatureHelpProvider"`
+			DocumentHighlightProvider  json.RawMessage `json:"documentHighlightProvider"`
+			DocumentSymbolProvider     json.RawMessage `json:"documentSymbolProvider"`
 			DocumentFormattingProvider json.RawMessage `json:"documentFormattingProvider"`
 			SemanticTokensProvider     json.RawMessage `json:"semanticTokensProvider"`
 			TextDocumentSync           json.RawMessage `json:"textDocumentSync"`
@@ -324,6 +329,8 @@ func Start(ctx context.Context, opts Options) (*Client, error) {
 	c.caps.ResolveCodeAction = providerFlag(cp.CodeActionProvider, "resolveProvider")
 	c.caps.Commands = cp.ExecuteCommandProvider.Commands
 	c.semantic = parseSemanticProvider(cp.SemanticTokensProvider)
+	c.caps.DocumentHighlight = on(cp.DocumentHighlightProvider)
+	c.caps.DocumentSymbol = on(cp.DocumentSymbolProvider)
 	if c.caps.SignatureHelp = on(cp.SignatureHelpProvider); c.caps.SignatureHelp {
 		var sh struct {
 			Triggers   []string `json:"triggerCharacters"`

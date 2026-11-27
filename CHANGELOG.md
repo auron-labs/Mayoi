@@ -13,6 +13,8 @@ needs a `## <version>` section here, or its build fails.
 - A name a language server marks deprecated is struck through.
 - `semanticHighlighting` turns server colouring off, in **Settings → Editor**.
 - Typing `(` or `,` in a call shows its signature from the language server, with the parameter in use in bold.
+- A name at rest under the caret is marked where the language server finds it, such as one-letter names.
+- The symbols of a file in the breadcrumbs and **Go → Go to Symbol…** come from its language server, nested.
 - **Go → Show Signature Help** (`Shift+Cmd+Space`) shows the signature of the call at the caret.
 - Fix the caret disappearing after a keymap shortcut with `Cmd`, such as `Cmd+D` or `Cmd+Backspace`, on macOS.
 - Tabs of files with the same name show their folder in brackets, such as `index.ts (api)`.

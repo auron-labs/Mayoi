@@ -93,7 +93,8 @@ func parameterURIs(method string) uriFields {
 		"textDocument/hover", "textDocument/definition", "textDocument/typeDefinition", "textDocument/implementation",
 		"textDocument/references", "textDocument/completion", "textDocument/formatting",
 		"textDocument/semanticTokens/full", "textDocument/semanticTokens/full/delta",
-		"textDocument/prepareRename", "textDocument/rename", "textDocument/codeAction", "textDocument/signatureHelp":
+		"textDocument/prepareRename", "textDocument/rename", "textDocument/codeAction", "textDocument/signatureHelp",
+		"textDocument/documentHighlight", "textDocument/documentSymbol":
 		return documentURI
 	case "codeAction/resolve":
 		return uriFields{"edit": editURIs}
@@ -207,7 +208,7 @@ func mapResult(method string, data json.RawMessage, mappings []PathMapping, toSe
 	switch method {
 	case "textDocument/definition", "textDocument/typeDefinition", "textDocument/implementation", "textDocument/references":
 		return mapURIFields(data, locationURIs, mappings, toServer)
-	case "workspace/symbol":
+	case "workspace/symbol", "textDocument/documentSymbol":
 		return mapURIFields(data, symbolURIs, mappings, toServer)
 	case "textDocument/rename":
 		return mapURIFields(data, editURIs, mappings, toServer)

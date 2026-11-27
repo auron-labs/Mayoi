@@ -1037,6 +1037,11 @@ language servers, and they work on SSH folders with nothing installed on the hos
   line, with the parameter in use in bold and its documentation. It follows the caret through the call and closes on
   Esc, as the caret leaves the call, as the window loses the keyboard, or as a list opens. **Go → Show Signature
   Help** (⇧⌘Space, Shift+Ctrl+Space on Windows and Linux) asks for it at the caret.
+- With the caret at rest on a name for half a second, the places a server says have that name are marked in place of the
+  text's own marks of the same word, which show until it answers.
+- When a server lists a file's symbols, the outline in the breadcrumbs and **Go → Go to Symbol…** (`@` in Quick
+  Open) show its symbols, nested as it has them, in place of the ones Mayoi finds in the text, and ask again once you
+  stop typing. Notes keep their headings.
 - **Show Hover** again while its card shows gives the card the keys: ↑ ↓, Page Up, Page Down, Home and End scroll it,
   Esc closes it, and any other key goes back to the text.
 - Rest the pointer on a name for half a second to see its hover card, without moving the caret. Move into the card
