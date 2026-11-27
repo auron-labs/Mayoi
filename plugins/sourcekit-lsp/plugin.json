@@ -1,0 +1,15 @@
+{
+  "name": "sourcekit-lsp",
+  "displayName": "Swift",
+  "version": "1.0.0",
+  "description": "Go to Definition, hovers, completions and problems in Swift files, with sourcekit-lsp",
+  "enabled": false,
+  "contributes": {
+    "settings": {
+      "path": { "type": "string", "default": "sourcekit-lsp", "description": "The sourcekit-lsp program, by name or path" }
+    },
+    "languageServers": [
+      { "id": "sourcekit-lsp.server", "languages": ["swift"], "command": "${settings.path}" }
+    ]
+  }
+}

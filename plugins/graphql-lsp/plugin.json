@@ -1,0 +1,16 @@
+{
+  "name": "graphql-lsp",
+  "displayName": "GraphQL",
+  "version": "1.0.0",
+  "description": "Go to Definition, hovers, completions and problems in GraphQL files, with graphql-lsp",
+  "enabled": false,
+  "contributes": {
+    "settings": {
+      "path": { "type": "string", "default": "graphql-lsp", "description": "The graphql-lsp program, by name or path" }
+    },
+    "languageServers": [
+      { "id": "graphql-lsp.server", "languages": ["graphql"], "command": "${settings.path}",
+        "args": ["server", "-m", "stream"], "install": "npm install -g graphql-language-service-cli" }
+    ]
+  }
+}

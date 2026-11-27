@@ -1,0 +1,16 @@
+{
+  "name": "ruby-lsp",
+  "displayName": "Ruby",
+  "version": "1.0.0",
+  "description": "Go to Definition, hovers, completions and problems in Ruby files, with ruby-lsp",
+  "enabled": false,
+  "contributes": {
+    "settings": {
+      "path": { "type": "string", "default": "ruby-lsp", "description": "The ruby-lsp program, by name or path" }
+    },
+    "languageServers": [
+      { "id": "ruby-lsp.server", "languages": ["ruby"], "command": "${settings.path}",
+        "install": "gem install ruby-lsp" }
+    ]
+  }
+}

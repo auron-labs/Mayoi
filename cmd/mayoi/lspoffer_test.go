@@ -261,3 +261,19 @@ func TestOfferBundledServerTurnedOff(t *testing.T) {
 		t.Fatalf("offered %s, turned off", p.Name)
 	}
 }
+
+// A companion, as a linter, is not offered for its language, though it
+// comes before the language's own server.
+func TestOfferBundledServerNotCompanion(t *testing.T) {
+	newOfferHarness(t, func() ([]plugin.IndexEntry, error) { return nil, nil })
+	plugins.reg.Dirs.Bundled = fstest.MapFS{
+		"a-lint/plugin.json": {Data: []byte(`{"name": "a-lint", "enabled": false, "contributes": {
+  "settings": {"path": {"type": "string", "default": "a-lint"}},
+  "languageServers": [{"id": "a-lint.server", "languages": ["zigx"], "command": "${settings.path}", "companion": true}]}}`)},
+		"zig-ls/plugin.json": {Data: []byte(zigBundled)},
+	}
+	plugins.reg.Load()
+	if p, _ := offServer("zigx"); p == nil || p.Name != "zig-ls" {
+		t.Fatalf("offered %v, not zig-ls", p)
+	}
+}

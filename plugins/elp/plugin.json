@@ -1,0 +1,16 @@
+{
+  "name": "elp",
+  "displayName": "Erlang",
+  "version": "1.0.0",
+  "description": "Go to Definition, hovers, completions and problems in Erlang files, with elp",
+  "enabled": false,
+  "contributes": {
+    "settings": {
+      "path": { "type": "string", "default": "elp", "description": "The elp program, by name or path" }
+    },
+    "languageServers": [
+      { "id": "elp.server", "languages": ["erlang"], "command": "${settings.path}",
+        "args": ["server"] }
+    ]
+  }
+}

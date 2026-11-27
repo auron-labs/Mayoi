@@ -1,0 +1,15 @@
+{
+  "name": "nixd",
+  "displayName": "Nix",
+  "version": "1.0.0",
+  "description": "Go to Definition, hovers, completions and problems in Nix files, with nixd",
+  "enabled": false,
+  "contributes": {
+    "settings": {
+      "path": { "type": "string", "default": "nixd", "description": "The nixd program, by name or path" }
+    },
+    "languageServers": [
+      { "id": "nixd.server", "languages": ["nix"], "command": "${settings.path}" }
+    ]
+  }
+}

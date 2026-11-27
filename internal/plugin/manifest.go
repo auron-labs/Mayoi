@@ -222,6 +222,9 @@ type ServerContrib struct {
 	// Exclusive keeps the documents it serves from the servers that are
 	// not exclusive.
 	Exclusive bool `json:"exclusive,omitempty"`
+	// Companion serves beside a language's own server, as a linter does,
+	// so a file of its language opening never offers it.
+	Companion bool `json:"companion,omitempty"`
 	// Schemas is how the server takes the schemas of files, which Mayoi
 	// sends it as its settings change: "json" as vscode-json-language-server
 	// takes json.schemas, "yaml" as rlsp-yaml takes schemas; "" for none.

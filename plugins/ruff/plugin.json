@@ -9,7 +9,7 @@
       "path": { "type": "string", "default": "ruff", "description": "The ruff program, by name or path" }
     },
     "languageServers": [
-      { "id": "ruff.server", "languages": ["python"], "command": "${settings.path}", "args": ["server"],
+      { "id": "ruff.server", "languages": ["python"], "command": "${settings.path}", "args": ["server"], "companion": true,
         "install": "uv tool install ruff" }
     ]
   }

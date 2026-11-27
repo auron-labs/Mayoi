@@ -1,0 +1,15 @@
+{
+  "name": "jdtls",
+  "displayName": "Java",
+  "version": "1.0.0",
+  "description": "Go to Definition, hovers, completions and problems in Java files, with jdtls",
+  "enabled": false,
+  "contributes": {
+    "settings": {
+      "path": { "type": "string", "default": "jdtls", "description": "The jdtls program, by name or path" }
+    },
+    "languageServers": [
+      { "id": "jdtls.server", "languages": ["java"], "command": "${settings.path}" }
+    ]
+  }
+}

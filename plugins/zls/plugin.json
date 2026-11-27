@@ -1,0 +1,15 @@
+{
+  "name": "zls",
+  "displayName": "Zig",
+  "version": "1.0.0",
+  "description": "Go to Definition, hovers, completions and problems in Zig files, with zls",
+  "enabled": false,
+  "contributes": {
+    "settings": {
+      "path": { "type": "string", "default": "zls", "description": "The zls program, by name or path" }
+    },
+    "languageServers": [
+      { "id": "zls.server", "languages": ["zig"], "command": "${settings.path}" }
+    ]
+  }
+}

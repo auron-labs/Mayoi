@@ -1,0 +1,16 @@
+{
+  "name": "tailwindcss-language-server",
+  "displayName": "Tailwind CSS",
+  "version": "1.0.0",
+  "description": "Tailwind class completions, hovers and problems, beside each language's own server",
+  "enabled": false,
+  "contributes": {
+    "settings": {
+      "path": { "type": "string", "default": "tailwindcss-language-server", "description": "The tailwindcss-language-server program, by name or path" }
+    },
+    "languageServers": [
+      { "id": "tailwindcss-language-server.server", "languages": ["html", "css", "scss", "javascript", "typescript", "react", "vue", "svelte"], "command": "${settings.path}",
+        "args": ["--stdio"], "companion": true, "install": "npm install -g @tailwindcss/language-server" }
+    ]
+  }
+}

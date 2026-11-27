@@ -558,7 +558,8 @@ func (c *Client) notified(method string, params json.RawMessage) {
 }
 
 // LanguageID is the protocol's identifier of a language Mayoi names, as
-// the highlighter does, for the document at uri: "c++" is "cpp", and JSX
+// the highlighter does, for the document at uri: "c++" is "cpp", "c#"
+// "csharp", "docker" "dockerfile" and "tex" "latex", and JSX
 // and TSX are their own, which servers parse by it.
 func LanguageID(language, uri string) string {
 	switch strings.ToLower(filepath.Ext(uri)) {
@@ -570,6 +571,12 @@ func LanguageID(language, uri string) string {
 	switch language {
 	case "c++":
 		return "cpp"
+	case "c#":
+		return "csharp"
+	case "docker":
+		return "dockerfile"
+	case "tex":
+		return "latex"
 	case "react":
 		return "javascriptreact"
 	case "json":

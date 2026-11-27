@@ -1,0 +1,16 @@
+{
+  "name": "dart",
+  "displayName": "Dart",
+  "version": "1.0.0",
+  "description": "Go to Definition, hovers, completions and problems in Dart files, with dart",
+  "enabled": false,
+  "contributes": {
+    "settings": {
+      "path": { "type": "string", "default": "dart", "description": "The dart program, by name or path" }
+    },
+    "languageServers": [
+      { "id": "dart.server", "languages": ["dart"], "command": "${settings.path}",
+        "args": ["language-server", "--protocol=lsp"] }
+    ]
+  }
+}

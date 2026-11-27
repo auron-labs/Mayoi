@@ -1,0 +1,16 @@
+{
+  "name": "tinymist",
+  "displayName": "Typst",
+  "version": "1.0.0",
+  "description": "Go to Definition, hovers, completions and problems in Typst files, with tinymist",
+  "enabled": false,
+  "contributes": {
+    "settings": {
+      "path": { "type": "string", "default": "tinymist", "description": "The tinymist program, by name or path" }
+    },
+    "languageServers": [
+      { "id": "tinymist.server", "languages": ["typst"], "command": "${settings.path}",
+        "install": "cargo install --locked tinymist" }
+    ]
+  }
+}

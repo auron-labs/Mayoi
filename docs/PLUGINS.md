@@ -480,7 +480,8 @@ A document can have several servers, as Python's with ty and a linter's: every s
 offers the completions of each, each server's together. Go to Definition and the other jumps, and **Format
 Document**, ask the first server that answers them: yours, in your order, then the plugins' by their `files`, then by
 their languages. A server with `"exclusive": true` keeps the documents it serves from the servers that are not, as
-Ansible's keeps its files from the YAML server's.
+Ansible's keeps its files from the YAML server's. One with `"companion": true`, as a linter, serves beside the
+language's own server, and a file of its language opening never offers it.
 
 You can also set up servers yourself, by language or by file glob, in settings.json, with no plugin. They come
 before a plugin's, and an entry with the `id` of a plugin's server replaces it. See

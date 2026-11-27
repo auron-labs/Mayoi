@@ -10,7 +10,7 @@
     },
     "languageServers": [
       { "id": "oxlint.server", "languages": ["typescript", "javascript", "react", "vue", "svelte"],
-        "command": "${settings.path}", "args": ["--lsp"], "install": "npm install -g oxlint" }
+        "command": "${settings.path}", "args": ["--lsp"], "companion": true, "install": "npm install -g oxlint" }
     ]
   }
 }

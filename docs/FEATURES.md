@@ -1040,8 +1040,9 @@ language servers, and they work on SSH folders with nothing installed on the hos
 - Signed in, the plugins you install from Git follow you to your other machines.
 - Mayoi comes with **Word Count**, the words of a Markdown file in the status bar, **TODOs**, the folder's TODO
   comments in the sidebar, the language servers of Go, TypeScript and JavaScript, Python, Rust, C/C++, Bash, JSON,
-  YAML, TOML, PHP and Ansible, the linters Ruff and oxlint, beside Python's and TypeScript's servers, and the formatter
-  oxfmt.
+  YAML, TOML, PHP, Ansible, HTML, CSS and SCSS, Svelte, Zig, Lua, Ruby, Elixir, Java, Kotlin, Swift, C#, Dart, Haskell,
+  OCaml, Gleam, Erlang, Elm, Clojure, Scala, Dockerfile, Terraform, Nix, GraphQL, LaTeX and Typst, the linters Ruff,
+  oxlint and Biome, Tailwind CSS's and marksman's servers, each beside a language's own, and the formatter oxfmt.
 - They start off. A file of a language whose server is off offers **Turn On** when its program is installed, and
   says how to install it when it is not; a server's `path` setting names a program not on the path.
 - A plugin you install under the name of one Mayoi comes with takes its place.

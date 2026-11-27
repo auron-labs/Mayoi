@@ -1,0 +1,15 @@
+{
+  "name": "lua-language-server",
+  "displayName": "Lua",
+  "version": "1.0.0",
+  "description": "Go to Definition, hovers, completions and problems in Lua files, with lua-language-server",
+  "enabled": false,
+  "contributes": {
+    "settings": {
+      "path": { "type": "string", "default": "lua-language-server", "description": "The lua-language-server program, by name or path" }
+    },
+    "languageServers": [
+      { "id": "lua-language-server.server", "languages": ["lua"], "command": "${settings.path}" }
+    ]
+  }
+}

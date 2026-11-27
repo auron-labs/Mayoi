@@ -285,7 +285,7 @@ func (a *app) offerServer(d *document) {
 
 // offServer is the server for lang of a bundled plugin that is off, as it
 // comes, and that starts its command itself; nil for none. One the
-// settings turned off is not offered.
+// settings turned off is not offered, nor a companion.
 func offServer(lang string) (*plugin.Plugin, *plugin.ServerContrib) {
 	on := plugins.enabled()
 	for _, p := range plugins.reg.Plugins() {
@@ -299,7 +299,7 @@ func offServer(lang string) (*plugin.Plugin, *plugin.ServerContrib) {
 			continue
 		}
 		for i, sc := range p.Contributes.LanguageServers {
-			if sc.Resolve == nil && slices.Contains(sc.Languages, lang) {
+			if sc.Resolve == nil && !sc.Companion && slices.Contains(sc.Languages, lang) {
 				return p, &p.Contributes.LanguageServers[i]
 			}
 		}

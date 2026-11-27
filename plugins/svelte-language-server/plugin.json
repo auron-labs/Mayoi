@@ -1,0 +1,16 @@
+{
+  "name": "svelte-language-server",
+  "displayName": "Svelte",
+  "version": "1.0.0",
+  "description": "Go to Definition, hovers, completions and problems in Svelte files, with svelteserver",
+  "enabled": false,
+  "contributes": {
+    "settings": {
+      "path": { "type": "string", "default": "svelteserver", "description": "The svelteserver program, by name or path" }
+    },
+    "languageServers": [
+      { "id": "svelte-language-server.server", "languages": ["svelte"], "command": "${settings.path}",
+        "args": ["--stdio"], "install": "npm install -g svelte-language-server" }
+    ]
+  }
+}

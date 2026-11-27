@@ -1,0 +1,16 @@
+{
+  "name": "terraform-ls",
+  "displayName": "Terraform",
+  "version": "1.0.0",
+  "description": "Go to Definition, hovers, completions and problems in Terraform files, with terraform-ls",
+  "enabled": false,
+  "contributes": {
+    "settings": {
+      "path": { "type": "string", "default": "terraform-ls", "description": "The terraform-ls program, by name or path" }
+    },
+    "languageServers": [
+      { "id": "terraform-ls.server", "languages": ["terraform"], "command": "${settings.path}",
+        "args": ["serve"] }
+    ]
+  }
+}

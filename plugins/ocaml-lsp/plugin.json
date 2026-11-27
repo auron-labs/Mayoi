@@ -1,0 +1,16 @@
+{
+  "name": "ocaml-lsp",
+  "displayName": "OCaml",
+  "version": "1.0.0",
+  "description": "Go to Definition, hovers, completions and problems in OCaml files, with ocamllsp",
+  "enabled": false,
+  "contributes": {
+    "settings": {
+      "path": { "type": "string", "default": "ocamllsp", "description": "The ocamllsp program, by name or path" }
+    },
+    "languageServers": [
+      { "id": "ocaml-lsp.server", "languages": ["ocaml"], "command": "${settings.path}",
+        "install": "opam install ocaml-lsp-server" }
+    ]
+  }
+}

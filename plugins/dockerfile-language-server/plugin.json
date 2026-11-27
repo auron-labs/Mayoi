@@ -1,0 +1,16 @@
+{
+  "name": "dockerfile-language-server",
+  "displayName": "Dockerfile",
+  "version": "1.0.0",
+  "description": "Go to Definition, hovers, completions and problems in Dockerfile files, with docker-langserver",
+  "enabled": false,
+  "contributes": {
+    "settings": {
+      "path": { "type": "string", "default": "docker-langserver", "description": "The docker-langserver program, by name or path" }
+    },
+    "languageServers": [
+      { "id": "dockerfile-language-server.server", "languages": ["docker"], "command": "${settings.path}",
+        "args": ["--stdio"], "install": "npm install -g dockerfile-language-server-nodejs" }
+    ]
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "name": "biome",
+  "displayName": "Biome",
+  "version": "1.0.0",
+  "description": "Problems and formatting in JavaScript, TypeScript, JSON and CSS files, with Biome, beside each language's own server",
+  "enabled": false,
+  "contributes": {
+    "settings": {
+      "path": { "type": "string", "default": "biome", "description": "The biome program, by name or path" }
+    },
+    "languageServers": [
+      { "id": "biome.server", "languages": ["javascript", "typescript", "react", "json", "css"], "command": "${settings.path}",
+        "args": ["lsp-proxy"], "companion": true, "install": "npm install -g @biomejs/biome" }
+    ]
+  }
+}

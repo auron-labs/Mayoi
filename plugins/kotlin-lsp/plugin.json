@@ -1,0 +1,16 @@
+{
+  "name": "kotlin-lsp",
+  "displayName": "Kotlin",
+  "version": "1.0.0",
+  "description": "Go to Definition, hovers, completions and problems in Kotlin files, with kotlin-lsp",
+  "enabled": false,
+  "contributes": {
+    "settings": {
+      "path": { "type": "string", "default": "kotlin-lsp", "description": "The kotlin-lsp program, by name or path" }
+    },
+    "languageServers": [
+      { "id": "kotlin-lsp.server", "languages": ["kotlin"], "command": "${settings.path}",
+        "args": ["--stdio"] }
+    ]
+  }
+}

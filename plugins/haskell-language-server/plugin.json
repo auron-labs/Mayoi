@@ -1,0 +1,16 @@
+{
+  "name": "haskell-language-server",
+  "displayName": "Haskell",
+  "version": "1.0.0",
+  "description": "Go to Definition, hovers, completions and problems in Haskell files, with haskell-language-server-wrapper",
+  "enabled": false,
+  "contributes": {
+    "settings": {
+      "path": { "type": "string", "default": "haskell-language-server-wrapper", "description": "The haskell-language-server-wrapper program, by name or path" }
+    },
+    "languageServers": [
+      { "id": "haskell-language-server.server", "languages": ["haskell"], "command": "${settings.path}",
+        "args": ["--lsp"], "install": "ghcup install hls" }
+    ]
+  }
+}

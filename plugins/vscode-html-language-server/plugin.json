@@ -1,0 +1,16 @@
+{
+  "name": "vscode-html-language-server",
+  "displayName": "HTML",
+  "version": "1.0.0",
+  "description": "Go to Definition, hovers, completions and problems in HTML files, with vscode-html-language-server",
+  "enabled": false,
+  "contributes": {
+    "settings": {
+      "path": { "type": "string", "default": "vscode-html-language-server", "description": "The vscode-html-language-server program, by name or path" }
+    },
+    "languageServers": [
+      { "id": "vscode-html-language-server.server", "languages": ["html"], "command": "${settings.path}",
+        "args": ["--stdio"], "initializationOptions": {"provideFormatter": true}, "install": "npm install -g vscode-langservers-extracted" }
+    ]
+  }
+}
