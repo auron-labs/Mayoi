@@ -18,7 +18,6 @@ import (
 	"mayoi/internal/plugin"
 	"mayoi/internal/remote"
 	"mayoi/internal/settings"
-	"mayoi/internal/vfs"
 	"mayoi/locales"
 )
 
@@ -71,7 +70,7 @@ func tscVersionOnHost(ctx context.Context, root, program string, env, unset []st
 			return ""
 		}
 	}
-	cmd, err := vfs.CommandEnvironment(root, env, unset, nil, program, "--version")
+	cmd, err := managedCommand(ctx, root, env, unset, nil, program, "--version")
 	if err != nil {
 		return ""
 	}

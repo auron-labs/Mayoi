@@ -49,6 +49,7 @@ type Dirs struct {
 	Plugins string // installed plugins, a folder each, and plugins.json
 	Scripts string // user scripts, a file each
 	Storage string // what plugins store
+	Servers string // language servers Mayoi installed, on this machine
 	// Bundled are the plugins in the app, a folder each.
 	Bundled fs.FS
 }

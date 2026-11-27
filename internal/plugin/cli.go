@@ -25,6 +25,7 @@ func UserDirs() Dirs {
 		Plugins: filepath.Join(base, "plugins"),
 		Scripts: filepath.Join(base, "scripts"),
 		Storage: filepath.Join(base, "storage"),
+		Servers: filepath.Join(base, "servers"),
 	}
 }
 

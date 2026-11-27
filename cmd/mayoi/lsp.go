@@ -21,7 +21,6 @@ import (
 	"mayoi/internal/plugin"
 	"mayoi/internal/remote"
 	"mayoi/internal/settings"
-	"mayoi/internal/vfs"
 	"mayoi/internal/workspace"
 	"mayoi/locales"
 )
@@ -379,7 +378,7 @@ func (s *lspServer) start(a *app, prev *lspServer) {
 		return
 	}
 	pr, pw := io.Pipe()
-	cmd, err := vfs.CommandEnvironment(s.root, launch.environment(), launch.UnsetEnv, pr, launch.Command, launch.Args...)
+	cmd, err := managedCommand(ctx, s.root, launch.environment(), launch.UnsetEnv, pr, launch.Command, launch.Args...)
 	if err != nil {
 		pr.Close()
 		pw.Close()

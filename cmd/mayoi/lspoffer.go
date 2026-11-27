@@ -117,7 +117,7 @@ func serverInstalled(ctx context.Context, root, name string) (found, known bool)
 
 // programCheck says whether env, in the folder, would find the program
 // $1: one with a slash from the folder, else on PATH, an empty entry of
-// which is the folder. What it prints is all that is taken, as an SSH
+// which is the folder; $2, when it is not empty, is searched before PATH. What it prints is all that is taken, as an SSH
 // host that does not answer may end the command with any status.
 const programCheck = `set -f
 there() { [ -f "$1" ] && [ -x "$1" ]; }
@@ -125,6 +125,7 @@ case $1 in
 */*) if there "$1"; then echo mayoi:found; else echo mayoi:missing; fi; exit 0 ;;
 esac
 p=${PATH-/bin:/usr/bin}
+if [ -n "$2" ]; then p=$2:$p; fi
 case $p in *:) p=$p. ;; esac
 IFS=:
 for d in $p; do
@@ -135,7 +136,8 @@ echo mayoi:missing`
 // programOnHost reports whether a program is found on the machine of
 // root, as a command started in root with env added and unset removed
 // finds it there; known is false when it could not tell, as when the host
-// did not answer in time. On this machine, env is not looked at.
+// did not answer in time. The folder of the servers Mayoi installed is
+// searched first. On this machine, env is not looked at.
 func programOnHost(ctx context.Context, root string, env, unset []string, name string) (found, known bool) {
 	if !remote.Is(root) {
 		// On the path of the user's shell, not the one Mayoi started with.
@@ -144,10 +146,17 @@ func programOnHost(ctx context.Context, root string, env, unset []string, name s
 		case <-ctx.Done():
 			return false, false
 		}
+		if dir, err := serversDir(ctx, root); err == nil && findManaged(serverBins(root, dir), name) != "" {
+			return true, true
+		}
 		_, err := exec.LookPath(name)
 		return err == nil, true
 	}
-	cmd, err := vfs.CommandEnvironment(root, env, unset, nil, "/bin/sh", "-c", programCheck, "sh", name)
+	var managed string
+	if dir, err := serversDir(ctx, root); err == nil {
+		managed = strings.Join(serverBins(root, dir), ":")
+	}
+	cmd, err := vfs.CommandEnvironment(root, env, unset, nil, "/bin/sh", "-c", programCheck, "sh", name, managed)
 	if err != nil {
 		return false, false
 	}

@@ -21,6 +21,7 @@ needs a `## <version>` section here, or its build fails.
 - Tap `Shift` twice or choose **Go → Search Everywhere…** to find files by name and text.
 - Search Everywhere keeps the last query and can open all matches in Search.
 - Search Everywhere lists symbols and classes from the workspace, found by the running language servers.
+- Language servers installed by Mayoi are found in `~/.mayoi/servers/bin` before the path.
 - Line comments, indentation, deletion and insertion act at every caret.
 - Up and Down move every caret through wrapped rows.
 - Hold `Alt` while dragging with the middle button to select a column.
