@@ -591,6 +591,12 @@ func (a *app) applyFormat(d *editor, snap ui.TextSnapshot, res json.RawMessage) 
 	if editsOverlap(tes) {
 		return
 	}
+	editKeepingSelection(d, tes)
+}
+
+// editKeepingSelection makes edits, which must not overlap, as one step of
+// undo, the selection moving with them.
+func editKeepingSelection(d *editor, tes []textEdit) {
 	sel := d.sel
 	moved := func(x int) int {
 		for _, e := range sortedEdits(tes) {

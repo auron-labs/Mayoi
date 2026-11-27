@@ -411,6 +411,27 @@ func (s *lspServer) start(a *app, prev *lspServer) {
 				}
 				plugins.setDiagnosticList(owner, path, source, false, list)
 			},
+			ApplyEdit: func(edit json.RawMessage) error {
+				result := make(chan error, 1)
+				a.post(func() {
+					if !s.current() {
+						result <- errors.New("the server is not running")
+						return
+					}
+					a.applyEdit(root, edit, func(_ int, err error) {
+						if err != nil {
+							a.fail("%s", locales.LspEditFailed(firstLine(err.Error())))
+						}
+						result <- err
+					})
+				})
+				select {
+				case err := <-result:
+					return err
+				case <-time.After(30 * time.Second):
+					return errors.New("the window did not answer in time")
+				}
+			},
 			Log: func(level, msg string) { s.log(level, s.contrib.ID+": "+msg) },
 			RefreshSemanticTokens: func() {
 				a.post(func() {

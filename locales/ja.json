@@ -1862,6 +1862,7 @@
   "lspNavigationNone": "位置が見つかりません",
   "lspLocationElsewhere": "Mayoi では {uri} を開けません",
   "lspChooseLocation": "移動先を選択",
+  "lspEditFailed": "言語サーバーの変更を適用できませんでした: {err}",
   "lspOffer": "{detect} がインストールされています。定義へ移動などのために {name} プラグインをインストールしますか?",
   "lspOfferInstall": "インストール",
   "lspOfferTurnOn": "{detect} がインストールされています。定義へ移動などのために {name} プラグインをオンにしますか?",

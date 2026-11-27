@@ -76,6 +76,9 @@ type Handlers struct {
 	Diagnostics func(uri string, items []Diagnostic)
 	// Log is a message of the server's, and of the client's about it.
 	Log func(level, msg string)
+	// ApplyEdit makes the WorkspaceEdit a server asks for, and says why it
+	// could not. It may wait on the app: the client goes on reading.
+	ApplyEdit func(edit json.RawMessage) error
 	// Notification receives notifications not otherwise handled by the client.
 	Notification func(method string, params json.RawMessage)
 	// RefreshSemanticTokens is the server's ask for the semantic tokens of
@@ -238,8 +241,11 @@ func Start(ctx context.Context, opts Options) (*Client, error) {
 					"overlappingTokenSupport": false,
 				},
 			},
-			"workspace": map[string]any{"workspaceFolders": true, "configuration": true, "symbol": map[string]any{},
-				"semanticTokens": map[string]any{"refreshSupport": true}},
+			"workspace": map[string]any{
+				"workspaceFolders": true, "configuration": true, "symbol": map[string]any{},
+				"applyEdit": true, "workspaceEdit": map[string]any{"documentChanges": true},
+				"semanticTokens": map[string]any{"refreshSupport": true},
+			},
 		},
 		"clientInfo": map[string]any{"name": "Mayoi"},
 	}
@@ -508,6 +514,11 @@ func (c *Client) read(r *bufio.Reader) {
 
 // answer answers a request of the server's.
 func (c *Client) answer(id json.RawMessage, method string, params json.RawMessage) {
+	if method == "workspace/applyEdit" {
+		// The app takes its time; what the server sends meanwhile is read.
+		go c.reply(id, method, c.applyEdit(params))
+		return
+	}
 	var result any
 	switch method {
 	case "workspace/configuration":
@@ -540,6 +551,28 @@ func (c *Client) answer(id json.RawMessage, method string, params json.RawMessag
 			c.h.RefreshSemanticTokens()
 		}
 	}
+	c.reply(id, method, result)
+}
+
+// applyEdit is the answer to workspace/applyEdit.
+func (c *Client) applyEdit(params json.RawMessage) any {
+	type applied struct {
+		Applied       bool   `json:"applied"`
+		FailureReason string `json:"failureReason,omitempty"`
+	}
+	var p struct {
+		Edit json.RawMessage `json:"edit"`
+	}
+	if err := json.Unmarshal(params, &p); err != nil || c.h.ApplyEdit == nil {
+		return applied{}
+	}
+	if err := c.h.ApplyEdit(p.Edit); err != nil {
+		return applied{FailureReason: err.Error()}
+	}
+	return applied{Applied: true}
+}
+
+func (c *Client) reply(id json.RawMessage, method string, result any) {
 	raw, err := json.Marshal(result)
 	if err == nil {
 		c.write(map[string]any{"jsonrpc": "2.0", "id": id, "result": mapResult(method, raw, c.toServer, true)})

@@ -40,6 +40,7 @@ func Serve(in io.Reader, out io.Writer) {
 	var initialize, document, navigation, configuration json.RawMessage
 	texts := map[string]string{} // by URI
 	var late func()              // the answer held back
+	var executing int            // the executeCommand that waits for the client's workspace/applyEdit answer
 	var options struct {
 		HoverContents  json.RawMessage `json:"hoverContents"`
 		FailInitialize string          `json:"failInitialize"`
@@ -75,6 +76,7 @@ func Serve(in io.Reader, out io.Writer) {
 			ID     *int            `json:"id"`
 			Method string          `json:"method"`
 			Params json.RawMessage `json:"params"`
+			Result json.RawMessage `json:"result"`
 		}
 		json.Unmarshal(body, &m)
 		reply := func(result any) { send(map[string]any{"jsonrpc": "2.0", "id": *m.ID, "result": result}) }
@@ -123,7 +125,9 @@ func Serve(in io.Reader, out io.Writer) {
 				"documentFormattingProvider": true, "textDocumentSync": 1,
 				"typeDefinitionProvider": map[string]any{}, "implementationProvider": true, "referencesProvider": true,
 				"workspaceSymbolProvider": true,
-				"executeCommandProvider":  map[string]any{"commands": []string{"fake.sourceDefinition"}},
+				"renameProvider":          map[string]any{"prepareProvider": true},
+				"codeActionProvider":      map[string]any{"resolveProvider": true, "codeActionKinds": []string{"quickfix", "refactor"}},
+				"executeCommandProvider":  map[string]any{"commands": []string{"fake.sourceDefinition", "fake.applyEdit"}},
 			}
 			if options.Semantic != nil {
 				caps["semanticTokensProvider"] = map[string]any{"full": map[string]any{"delta": true}, "legend": map[string]any{
@@ -225,6 +229,19 @@ func Serve(in io.Reader, out io.Writer) {
 			reply(json.RawMessage(`[{"targetUri":"file:///tmp/def.fake","targetRange":{"start":{"line":1,"character":0}},
 				"targetSelectionRange":{"start":{"line":3,"character":1},"end":{"line":3,"character":4}}}]`))
 		case "textDocument/implementation", "textDocument/references", "workspace/executeCommand":
+			var c struct {
+				Command   string            `json:"command"`
+				Arguments []json.RawMessage `json:"arguments"`
+			}
+			json.Unmarshal(m.Params, &c)
+			if m.Method == "workspace/executeCommand" && c.Command == "fake.applyEdit" && len(c.Arguments) == 1 {
+				// Asks the client to apply the edit it is given, and answers
+				// what the client says of it.
+				executing = *m.ID
+				send(map[string]any{"jsonrpc": "2.0", "id": applyEditID, "method": "workspace/applyEdit",
+					"params": map[string]any{"edit": c.Arguments[0]}})
+				break
+			}
 			navigation = m.Params
 			// References of a word of a document are where it is defined.
 			if defs, _ := definitions(texts, m.Params); defs != nil && m.Method == "textDocument/references" {
@@ -246,6 +263,34 @@ func Serve(in io.Reader, out io.Writer) {
 		case "textDocument/formatting":
 			reply([]any{map[string]any{"range": map[string]any{
 				"start": map[string]any{"line": 0, "character": 0}, "end": map[string]any{"line": 0, "character": 0}}, "newText": "// formatted\n"}})
+		case "textDocument/prepareRename":
+			at, ok := wordRange(texts, m.Params)
+			if !ok {
+				reply(nil)
+				break
+			}
+			answer(map[string]any{"range": at, "placeholder": wordAt(texts, m.Params)})
+		case "textDocument/rename":
+			reply(rename(texts, rootDir(initialize), m.Params))
+		case "textDocument/codeAction":
+			reply(codeActions(m.Params))
+		case "codeAction/resolve":
+			var a map[string]any
+			json.Unmarshal(m.Params, &a)
+			data, _ := a["data"].(map[string]any)
+			uri, _ := data["uri"].(string)
+			a["edit"] = map[string]any{"changes": map[string]any{uri: []any{insertion(0, 0, "// resolved\n")}}}
+			reply(a)
+		case "":
+			// The client's answer to workspace/applyEdit is the answer to
+			// the command that asked for it.
+			if m.ID != nil && *m.ID == applyEditID {
+				var r struct {
+					Applied bool `json:"applied"`
+				}
+				json.Unmarshal(m.Result, &r)
+				send(map[string]any{"jsonrpc": "2.0", "id": executing, "result": map[string]any{"applied": r.Applied}})
+			}
 		case "shutdown":
 			reply(nil)
 		case "exit":

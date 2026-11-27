@@ -1862,6 +1862,7 @@
   "lspNavigationNone": "未找到位置",
   "lspLocationElsewhere": "Mayoi 无法打开 {uri}",
   "lspChooseLocation": "选择位置",
+  "lspEditFailed": "无法应用语言服务器的更改：{err}",
   "lspOffer": "已安装 {detect}。要安装 {name} 插件来使用转到定义等功能吗？",
   "lspOfferInstall": "安装",
   "lspOfferTurnOn": "已安装 {detect}。要开启 {name} 插件来使用转到定义等功能吗？",

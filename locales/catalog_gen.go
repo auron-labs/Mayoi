@@ -18824,6 +18824,16 @@ func (msgs Messages) LspChooseLocation() string {
 	return Catalog.Format(msgs.locale, "lspChooseLocation", nil)
 }
 
+// LspEditFailed says "Couldn't make the language server's change: {err}"
+// in the language the app shows.
+func LspEditFailed(err string) string { return In(i18n.Locale()).LspEditFailed(err) }
+
+// LspEditFailed says "Couldn't make the language server's change: {err}"
+// in the language of msgs.
+func (msgs Messages) LspEditFailed(err string) string {
+	return Catalog.Format(msgs.locale, "lspEditFailed", map[string]any{"err": err})
+}
+
 // LspOffer says "{detect} is installed. Install the {name} plugin for Go to Definition and more?"
 // in the language the app shows.
 func LspOffer(detect string, name string) string { return In(i18n.Locale()).LspOffer(detect, name) }
