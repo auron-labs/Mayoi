@@ -211,6 +211,7 @@ func (a *app) view(c *ui.Context) {
 	a.recentPickerView(c)
 	a.pluginPickerView(c)
 	a.hoverView(c)
+	a.signatureView(c)
 	a.themePickerView(c)
 	a.remotePickerView(c)
 	a.conflictsView(c)

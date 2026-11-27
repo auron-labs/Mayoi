@@ -18654,6 +18654,16 @@ func (msgs Messages) CmdGoHover() string {
 	return Catalog.Format(msgs.locale, "cmdGoHover", nil)
 }
 
+// CmdGoSignatureHelp says "Show Signature Help"
+// in the language the app shows.
+func CmdGoSignatureHelp() string { return In(i18n.Locale()).CmdGoSignatureHelp() }
+
+// CmdGoSignatureHelp says "Show Signature Help"
+// in the language of msgs.
+func (msgs Messages) CmdGoSignatureHelp() string {
+	return Catalog.Format(msgs.locale, "cmdGoSignatureHelp", nil)
+}
+
 // CmdSelComplete says "Complete Word"
 // in the language the app shows.
 func CmdSelComplete() string { return In(i18n.Locale()).CmdSelComplete() }
@@ -18672,6 +18682,16 @@ func HoverNone() string { return In(i18n.Locale()).HoverNone() }
 // in the language of msgs.
 func (msgs Messages) HoverNone() string {
 	return Catalog.Format(msgs.locale, "hoverNone", nil)
+}
+
+// SignatureNone says "No signature help here"
+// in the language the app shows.
+func SignatureNone() string { return In(i18n.Locale()).SignatureNone() }
+
+// SignatureNone says "No signature help here"
+// in the language of msgs.
+func (msgs Messages) SignatureNone() string {
+	return Catalog.Format(msgs.locale, "signatureNone", nil)
 }
 
 // LspNone says "No language server is set up for {language}"

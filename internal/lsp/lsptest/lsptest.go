@@ -127,6 +127,7 @@ func Serve(in io.Reader, out io.Writer) {
 				"workspaceSymbolProvider": true,
 				"renameProvider":          map[string]any{"prepareProvider": true},
 				"codeActionProvider":      map[string]any{"resolveProvider": true, "codeActionKinds": []string{"quickfix", "refactor"}},
+				"signatureHelpProvider":   map[string]any{"triggerCharacters": []string{"(", ","}, "retriggerCharacters": []string{")"}},
 				"executeCommandProvider":  map[string]any{"commands": []string{"fake.sourceDefinition", "fake.applyEdit"}},
 			}
 			if options.Semantic != nil {
@@ -204,6 +205,9 @@ func Serve(in io.Reader, out io.Writer) {
 			default:
 				answer(map[string]any{"contents": map[string]any{"kind": "markdown", "value": "**hello**"}})
 			}
+		case "textDocument/signatureHelp":
+			navigation = m.Params
+			reply(signatureHelp(texts, m.Params))
 		case "workspace/symbol":
 			reply(workspaceSymbols(initialize, m.Params))
 		case "workspace/didChangeConfiguration":
@@ -301,6 +305,52 @@ func Serve(in io.Reader, out io.Writer) {
 			}
 		}
 	}
+}
+
+// signatureHelp is the help of the call open at a place: the signature
+// "name(first int, second string)" of the word before its last open
+// parenthesis, with the parameter after as many commas as there are
+// after the parenthesis; none outside a call. "name" has two signatures,
+// the second the active one.
+func signatureHelp(texts map[string]string, params json.RawMessage) any {
+	var p struct {
+		TextDocument struct {
+			URI string `json:"uri"`
+		} `json:"textDocument"`
+		Position struct {
+			Line      int `json:"line"`
+			Character int `json:"character"`
+		} `json:"position"`
+	}
+	json.Unmarshal(params, &p)
+	lines := strings.Split(texts[p.TextDocument.URI], "\n")
+	if p.Position.Line >= len(lines) {
+		return nil
+	}
+	before := lines[p.Position.Line][:min(p.Position.Character, len(lines[p.Position.Line]))]
+	open := strings.LastIndex(before, "(")
+	if open < 0 || strings.Contains(before[open:], ")") {
+		return nil
+	}
+	start := open
+	for start > 0 && before[start-1] != ' ' {
+		start--
+	}
+	name := before[start:open]
+	sig := map[string]any{
+		"label":         name + "(first int, second string)",
+		"documentation": map[string]any{"kind": "markdown", "value": "Calls **" + name + "**."},
+		"parameters": []any{
+			map[string]any{"label": []int{len(name) + 1, len(name) + 10}, "documentation": "The first."},
+			map[string]any{"label": "second string"},
+		},
+	}
+	help := map[string]any{"signatures": []any{sig}, "activeParameter": strings.Count(before[open:], ",")}
+	if name == "name" {
+		help["signatures"] = []any{map[string]any{"label": "name()"}, sig}
+		help["activeSignature"] = 1
+	}
+	return help
 }
 
 // workspaceSymbols are the symbols of the fake workspace whose names hold

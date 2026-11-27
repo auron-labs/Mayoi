@@ -140,6 +140,9 @@ type editor struct {
 	// makes, once the editor has its selection.
 	cmds []func(d *editor)
 	deco decorations
+	// typedRune is the rune the text area typed at the caret, until the
+	// frame that follows takes it.
+	typedRune string
 	// closers are the offsets of the closing brackets and quotes the
 	// editor put after the caret, which typing them steps over.
 	closers []int

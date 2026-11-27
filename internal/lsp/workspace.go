@@ -93,7 +93,7 @@ func parameterURIs(method string) uriFields {
 		"textDocument/hover", "textDocument/definition", "textDocument/typeDefinition", "textDocument/implementation",
 		"textDocument/references", "textDocument/completion", "textDocument/formatting",
 		"textDocument/semanticTokens/full", "textDocument/semanticTokens/full/delta",
-		"textDocument/prepareRename", "textDocument/rename", "textDocument/codeAction":
+		"textDocument/prepareRename", "textDocument/rename", "textDocument/codeAction", "textDocument/signatureHelp":
 		return documentURI
 	case "codeAction/resolve":
 		return uriFields{"edit": editURIs}

@@ -428,6 +428,10 @@ type app struct {
 	// completeAsked is the Complete Word last asked, as defAsked: each
 	// its own, so one does not drop another's answer.
 	completeAsked int
+	// sig is the signature help of the call being typed, and sigAsked the
+	// one last asked for, as defAsked.
+	sig      signatureHelp
+	sigAsked int
 	// picksOpened counts the pickers opened, Quick Open's and the plugins':
 	// an answer asked for before one opened does not take its place.
 	picksOpened int

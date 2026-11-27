@@ -115,8 +115,12 @@ type Client struct {
 		WorkspaceSymbol                            bool
 		Rename, PrepareRename                      bool
 		CodeAction, ResolveCodeAction              bool
-		Commands                                   []string
-		Experimental                               map[string]json.RawMessage
+		SignatureHelp                              bool
+		// SignatureTriggers and SignatureRetriggers are the characters
+		// that ask for signature help, and ask again while it shows.
+		SignatureTriggers, SignatureRetriggers []string
+		Commands                               []string
+		Experimental                           map[string]json.RawMessage
 		// Sync is the text document sync kind: 1 full, 2 incremental.
 		Sync int
 	}
@@ -245,6 +249,14 @@ func Start(ctx context.Context, opts Options) (*Client, error) {
 					"isPreferredSupport": true,
 					"resolveSupport":     map[string]any{"properties": []string{"edit"}},
 				},
+				"signatureHelp": map[string]any{
+					"contextSupport": true,
+					"signatureInformation": map[string]any{
+						"documentationFormat":    []string{"markdown", "plaintext"},
+						"parameterInformation":   map[string]any{"labelOffsetSupport": true},
+						"activeParameterSupport": true,
+					},
+				},
 				"publishDiagnostics": map[string]any{"relatedInformation": false},
 				"semanticTokens": map[string]any{
 					"requests":                map[string]any{"full": map[string]any{"delta": true}, "range": true},
@@ -290,6 +302,7 @@ func Start(ctx context.Context, opts Options) (*Client, error) {
 				Commands []string `json:"commands"`
 			} `json:"executeCommandProvider"`
 			CompletionProvider         json.RawMessage `json:"completionProvider"`
+			SignatureHelpProvider      json.RawMessage `json:"signatureHelpProvider"`
 			DocumentFormattingProvider json.RawMessage `json:"documentFormattingProvider"`
 			SemanticTokensProvider     json.RawMessage `json:"semanticTokensProvider"`
 			TextDocumentSync           json.RawMessage `json:"textDocumentSync"`
@@ -311,6 +324,14 @@ func Start(ctx context.Context, opts Options) (*Client, error) {
 	c.caps.ResolveCodeAction = providerFlag(cp.CodeActionProvider, "resolveProvider")
 	c.caps.Commands = cp.ExecuteCommandProvider.Commands
 	c.semantic = parseSemanticProvider(cp.SemanticTokensProvider)
+	if c.caps.SignatureHelp = on(cp.SignatureHelpProvider); c.caps.SignatureHelp {
+		var sh struct {
+			Triggers   []string `json:"triggerCharacters"`
+			Retriggers []string `json:"retriggerCharacters"`
+		}
+		json.Unmarshal(cp.SignatureHelpProvider, &sh)
+		c.caps.SignatureTriggers, c.caps.SignatureRetriggers = sh.Triggers, sh.Retriggers
+	}
 	_ = json.Unmarshal(cp.Experimental, &c.caps.Experimental)
 	c.caps.Sync = 1
 	var kind int

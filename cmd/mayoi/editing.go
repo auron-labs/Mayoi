@@ -795,6 +795,10 @@ func (a *app) editorKey(d *editor, ev ui.InputEvent) bool {
 		a.hover = nil
 		return true
 	}
+	if ev.Key == ui.KeyEscape && ev.Mods == 0 && a.sig.ed == d {
+		a.closeSignature()
+		return true
+	}
 	if a.hoverKey(d, ev) {
 		return true
 	}

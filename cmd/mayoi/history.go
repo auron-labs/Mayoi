@@ -102,6 +102,9 @@ func (d *document) observe() {
 	if len(t.cursors) > 0 && t.typeAtAll(old, snap, sel) {
 		return
 	}
+	if a, b := min(sel[0], sel[1]), max(sel[0], sel[1]); a == b && snap.Len() == old.Len()+1 {
+		t.typedRune = string(runeAt(snap, a))
+	}
 	// Brackets and quotes typed close, in the same step.
 	if t.autoClose(old, snap, sel) {
 		h.snap = d.buf.Snapshot()
