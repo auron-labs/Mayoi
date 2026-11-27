@@ -10,7 +10,9 @@
     },
     "languageServers": [
       { "id": "texlab.server", "languages": ["tex"], "command": "${settings.path}",
-        "install": "cargo install --locked texlab" }
+        "install": "cargo install --locked texlab",
+        "download": { "url": "https://github.com/latex-lsp/texlab/releases/latest/download/texlab-{arch}-{os}.tar.gz", "bin": "texlab",
+          "os": {"linux": "linux", "darwin": "macos"} } }
     ]
   }
 }

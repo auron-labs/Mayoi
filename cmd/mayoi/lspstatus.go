@@ -185,6 +185,17 @@ func (s *lspServer) failMessage() string {
 	return locales.LspCouldNotStart(s.contrib.ID, s.reason())
 }
 
+// failNote tells why the server could not start: with Install when its
+// plugin's program is missing and Mayoi can install it, else Restart.
+func (s *lspServer) failNote(a *app) note {
+	if sc := &s.contrib; s.failure == lspFailMissing && s.plugin != nil && (sc.Install != "" || sc.Download != nil) {
+		p, program := s.plugin, s.program()
+		return note{message: s.failMessage(), label: locales.LspOfferInstall(),
+			action: func() { a.installServerProgram(p, sc, program) }}
+	}
+	return note{message: s.failMessage(), label: locales.RunningRestart(), action: func() { a.restartServer(s.key) }}
+}
+
 // serverInstallHint is how to install command, as the index of plugins
 // last read says for the plugin of name, which looks for it by that name;
 // "" when it does not, as for a command of a folder, or was not read. It

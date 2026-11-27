@@ -10,7 +10,9 @@
     },
     "languageServers": [
       { "id": "tinymist.server", "languages": ["typst"], "command": "${settings.path}",
-        "install": "cargo install --locked tinymist" }
+        "install": "cargo install --locked tinymist",
+        "download": { "url": "https://github.com/Myriad-Dreamin/tinymist/releases/latest/download/tinymist-{os}-{arch}",
+          "arch": {"x86_64": "x64", "aarch64": "arm64"} } }
     ]
   }
 }

@@ -10,7 +10,9 @@
     },
     "languageServers": [
       { "id": "biome.server", "languages": ["javascript", "typescript", "react", "json", "css"], "command": "${settings.path}",
-        "args": ["lsp-proxy"], "companion": true, "install": "npm install -g @biomejs/biome" }
+        "args": ["lsp-proxy"], "companion": true, "install": "npm install -g @biomejs/biome",
+        "download": { "url": "https://github.com/biomejs/biome/releases/latest/download/biome-{os}-{arch}",
+          "arch": {"x86_64": "x64", "aarch64": "arm64"} } }
     ]
   }
 }

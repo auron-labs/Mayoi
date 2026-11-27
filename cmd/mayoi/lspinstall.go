@@ -155,9 +155,16 @@ func (a *app) installServerProgram(p *plugin.Plugin, sc *plugin.ServerContrib, p
 				return
 			}
 			a.tell(note{message: locales.PluginsInstalled(p.Title())})
-			if plugins != nil && !slices.Contains(plugins.enabled(), p) {
-				plugins.setEnabled(p.Name, true)
+			if plugins == nil {
+				return
 			}
+			if !slices.Contains(plugins.enabled(), p) {
+				plugins.setEnabled(p.Name, true)
+				return
+			}
+			// On already, its server failed for the missing program.
+			forgetFailedServers(p.Name)
+			plugins.startServers()
 		})
 	}()
 }

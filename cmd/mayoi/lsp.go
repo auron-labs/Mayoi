@@ -350,10 +350,9 @@ func (s *lspServer) start(a *app, prev *lspServer) {
 			}
 			s.failedAt = time.Now()
 			if s.ctx.Err() == nil && s.current() {
-				msg := s.failMessage()
 				a.post(func() {
 					a.fails++
-					a.tell(note{message: msg, label: locales.RunningRestart(), action: func() { a.restartServer(s.key) }})
+					a.tell(s.failNote(a))
 				})
 			}
 		}
@@ -972,7 +971,7 @@ func (a *app) goToLocation(path string, loc lsp.Location) {
 func (a *app) lspFailed(s *lspServer) {
 	switch {
 	case s != nil && s.state() == lspFailed:
-		a.tell(note{message: s.failMessage(), label: locales.RunningRestart(), action: func() { a.restartServer(s.key) }})
+		a.tell(s.failNote(a))
 		return
 	case s != nil && s.state() == lspStopped:
 		a.tell(note{message: locales.LspDown(), label: locales.RunningRestart(), action: func() { a.restartServer(s.key) }})

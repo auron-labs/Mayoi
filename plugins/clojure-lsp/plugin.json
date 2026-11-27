@@ -9,7 +9,9 @@
       "path": { "type": "string", "default": "clojure-lsp", "description": "The clojure-lsp program, by name or path" }
     },
     "languageServers": [
-      { "id": "clojure-lsp.server", "languages": ["clojure"], "command": "${settings.path}" }
+      { "id": "clojure-lsp.server", "languages": ["clojure"], "command": "${settings.path}",
+        "download": { "url": "https://github.com/clojure-lsp/clojure-lsp/releases/latest/download/clojure-lsp-native-{os}-{arch}.zip",
+          "bin": "clojure-lsp", "os": {"linux": "linux", "darwin": "macos"}, "arch": {"x86_64": "amd64", "aarch64": "aarch64"} } }
     ]
   }
 }

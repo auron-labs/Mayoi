@@ -170,3 +170,22 @@ func TestInstallServerFromNote(t *testing.T) {
 		t.Fatal("the installed program is not found")
 	}
 }
+
+// A server of a plugin on whose program is missing offers to install it,
+// as a companion that was never offered needs; one Mayoi cannot install
+// offers a restart.
+func TestFailNoteInstalls(t *testing.T) {
+	oh := newOfferHarness(t, func() ([]plugin.IndexEntry, error) { return nil, nil })
+	plugins.reg.Dirs.Bundled = fstest.MapFS{"zig-ls/plugin.json": {Data: []byte(zigBundled)}}
+	plugins.reg.Load()
+	p, sc := offServer("zigx")
+	s := newServer(p, *sc, oh.a.root, 1)
+	s.failure, s.command = lspFailMissing, "mayoi-zigx-ls"
+	if n := s.failNote(oh.a); n.label != "Install" || n.action == nil {
+		t.Fatalf("missing program: %+v", n)
+	}
+	s.contrib.Install = ""
+	if n := s.failNote(oh.a); n.label != "Restart" {
+		t.Fatalf("nothing to install: %+v", n)
+	}
+}

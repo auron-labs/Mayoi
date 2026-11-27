@@ -10,7 +10,9 @@
     },
     "languageServers": [
       { "id": "marksman.server", "languages": ["markdown"], "command": "${settings.path}",
-        "args": ["server"], "companion": true }
+        "args": ["server"], "companion": true,
+        "download": { "url": "https://github.com/artempyanykh/marksman/releases/latest/download/marksman-{os}-{arch}",
+          "os": {"linux": "linux"}, "arch": {"x86_64": "x64", "aarch64": "arm64"} } }
     ]
   }
 }

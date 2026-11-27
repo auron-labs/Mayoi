@@ -9,7 +9,9 @@
       "path": { "type": "string", "default": "zls", "description": "The zls program, by name or path" }
     },
     "languageServers": [
-      { "id": "zls.server", "languages": ["zig"], "command": "${settings.path}" }
+      { "id": "zls.server", "languages": ["zig"], "command": "${settings.path}",
+        "download": { "url": "https://github.com/zigtools/zls/releases/latest/download/zls-{arch}-{os}.tar.xz", "bin": "zls",
+          "os": {"linux": "linux", "darwin": "macos"} } }
     ]
   }
 }

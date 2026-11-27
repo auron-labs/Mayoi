@@ -1044,8 +1044,8 @@ language servers, and they work on SSH folders with nothing installed on the hos
   OCaml, Gleam, Erlang, Elm, Clojure, Scala, Dockerfile, Terraform, Nix, GraphQL, LaTeX and Typst, the linters Ruff,
   oxlint and Biome, Tailwind CSS's and marksman's servers, each beside a language's own, and the formatter oxfmt.
 - They start off. A file of a language whose server is off offers **Turn On** when its program is installed, and
-  says so when it is not, with **Install**, which installs it on the folder's machine, into `~/.mayoi/servers`, as
-  Zed does, and turns the plugin on; the release binary is downloaded where the project publishes one. It runs on SSH
+  says so when it is not, with **Install**, which installs it on the folder's machine, into `~/.mayoi/servers`, and
+  turns the plugin on, or starts it again when it was on; the release binary is downloaded where the project publishes one. It runs on SSH
   and WSL folders too. A server's `path` setting names a program not on the path.
 - A plugin you install under the name of one Mayoi comes with takes its place.
 
