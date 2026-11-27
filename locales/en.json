@@ -2091,6 +2091,17 @@
   "lspLocationElsewhere": "Mayoi can't open {uri}",
   "lspChooseLocation": "Choose a location",
   "lspEditFailed": "Couldn't make the language server's change: {err}",
+  "cmdEditRename": "Rename Symbol",
+  "renameUnsupported": "No language server here can rename symbols",
+  "renameNothing": "Nothing to rename here",
+  "renameFailed": "Couldn't rename: {err}",
+  "renameStale": "The file changed before the rename was ready. Try again.",
+  "renamedIn": "Renamed in {files, plural, one {# file} other {# files}}",
+  "@renamedIn": {
+    "placeholders": {
+      "files": {}
+    }
+  },
   "lspOffer": "{detect} is installed. Install the {name} plugin for Go to Definition and more?",
   "lspOfferInstall": "Install",
   "lspOfferTurnOn": "{detect} is installed. Turn on the {name} plugin for Go to Definition and more?",

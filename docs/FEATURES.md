@@ -1023,6 +1023,10 @@ language servers, and they work on SSH folders with nothing installed on the hos
   show, and the first that can goes to definitions and formats.
 - **Go → Go to Type Definition**, **Go to Source Definition**, **Go to Implementation** (⌘F12, Ctrl+F12 on Windows and
   Linux) and **Find References** (⇧F12) ask the server, when it supports them. References always open in a list.
+- **Go → Rename Symbol** (F2 in the editor; ⇧F6 in the JetBrains keymap) asks the server what is at the caret, asks for
+  the new name, and renames it in every file the server says uses it. Open files change as one step of undo each;
+  the others are written to disk, on SSH and WSL folders too. It says how many files changed when there were several.
+  An edit that creates, renames or deletes files is refused whole, as is any a file cannot take.
 - Several definitions are offered in a list: ↑ ↓ choose, Return goes, Esc stays. **Go → Go Back** (⌃-, Alt+Left on
   Windows and Linux) and **Go Forward** (⌃⇧-, Alt+Right) return.
 - **Show Hover** again while its card shows gives the card the keys: ↑ ↓, Page Up, Page Down, Home and End scroll it,

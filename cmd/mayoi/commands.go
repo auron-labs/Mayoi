@@ -148,6 +148,8 @@ func (a *app) commandsIn(t locales.Messages) []command {
 		{"go.implementation", t.CmdGoImplementation(), "CmdOrCtrl+F12", a.jumpCommand(lsp.Implementation)},
 		{"go.references", t.CmdGoReferences(), "Shift+F12", a.jumpCommand(lsp.References)},
 		{"go.hover", t.CmdGoHover(), "", a.showHover},
+		// F2, which the editor takes itself, so that the explorer keeps it.
+		{"edit.rename", t.CmdEditRename(), "", a.renameSymbol},
 		// ⌃- and ⌃⇧- on macOS, as VS Code has them, where ⌥⌘← goes to the
 		// column on the left and ⌥← by words.
 		{"go.back", t.CmdGoBack(), "Ctrl+-", func() { a.navGo(-1) }},
@@ -784,7 +786,7 @@ func (a *app) menu(cli bool, run func(id string, win *mygo.Window)) *mygo.Menu {
 		{Label: locales.MenuGo(), Submenu: []*mygo.MenuItem{
 			item("go.quickOpen"), item("go.searchEverywhere"), item("go.commands"), item("go.symbol"), item("go.line"), item("go.bracket"), mygo.Separator(),
 			item("go.definition"), item("go.typeDefinition"), item("go.sourceDefinition"),
-			item("go.implementation"), item("go.references"), item("go.hover"), mygo.Separator(),
+			item("go.implementation"), item("go.references"), item("edit.rename"), item("go.hover"), mygo.Separator(),
 			item("go.back"), item("go.forward"), mygo.Separator(),
 			item("go.nextTab"), item("go.prevTab"), mygo.Separator(),
 			item("go.nextProject"), item("go.prevProject"),

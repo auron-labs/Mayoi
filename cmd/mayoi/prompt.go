@@ -19,6 +19,9 @@ type prompt struct {
 	selected    bool
 	// optional lets the value be empty.
 	optional bool
+	// whole selects all of the value as the prompt opens, not its name
+	// without an extension.
+	whole bool
 	// cancel runs as the prompt closes without a value, when set.
 	cancel func()
 }
@@ -61,7 +64,11 @@ func (a *app) promptView(c *ui.Context) {
 				if !pr.selected {
 					// Select the name without its extension, as Finder does.
 					pr.selected = true
-					in.SetTextSelection(0, stemLen(pr.value))
+					n := stemLen(pr.value)
+					if pr.whole {
+						n = len([]rune(pr.value))
+					}
+					in.SetTextSelection(0, n)
 				}
 				if pr.err != "" {
 					in.Error(pr.err)

@@ -92,7 +92,8 @@ func parameterURIs(method string) uriFields {
 	case "textDocument/didOpen", "textDocument/didChange", "textDocument/didSave", "textDocument/didClose",
 		"textDocument/hover", "textDocument/definition", "textDocument/typeDefinition", "textDocument/implementation",
 		"textDocument/references", "textDocument/completion", "textDocument/formatting",
-		"textDocument/semanticTokens/full", "textDocument/semanticTokens/full/delta":
+		"textDocument/semanticTokens/full", "textDocument/semanticTokens/full/delta",
+		"textDocument/prepareRename", "textDocument/rename":
 		return documentURI
 	case "textDocument/publishDiagnostics":
 		return uriFields{"uri": nil, "diagnostics": {"*": {
@@ -206,6 +207,8 @@ func mapResult(method string, data json.RawMessage, mappings []PathMapping, toSe
 		return mapURIFields(data, locationURIs, mappings, toServer)
 	case "workspace/symbol":
 		return mapURIFields(data, symbolURIs, mappings, toServer)
+	case "textDocument/rename":
+		return mapURIFields(data, editURIs, mappings, toServer)
 	case "workspace/workspaceFolders":
 		return mapURIFields(data, folderURIs, mappings, toServer)
 	default:

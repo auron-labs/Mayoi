@@ -88,6 +88,7 @@ var viewKeys = map[string]string{
 	"markdown.moveItemUp": "Shift+CmdOrCtrl+Up", "markdown.moveItemDown": "Shift+CmdOrCtrl+Down",
 	"file.openRecent": "Ctrl+R",
 	"sel.complete":    "Ctrl+Space",
+	"edit.rename":     "F2",
 }
 
 // paletteEntries are the commands the palette runs, by title, made once

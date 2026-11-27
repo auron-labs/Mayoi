@@ -113,6 +113,7 @@ type Client struct {
 		Hover, Definition, Completion, Formatting  bool
 		TypeDefinition, Implementation, References bool
 		WorkspaceSymbol                            bool
+		Rename, PrepareRename                      bool
 		Commands                                   []string
 		Experimental                               map[string]json.RawMessage
 		// Sync is the text document sync kind: 1 full, 2 incremental.
@@ -231,6 +232,7 @@ func Start(ctx context.Context, opts Options) (*Client, error) {
 				"references":         map[string]any{},
 				"completion":         map[string]any{"completionItem": map[string]any{"snippetSupport": true}},
 				"formatting":         map[string]any{},
+				"rename":             map[string]any{"prepareSupport": true},
 				"publishDiagnostics": map[string]any{"relatedInformation": false},
 				"semanticTokens": map[string]any{
 					"requests":                map[string]any{"full": map[string]any{"delta": true}, "range": true},
@@ -270,6 +272,7 @@ func Start(ctx context.Context, opts Options) (*Client, error) {
 			ImplementationProvider  json.RawMessage `json:"implementationProvider"`
 			ReferencesProvider      json.RawMessage `json:"referencesProvider"`
 			WorkspaceSymbolProvider json.RawMessage `json:"workspaceSymbolProvider"`
+			RenameProvider          json.RawMessage `json:"renameProvider"`
 			ExecuteCommandProvider  struct {
 				Commands []string `json:"commands"`
 			} `json:"executeCommandProvider"`
@@ -289,6 +292,8 @@ func Start(ctx context.Context, opts Options) (*Client, error) {
 	c.caps.Implementation = on(cp.ImplementationProvider)
 	c.caps.References = on(cp.ReferencesProvider)
 	c.caps.WorkspaceSymbol = on(cp.WorkspaceSymbolProvider)
+	c.caps.Rename = on(cp.RenameProvider)
+	c.caps.PrepareRename = providerFlag(cp.RenameProvider, "prepareProvider")
 	c.caps.Commands = cp.ExecuteCommandProvider.Commands
 	c.semantic = parseSemanticProvider(cp.SemanticTokensProvider)
 	_ = json.Unmarshal(cp.Experimental, &c.caps.Experimental)

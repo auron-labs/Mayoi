@@ -822,6 +822,11 @@ func (a *app) editorKey(d *editor, ev ui.InputEvent) bool {
 		a.post(a.completeOne)
 		return true
 	}
+	// F2 in the editor, as in VS Code; in the explorer it renames the file.
+	if ev.Key == ui.KeyF2 && ev.Mods == 0 && !a.keyBound(0, ui.KeyF2) {
+		a.post(a.renameSymbol)
+		return true
+	}
 	if a.prefs().Vim && a.vimKey(d, ev) {
 		return true
 	}

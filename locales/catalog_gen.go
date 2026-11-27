@@ -18834,6 +18834,66 @@ func (msgs Messages) LspEditFailed(err string) string {
 	return Catalog.Format(msgs.locale, "lspEditFailed", map[string]any{"err": err})
 }
 
+// CmdEditRename says "Rename Symbol"
+// in the language the app shows.
+func CmdEditRename() string { return In(i18n.Locale()).CmdEditRename() }
+
+// CmdEditRename says "Rename Symbol"
+// in the language of msgs.
+func (msgs Messages) CmdEditRename() string {
+	return Catalog.Format(msgs.locale, "cmdEditRename", nil)
+}
+
+// RenameUnsupported says "No language server here can rename symbols"
+// in the language the app shows.
+func RenameUnsupported() string { return In(i18n.Locale()).RenameUnsupported() }
+
+// RenameUnsupported says "No language server here can rename symbols"
+// in the language of msgs.
+func (msgs Messages) RenameUnsupported() string {
+	return Catalog.Format(msgs.locale, "renameUnsupported", nil)
+}
+
+// RenameNothing says "Nothing to rename here"
+// in the language the app shows.
+func RenameNothing() string { return In(i18n.Locale()).RenameNothing() }
+
+// RenameNothing says "Nothing to rename here"
+// in the language of msgs.
+func (msgs Messages) RenameNothing() string {
+	return Catalog.Format(msgs.locale, "renameNothing", nil)
+}
+
+// RenameFailed says "Couldn't rename: {err}"
+// in the language the app shows.
+func RenameFailed(err string) string { return In(i18n.Locale()).RenameFailed(err) }
+
+// RenameFailed says "Couldn't rename: {err}"
+// in the language of msgs.
+func (msgs Messages) RenameFailed(err string) string {
+	return Catalog.Format(msgs.locale, "renameFailed", map[string]any{"err": err})
+}
+
+// RenameStale says "The file changed before the rename was ready. Try again."
+// in the language the app shows.
+func RenameStale() string { return In(i18n.Locale()).RenameStale() }
+
+// RenameStale says "The file changed before the rename was ready. Try again."
+// in the language of msgs.
+func (msgs Messages) RenameStale() string {
+	return Catalog.Format(msgs.locale, "renameStale", nil)
+}
+
+// RenamedIn says "Renamed in {files, plural, one {# file} other {# files}}"
+// in the language the app shows.
+func RenamedIn(files int) string { return In(i18n.Locale()).RenamedIn(files) }
+
+// RenamedIn says "Renamed in {files, plural, one {# file} other {# files}}"
+// in the language of msgs.
+func (msgs Messages) RenamedIn(files int) string {
+	return Catalog.Format(msgs.locale, "renamedIn", map[string]any{"files": files})
+}
+
 // LspOffer says "{detect} is installed. Install the {name} plugin for Go to Definition and more?"
 // in the language the app shows.
 func LspOffer(detect string, name string) string { return In(i18n.Locale()).LspOffer(detect, name) }

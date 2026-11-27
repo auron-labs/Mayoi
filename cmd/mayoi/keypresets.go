@@ -61,7 +61,7 @@ var keyPresets = map[string]map[string]presetKey{
 		"go.bracket":               {"ctrl+m", "ctrl+shift+m"},
 		"go.hover":                 {"ctrl+j", "ctrl+q"},
 		"file.openRecent":          both("cmd+e"),
-		"file.rename":              both("shift+f6"),
+		"edit.rename":              both("shift+f6"),
 		"edit.replace":             both("cmd+r"),
 		"edit.replaceInFiles":      both("cmd+shift+r"),
 		"sel.comment":              both("cmd+/"),

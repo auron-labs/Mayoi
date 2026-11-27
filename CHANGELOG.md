@@ -34,7 +34,7 @@ needs a `## <version>` section here, or its build fails.
 - Hold `Alt` while dragging with the middle button to select a column.
 - **Settings → Editor → Keymap** switches Mayoi's shortcuts to VS Code's or JetBrains' keys, and applies at once.
 - The JetBrains keymap has `⇧⌘O` go to a file, `⌘O` to a symbol and `⇧⌘A` open the command palette.
-- The JetBrains keymap has `⌘D` duplicate a line, `⌥⌘L` reformat, `⌘B` go to the definition and `⇧F6` rename.
+- The JetBrains keymap has `⌘D` duplicate a line, `⌥⌘L` reformat and `⌘B` go to the definition.
 - `keybindings.json` wins over the keymap, and Vim mode works with any keymap.
 - **Keyboard Shortcuts** shows the keys of the chosen keymap.
 - Rename a file or folder right in its explorer row, as in VS Code, instead of in a dialog.
@@ -81,6 +81,10 @@ needs a `## <version>` section here, or its build fails.
 - Dropped on the editor, the chosen files open together.
 - **Move to Trash** and its key act on every chosen file and folder.
 - On an SSH host, **Delete Permanently…** deletes every chosen file and folder after one question.
+- **Go → Rename Symbol** (`F2`) renames a name through its language server, in every file that uses it.
+- Rename Symbol asks for the new name, and says how many files it changed when there was more than one.
+- Open files change as one undo step; the other files are written to disk.
+- `⇧F6` in the JetBrains keymap renames the symbol at the caret.
 
 ## 0.23.4
 
