@@ -412,6 +412,20 @@ func (s *lspServer) start(a *app, prev *lspServer) {
 				plugins.setDiagnosticList(owner, path, source, false, list)
 			},
 			Log: func(level, msg string) { s.log(level, s.contrib.ID+": "+msg) },
+			RefreshSemanticTokens: func() {
+				a.post(func() {
+					if !s.current() {
+						return
+					}
+					for _, w := range s.windows(a) {
+						for _, d := range w.docs {
+							if w.serves(s, d) {
+								w.lspDoc("change", d)
+							}
+						}
+					}
+				})
+			},
 		}})
 	if err != nil {
 		pr.Close()
@@ -437,6 +451,7 @@ func (s *lspServer) start(a *app, prev *lspServer) {
 			for _, d := range w.docs {
 				if w.serves(s, d) {
 					c.Open(serverURI(d.path), languageOf(d), d.buf.String())
+					w.askSemantic(d, w.lspFor(d, false))
 				}
 			}
 		}
@@ -577,6 +592,9 @@ func (a *app) lspDoc(event string, d *document) {
 			}
 			c.Open(uri, languageOf(d), *text)
 		}
+	}
+	if event != "save" {
+		a.askSemantic(d, servers)
 	}
 }
 

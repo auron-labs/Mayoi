@@ -1555,6 +1555,8 @@
   "prefDescEditorAgentContext": "通常のファイルのガターに + を表示し、コードと任意のコメントを収集します。",
   "prefTitleEditorHover": "ポインタでホバー表示",
   "prefDescEditorHover": "ポインタが名前の上で止まると、言語サーバーの説明を表示します。",
+  "prefTitleSemanticHighlighting": "セマンティックハイライト",
+  "prefDescSemanticHighlighting": "言語サーバーの情報に基づき、パラメーターや型などの名前を色分けします。",
   "prefTitleSearchFollowSymlinks": "フォルダーのシンボリックリンクをたどる",
   "prefDescSearchFollowSymlinks": "ローカルワークスペースの外を指すリンクも含め、リンク先のフォルダーを検索します。",
   "prefTitleMarkdownMode": "Markdown の開き方",

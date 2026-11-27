@@ -634,6 +634,7 @@ func (a *app) editorView(c *ui.Context, d *editor) {
 		var highlights, strikes []lineRun
 		if d.hl != nil && d.hl.Lexer() != nil {
 			d.hl.Request(snap, first, last)
+			d.colors.sem = a.semanticFor(d.document)
 			area.TextRanges(d.colors.ranges(d.hl, p, snap, first, last, f.bold())...)
 			highlights, strikes = d.colors.marks, d.colors.strikes
 		}
@@ -1127,9 +1128,15 @@ func (a *app) linesInView(g geometry, y, viewH float32) (first, last int) {
 type colorCache struct {
 	version, gen uint64
 	first, last  int
-	pal          *palette
-	bold         int
-	out          []ui.TextRange
+	// sem are the semantic tokens that go over the lexer's, nil for none,
+	// and semGen what the colours were made from of them.
+	sem    *semanticState
+	semGen uint64
+	// merged is the tokens of a line with the semantic ones put over.
+	merged []highlight.Token
+	pal    *palette
+	bold   int
+	out    []ui.TextRange
 	// marks and strikes are the ==highlighted== and ~~struck~~ runs of
 	// Markdown among the lines, which the editor paints a box behind and
 	// a line through.
@@ -1147,10 +1154,14 @@ type lineRun struct{ line, start, end int }
 // one color with only blanks between them are one range, and those of two
 // colors leave no gap. Bold text, as Markdown's, is in weight bold.
 func (cc *colorCache) ranges(hl *highlight.Highlighter, p *palette, snap ui.TextSnapshot, first, last, bold int) []ui.TextRange {
-	gen := hl.Gen()
-	if cc.out != nil && cc.version == snap.Version() && cc.gen == gen && cc.first == first && cc.last == last && cc.pal == p && cc.bold == bold {
+	gen, semGen := hl.Gen(), uint64(0)
+	if cc.sem != nil {
+		semGen = cc.sem.gen + 1
+	}
+	if cc.out != nil && cc.version == snap.Version() && cc.gen == gen && cc.semGen == semGen && cc.first == first && cc.last == last && cc.pal == p && cc.bold == bold {
 		return cc.out
 	}
+	cc.semGen = semGen
 	cc.version, cc.gen, cc.first, cc.last, cc.pal, cc.bold = snap.Version(), gen, first, last, p, bold
 	out := cc.out[:0]
 	cc.marks, cc.strikes = cc.marks[:0], cc.strikes[:0]
@@ -1163,7 +1174,17 @@ func (cc *colorCache) ranges(hl *highlight.Highlighter, p *palette, snap ui.Text
 		text := snap.Slice(s, e)
 		ascii := isASCII(text) // a rune is a byte: the blanks are easy to find
 		from := len(out)
-		for _, tok := range hl.Line(i, text) {
+		toks := hl.Line(i, text)
+		if sem := cc.sem.at(i, snap.LineCount(), text); sem != nil {
+			cc.merged = mergeSemantic(cc.merged, toks, sem)
+			toks = cc.merged
+			for _, t := range sem {
+				if t.deprecated {
+					cc.strikes = append(cc.strikes, lineRun{i, int(t.start), int(t.end)})
+				}
+			}
+		}
+		for _, tok := range toks {
 			if markdown && tok.Kind == highlight.Mark {
 				cc.marks = append(cc.marks, lineRun{i, tok.Start, tok.End})
 			} else if markdown && tok.Kind == highlight.Deleted {

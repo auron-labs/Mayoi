@@ -83,6 +83,7 @@ var Schema = []Field{
 	{Key: "keymap", Category: CatEditor, Kind: KindEnum, Options: []string{"", "vscode", "jetbrains"}},
 	{Key: "editorAgentContext", Category: CatEditor, Kind: KindBool},
 	{Key: "editorHover", Category: CatEditor, Kind: KindBool},
+	{Key: "semanticHighlighting", Category: CatEditor, Kind: KindBool},
 	{Key: "cmdBackspaceDeletesLine", Category: CatEditor, Kind: KindBool},
 	{Key: "searchFollowSymlinks", Category: CatEditor, Kind: KindBool, Folder: true},
 

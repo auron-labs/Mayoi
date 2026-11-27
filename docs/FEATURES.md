@@ -1030,6 +1030,9 @@ language servers, and they work on SSH folders with nothing installed on the hos
 - Rest the pointer on a name for half a second to see its hover card, without moving the caret. Move into the card
   to read or scroll it; it closes as the pointer leaves, and on Esc, a click or a key. Nothing shows where the server
   has nothing to say, while you drag or hold a modifier key, or with `editorHover` off.
+- A server that knows what each name is colours code over the lexer's colours: parameters, types, functions,
+  constants and library names. Lines you edit show the lexer's colours until the server answers; a deprecated name
+  is struck through. Turn it off with `semanticHighlighting`.
 - An answer that comes after you opened Quick Open or another list leaves it be.
 - **Show Problems** lists every problem plugins found; the status bar counts them.
 - JSON and YAML files get SchemaStore's schema by their names, its catalog downloaded once a day. The status bar

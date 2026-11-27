@@ -94,6 +94,7 @@ takes its default.
 | `keymap`                | `""`          | `""` (Mayoi), `"vscode"`, `"jetbrains"`                     |                                                |
 | `editorAgentContext`    | `false`       | `true`, `false`                                             | Only this file                                 |
 | `editorHover`           | `true`        | `true`, `false`                                             | Only this file                                 |
+| `semanticHighlighting`  | `true`        | `true`, `false`                                             | **Settings → Editor**                          |
 | `searchFollowSymlinks`  | `true`        | `true`, `false` for local Find in Files                     | **Settings → Editor**                          |
 | `previewMermaid`        | `true`        | `true`, `false`                                             | Only this file                                 |
 | `previewMath`           | `true`        | `true`, `false`                                             | Only this file                                 |
@@ -291,6 +292,8 @@ differ in width lines them up only roughly.
 - **`editorHover`** shows a name's hover card, from its language server or a plugin, once the pointer rests on it
   in the editor for half a second, as **Go → Show Hover** does at the caret. Move into the card to read or scroll
   it; it closes as the pointer leaves, on **Esc**, a click or a key. Turn it off to see hover cards only when asked.
+- **`semanticHighlighting`** colours names by what the language server says they are, as a parameter, a type or a
+  constant, over the colours of the lexer. Turn it off to keep the lexer's colours alone.
 - **`previewMermaid`** draws the `mermaid` code blocks of Markdown as diagrams, in Live Preview and the Reading
   view. Turn it off to show them as code. A `.mmd` or `.mermaid` file's own preview draws its diagram either way.
 - **`previewMath`** draws the LaTeX math of Markdown, between `$` and `$`, `$$` and `$$`, or in a `math` code

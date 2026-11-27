@@ -15740,6 +15740,26 @@ func (msgs Messages) PrefDescEditorHover() string {
 	return Catalog.Format(msgs.locale, "prefDescEditorHover", nil)
 }
 
+// PrefTitleSemanticHighlighting says "Semantic Highlighting"
+// in the language the app shows.
+func PrefTitleSemanticHighlighting() string { return In(i18n.Locale()).PrefTitleSemanticHighlighting() }
+
+// PrefTitleSemanticHighlighting says "Semantic Highlighting"
+// in the language of msgs.
+func (msgs Messages) PrefTitleSemanticHighlighting() string {
+	return Catalog.Format(msgs.locale, "prefTitleSemanticHighlighting", nil)
+}
+
+// PrefDescSemanticHighlighting says "Colour names by what the language server says they are, such as parameters and types."
+// in the language the app shows.
+func PrefDescSemanticHighlighting() string { return In(i18n.Locale()).PrefDescSemanticHighlighting() }
+
+// PrefDescSemanticHighlighting says "Colour names by what the language server says they are, such as parameters and types."
+// in the language of msgs.
+func (msgs Messages) PrefDescSemanticHighlighting() string {
+	return Catalog.Format(msgs.locale, "prefDescSemanticHighlighting", nil)
+}
+
 // PrefTitleSearchFollowSymlinks says "Follow Directory Symlinks"
 // in the language the app shows.
 func PrefTitleSearchFollowSymlinks() string { return In(i18n.Locale()).PrefTitleSearchFollowSymlinks() }

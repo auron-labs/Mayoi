@@ -84,11 +84,15 @@ func (a *app) pluginTick() {
 		ver, saved := d.buf.Version(), d.saved
 		switch {
 		case !ok:
+			d.semantic.seen = a.prefs().SemanticHighlighting
 			h.reg.Activate("onLanguage:" + languageOf(d))
 			h.reg.Emit("editor.open", a.docEvent(d))
 			a.lspDoc("open", d)
 		case seen.version != ver:
 			s.changed[d], s.changedAt = true, now
+		}
+		if ok && d.semantic.seen != a.prefs().SemanticHighlighting {
+			a.semanticToggled(d)
 		}
 		if ok && seen.saved != saved && !d.dirty() {
 			h.reg.Emit("editor.didSave", a.docEvent(d))

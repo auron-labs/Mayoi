@@ -84,6 +84,8 @@ type document struct {
 	diskCRLF bool     // the file on disk has CRLF line endings
 	trimmed  trimSeen // the text last found without trailing whitespace
 	hl       *highlight.Highlighter
+	// semantic is what a language server says the names of the text are.
+	semantic semanticState
 	indent   indentStyle
 	hist     history
 	git      gitmarks.Marks

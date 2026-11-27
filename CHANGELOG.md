@@ -9,6 +9,9 @@ needs a `## <version>` section here, or its build fails.
 - It also brings servers for Dart, Haskell, OCaml, Gleam, Erlang, Elm, Clojure, Scala, LaTeX and Typst.
 - Dockerfile, Terraform, Nix, GraphQL, Biome, Tailwind CSS and marksman servers come with Mayoi too.
 - Opening a file no longer offers a linter, such as Ruff or oxlint, in place of the language's own server.
+- Language servers colour parameters, types, functions and constants by what they are, over the usual colours.
+- A name a language server marks deprecated is struck through.
+- `semanticHighlighting` turns server colouring off, in **Settings → Editor**.
 - Fix the caret disappearing after a keymap shortcut with `Cmd`, such as `Cmd+D` or `Cmd+Backspace`, on macOS.
 - Tabs of files with the same name show their folder in brackets, such as `index.ts (api)`.
 - Fix `Alt+Backspace` and `Alt+Delete` deleting past punctuation and across lines (`Ctrl` elsewhere).
