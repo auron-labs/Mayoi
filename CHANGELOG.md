@@ -85,6 +85,9 @@ needs a `## <version>` section here, or its build fails.
 - Rename Symbol asks for the new name, and says how many files it changed when there was more than one.
 - Open files change as one undo step; the other files are written to disk.
 - `⇧F6` in the JetBrains keymap renames the symbol at the caret.
+- **Go → Show Code Actions** (`⌘.`) lists the quick fixes and refactorings of the file's language servers.
+- Code actions fix the problems at the caret or selection, and the preferred fix comes first.
+- Language servers can change several files at once, such as an import fix or an organized import list.
 
 ## 0.23.4
 

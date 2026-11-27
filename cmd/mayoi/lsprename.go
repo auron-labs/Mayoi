@@ -57,7 +57,7 @@ func (a *app) renameSymbol() {
 				return
 			}
 			if err != nil {
-				a.renameFailed(s, err)
+				a.lspAnswerFailed(s, "rename", err, locales.RenameFailed)
 				return
 			}
 			name := renameName(snap, target, caret)
@@ -101,7 +101,7 @@ func (a *app) askNewName(d *editor, s *lspServer, c *lsp.Client, name string) {
 				switch {
 				case a.root != root || !s.current():
 				case err != nil:
-					a.renameFailed(s, err)
+					a.lspAnswerFailed(s, "rename", err, locales.RenameFailed)
 				case d.buf.Version() != version:
 					a.fail("%s", locales.RenameStale())
 				case edit == nil:
@@ -122,15 +122,4 @@ func (a *app) askNewName(d *editor, s *lspServer, c *lsp.Client, name string) {
 		})
 		return ""
 	}}
-}
-
-// renameFailed tells why s did not rename: that it is not running, or what
-// it answered.
-func (a *app) renameFailed(s *lspServer, err error) {
-	if s.state() != lspRunning {
-		a.lspFailed(s)
-		return
-	}
-	s.log("warn", "rename: "+err.Error())
-	a.fail("%s", locales.RenameFailed(firstLine(err.Error())))
 }

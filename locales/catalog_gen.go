@@ -18844,6 +18844,56 @@ func (msgs Messages) CmdEditRename() string {
 	return Catalog.Format(msgs.locale, "cmdEditRename", nil)
 }
 
+// CmdEditCodeAction says "Show Code Actions"
+// in the language the app shows.
+func CmdEditCodeAction() string { return In(i18n.Locale()).CmdEditCodeAction() }
+
+// CmdEditCodeAction says "Show Code Actions"
+// in the language of msgs.
+func (msgs Messages) CmdEditCodeAction() string {
+	return Catalog.Format(msgs.locale, "cmdEditCodeAction", nil)
+}
+
+// CodeActionUnsupported says "No language server here offers code actions"
+// in the language the app shows.
+func CodeActionUnsupported() string { return In(i18n.Locale()).CodeActionUnsupported() }
+
+// CodeActionUnsupported says "No language server here offers code actions"
+// in the language of msgs.
+func (msgs Messages) CodeActionUnsupported() string {
+	return Catalog.Format(msgs.locale, "codeActionUnsupported", nil)
+}
+
+// CodeActionNone says "No code actions here"
+// in the language the app shows.
+func CodeActionNone() string { return In(i18n.Locale()).CodeActionNone() }
+
+// CodeActionNone says "No code actions here"
+// in the language of msgs.
+func (msgs Messages) CodeActionNone() string {
+	return Catalog.Format(msgs.locale, "codeActionNone", nil)
+}
+
+// CodeActionFailed says "The code action failed: {err}"
+// in the language the app shows.
+func CodeActionFailed(err string) string { return In(i18n.Locale()).CodeActionFailed(err) }
+
+// CodeActionFailed says "The code action failed: {err}"
+// in the language of msgs.
+func (msgs Messages) CodeActionFailed(err string) string {
+	return Catalog.Format(msgs.locale, "codeActionFailed", map[string]any{"err": err})
+}
+
+// CodeActionPick says "Choose a code action"
+// in the language the app shows.
+func CodeActionPick() string { return In(i18n.Locale()).CodeActionPick() }
+
+// CodeActionPick says "Choose a code action"
+// in the language of msgs.
+func (msgs Messages) CodeActionPick() string {
+	return Catalog.Format(msgs.locale, "codeActionPick", nil)
+}
+
 // RenameUnsupported says "No language server here can rename symbols"
 // in the language the app shows.
 func RenameUnsupported() string { return In(i18n.Locale()).RenameUnsupported() }

@@ -1027,6 +1027,10 @@ language servers, and they work on SSH folders with nothing installed on the hos
   the new name, and renames it in every file the server says uses it. Open files change as one step of undo each;
   the others are written to disk, on SSH and WSL folders too. It says how many files changed when there were several.
   An edit that creates, renames or deletes files is refused whole, as is any a file cannot take.
+- **Go → Show Code Actions** (⌘., Ctrl+. on Windows and Linux) asks every server of the file for the quick fixes and
+  refactorings at the caret or selection, with the problems in it, and lists all they offer in one list: a server's
+  preferred action first, then fixes. The one chosen makes its edit, then runs its command, which may ask for edits of
+  its own.
 - Several definitions are offered in a list: ↑ ↓ choose, Return goes, Esc stays. **Go → Go Back** (⌃-, Alt+Left on
   Windows and Linux) and **Go Forward** (⌃⇧-, Alt+Right) return.
 - **Show Hover** again while its card shows gives the card the keys: ↑ ↓, Page Up, Page Down, Home and End scroll it,

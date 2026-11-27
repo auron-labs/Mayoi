@@ -114,6 +114,7 @@ type Client struct {
 		TypeDefinition, Implementation, References bool
 		WorkspaceSymbol                            bool
 		Rename, PrepareRename                      bool
+		CodeAction, ResolveCodeAction              bool
 		Commands                                   []string
 		Experimental                               map[string]json.RawMessage
 		// Sync is the text document sync kind: 1 full, 2 incremental.
@@ -131,7 +132,10 @@ type Client struct {
 	done    chan struct{}
 	err     error
 	// versions are the documents open, by URI, and their versions.
-	versions           map[string]int
+	versions map[string]int
+	// diagnostics are what the server last published of each document, by
+	// URI, which code actions are asked of.
+	diagnostics        map[string][]Diagnostic
 	configuration      map[string]any
 	folders            []WorkspaceFolder
 	toServer, toClient []PathMapping
@@ -179,7 +183,8 @@ func Start(ctx context.Context, opts Options) (*Client, error) {
 		return nil, err
 	}
 	c := &Client{cmd: opts.Cmd, in: in, h: opts.Handlers, waiting: map[int]chan response{}, done: make(chan struct{}),
-		versions: map[string]int{}, tokens: map[string]semanticState{}, configuration: opts.Configuration, folders: opts.WorkspaceFolders,
+		versions: map[string]int{}, tokens: map[string]semanticState{}, diagnostics: map[string][]Diagnostic{},
+		configuration: opts.Configuration, folders: opts.WorkspaceFolders,
 		toServer: sortedMappings(opts.PathMappings, true), toClient: sortedMappings(opts.PathMappings, false)}
 	if c.folders == nil {
 		c.folders = []WorkspaceFolder{{URI: opts.RootURI, Name: filepath.Base(Path(opts.RootURI))}}
@@ -224,15 +229,22 @@ func Start(ctx context.Context, opts Options) (*Client, error) {
 		"capabilities": map[string]any{
 			"general": map[string]any{"positionEncodings": []string{"utf-16"}},
 			"textDocument": map[string]any{
-				"synchronization":    map[string]any{"didSave": true},
-				"hover":              map[string]any{"contentFormat": []string{"markdown", "plaintext"}},
-				"definition":         map[string]any{"linkSupport": false},
-				"typeDefinition":     map[string]any{"linkSupport": true},
-				"implementation":     map[string]any{"linkSupport": true},
-				"references":         map[string]any{},
-				"completion":         map[string]any{"completionItem": map[string]any{"snippetSupport": true}},
-				"formatting":         map[string]any{},
-				"rename":             map[string]any{"prepareSupport": true},
+				"synchronization": map[string]any{"didSave": true},
+				"hover":           map[string]any{"contentFormat": []string{"markdown", "plaintext"}},
+				"definition":      map[string]any{"linkSupport": false},
+				"typeDefinition":  map[string]any{"linkSupport": true},
+				"implementation":  map[string]any{"linkSupport": true},
+				"references":      map[string]any{},
+				"completion":      map[string]any{"completionItem": map[string]any{"snippetSupport": true}},
+				"formatting":      map[string]any{},
+				"rename":          map[string]any{"prepareSupport": true},
+				"codeAction": map[string]any{
+					"codeActionLiteralSupport": map[string]any{"codeActionKind": map[string]any{"valueSet": []string{
+						"quickfix", "refactor", "refactor.extract", "refactor.inline", "refactor.rewrite", "source", "source.organizeImports", "source.fixAll",
+					}}},
+					"isPreferredSupport": true,
+					"resolveSupport":     map[string]any{"properties": []string{"edit"}},
+				},
 				"publishDiagnostics": map[string]any{"relatedInformation": false},
 				"semanticTokens": map[string]any{
 					"requests":                map[string]any{"full": map[string]any{"delta": true}, "range": true},
@@ -273,6 +285,7 @@ func Start(ctx context.Context, opts Options) (*Client, error) {
 			ReferencesProvider      json.RawMessage `json:"referencesProvider"`
 			WorkspaceSymbolProvider json.RawMessage `json:"workspaceSymbolProvider"`
 			RenameProvider          json.RawMessage `json:"renameProvider"`
+			CodeActionProvider      json.RawMessage `json:"codeActionProvider"`
 			ExecuteCommandProvider  struct {
 				Commands []string `json:"commands"`
 			} `json:"executeCommandProvider"`
@@ -294,6 +307,8 @@ func Start(ctx context.Context, opts Options) (*Client, error) {
 	c.caps.WorkspaceSymbol = on(cp.WorkspaceSymbolProvider)
 	c.caps.Rename = on(cp.RenameProvider)
 	c.caps.PrepareRename = providerFlag(cp.RenameProvider, "prepareProvider")
+	c.caps.CodeAction = on(cp.CodeActionProvider)
+	c.caps.ResolveCodeAction = providerFlag(cp.CodeActionProvider, "resolveProvider")
 	c.caps.Commands = cp.ExecuteCommandProvider.Commands
 	c.semantic = parseSemanticProvider(cp.SemanticTokensProvider)
 	_ = json.Unmarshal(cp.Experimental, &c.caps.Experimental)
@@ -591,7 +606,17 @@ func (c *Client) notified(method string, params json.RawMessage) {
 			URI         string       `json:"uri"`
 			Diagnostics []Diagnostic `json:"diagnostics"`
 		}
-		if json.Unmarshal(params, &p) == nil && c.h.Diagnostics != nil {
+		if json.Unmarshal(params, &p) != nil {
+			return
+		}
+		c.mu.Lock()
+		if len(p.Diagnostics) == 0 {
+			delete(c.diagnostics, p.URI)
+		} else {
+			c.diagnostics[p.URI] = p.Diagnostics
+		}
+		c.mu.Unlock()
+		if c.h.Diagnostics != nil {
 			c.h.Diagnostics(p.URI, p.Diagnostics)
 		}
 	case "window/logMessage", "window/showMessage":
@@ -701,6 +726,7 @@ func (c *Client) Closed(uri string) {
 	_, open := c.versions[uri]
 	delete(c.versions, uri)
 	delete(c.tokens, uri)
+	delete(c.diagnostics, uri)
 	c.mu.Unlock()
 	if open {
 		c.Notify("textDocument/didClose", map[string]any{"textDocument": map[string]any{"uri": uri}})

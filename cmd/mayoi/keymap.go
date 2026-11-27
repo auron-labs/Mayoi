@@ -251,6 +251,7 @@ var vscodeCommands = map[string]string{
 	"editor.action.transformToCamelcase":         "sel.camelCase",
 	"editor.action.joinLines":                    "sel.joinLines",
 	"editor.action.rename":                       "edit.rename",
+	"editor.action.quickFix":                     "edit.codeAction",
 	"editor.action.insertCursorAbove":            "sel.addCursorAbove",
 	"editor.action.insertCursorBelow":            "sel.addCursorBelow",
 	"editor.action.addSelectionToNextFindMatch":  "sel.addNextOccurrence",

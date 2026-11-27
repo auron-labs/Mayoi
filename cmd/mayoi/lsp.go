@@ -1019,6 +1019,17 @@ func (a *app) lspFailed(s *lspServer) {
 	a.tell(note{message: locales.LspNotReady()})
 }
 
+// lspAnswerFailed tells why s did not answer a request of method: that it
+// is not running, or what it answered, as told says it.
+func (a *app) lspAnswerFailed(s *lspServer, method string, err error, told func(string) string) {
+	if s.state() != lspRunning {
+		a.lspFailed(s)
+		return
+	}
+	s.log("warn", method+": "+err.Error())
+	a.fail("%s", told(firstLine(err.Error())))
+}
+
 // complete offers the completions of the document's language server at
 // the caret, in a box, and puts the one chosen in place of the word before
 // the caret.

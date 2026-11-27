@@ -412,18 +412,19 @@ type app struct {
 	nav        navHistory   // where Go Back and Go Forward go
 	defAsked   int          // the last language server jump, whose answer alone goes
 	hoverAsked int          // the Show Hover last asked, as defAsked
-	// renameAsked is the Rename Symbol last asked, as defAsked.
-	renameAsked int
-	restAsked   int // the hover the pointer last asked for, apart: it never drops Show Hover's
-	find        findState
-	inFiles     searchState // search in the files, of the sidebar
-	sessions    sessionsState
-	github      githubPanel
-	prompt      *prompt
-	confirm     *confirm
-	asks        []*confirm // the questions asked in the background, waiting their turn
-	signin      *signin
-	diagram     *diagramOverlay // a preview's diagram shown over the window
+	// renameAsked and actionAsked are the Rename Symbol and the Show Code
+	// Actions last asked, as defAsked.
+	renameAsked, actionAsked int
+	restAsked                int // the hover the pointer last asked for, apart: it never drops Show Hover's
+	find                     findState
+	inFiles                  searchState // search in the files, of the sidebar
+	sessions                 sessionsState
+	github                   githubPanel
+	prompt                   *prompt
+	confirm                  *confirm
+	asks                     []*confirm // the questions asked in the background, waiting their turn
+	signin                   *signin
+	diagram                  *diagramOverlay // a preview's diagram shown over the window
 	// completeAsked is the Complete Word last asked, as defAsked: each
 	// its own, so one does not drop another's answer.
 	completeAsked int
