@@ -10,7 +10,9 @@
     },
     "languageServers": [
       { "id": "rust-analyzer.server", "languages": ["rust"], "command": "${settings.path}",
-        "install": "rustup component add rust-analyzer" }
+        "install": "rustup component add rust-analyzer",
+        "download": { "url": "https://github.com/rust-lang/rust-analyzer/releases/latest/download/rust-analyzer-{arch}-{os}.gz",
+          "os": {"linux": "unknown-linux-gnu", "darwin": "apple-darwin"} } }
     ]
   }
 }

@@ -22,6 +22,9 @@ needs a `## <version>` section here, or its build fails.
 - Search Everywhere keeps the last query and can open all matches in Search.
 - Search Everywhere lists symbols and classes from the workspace, found by the running language servers.
 - Language servers installed by Mayoi are found in `~/.mayoi/servers/bin` before the path.
+- A language server that isn't installed offers **Install** in its note, which installs it on the folder's machine.
+- Rust, Python and PHP servers download from their releases, so no toolchain is needed to install them.
+- Install works on SSH and WSL folders, and keeps servers in `~/.mayoi/servers`.
 - Line comments, indentation, deletion and insertion act at every caret.
 - Up and Down move every caret through wrapped rows.
 - Hold `Alt` while dragging with the middle button to select a column.

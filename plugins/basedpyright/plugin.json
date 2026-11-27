@@ -13,7 +13,9 @@
       { "id": "basedpyright.server", "languages": ["python"],
         "command": "${settings.path}", "args": ["${settings.args}"],
         "programArgs": { "ty": ["server"] },
-        "install": "uv tool install ty" }
+        "install": "uv tool install ty",
+        "download": { "url": "https://github.com/astral-sh/ty/releases/latest/download/ty-{arch}-{os}.tar.gz", "bin": "ty-{arch}-{os}/ty",
+          "os": {"linux": "unknown-linux-gnu", "darwin": "apple-darwin"} } }
     ]
   }
 }

@@ -10,7 +10,9 @@
     },
     "languageServers": [
       { "id": "ruff.server", "languages": ["python"], "command": "${settings.path}", "args": ["server"], "companion": true,
-        "install": "uv tool install ruff" }
+        "install": "uv tool install ruff",
+        "download": { "url": "https://github.com/astral-sh/ruff/releases/latest/download/ruff-{arch}-{os}.tar.gz", "bin": "ruff-{arch}-{os}/ruff",
+          "os": {"linux": "unknown-linux-gnu", "darwin": "apple-darwin"} } }
     ]
   }
 }

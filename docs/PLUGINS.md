@@ -503,13 +503,38 @@ of `type` `array` is its strings, as many arguments. A string of `initialization
 [SETTINGS.md](SETTINGS.md#language-servers). Keep a server's `id` as it is between versions. A server that answers
 `initialize` with an error says it. `programArgs` are the arguments of a program by name, as
 `{"tsc": ["--lsp", "--stdio"]}`, in place of `args` when the command starts that program and no setting that `args` takes
-is set. `install` is the command that installs the program, said when it is missing:
+is set. `install` is the command that installs the program, said when it is missing, with an **Install** button that
+runs it on the folder's machine (in `/bin/sh`, `cmd` on Windows) and turns the plugin on:
 
 ```jsonc
 "settings": { "path": { "type": "string", "default": "gopls" } },
 "languageServers": [{ "id": "gopls.server", "languages": ["go"], "command": "${settings.path}",
   "install": "go install golang.org/x/tools/gopls@latest" }]
 ```
+
+Mayoi keeps what it installs in `servers` of its data folder (`~/.mayoi/servers`, in `$HOME` of an SSH or WSL
+folder's machine), and looks there, in `bin`, `gems/bin` and the folder itself, before the path for a server's
+program, only as servers start; terminals and other commands have the path they had. The install runs with
+`NPM_CONFIG_PREFIX`, `GOBIN`, `UV_TOOL_BIN_DIR`, `UV_TOOL_DIR`, `CARGO_INSTALL_ROOT`, `PIPX_BIN_DIR`, `PIPX_HOME` and
+`GEM_HOME` set to that folder, so `npm install -g`, `go install`, `uv tool install`, `cargo install`, `pipx install` and
+`gem install` need no administrator rights. A program installed with `GEM_HOME` starts with it. Installers that keep to
+their own place, such as `rustup` and `dotnet tool`, run as they are.
+
+`download` installs a server from the release binary the project publishes, with no toolchain, in preference to
+`install`. Mayoi asks the folder's machine for `uname -sm`, downloads `url` with `curl` or `wget` into `servers/<plugin
+name>`, unpacks it by the URL's end (`.tar.gz`, `.tgz`, `.tar.xz`, `.zip`, `.gz` or else the file as it is), and links
+the program into `servers/bin` under the name of `command`. `{os}` and `{arch}` in `url` and `bin` are the machine's
+`linux` or `darwin` and `x86_64` or `aarch64`, or what `os` and `arch` map those to: a machine one of them lacks has
+no download, and uses `install`. `bin` is the program's path in an archive. Use a URL of `releases/latest/download`
+whose file name carries no version. It is for Linux and macOS machines; Windows ones use `install`.
+
+```jsonc
+"download": { "url": "https://github.com/rust-lang/rust-analyzer/releases/latest/download/rust-analyzer-{arch}-{os}.gz",
+  "os": { "linux": "unknown-linux-gnu", "darwin": "apple-darwin" } }
+```
+
+Both texts are run as the plugin's code is, with your rights. Reinstalling downloads the latest again; Mayoi does not
+update what it installed.
 
 A server can serve files by glob, of any language, with `files`, as Ansible's does YAML's: a document its globs match
 is served by it, before the plugins' servers of its language. The globs match from the folder as those of

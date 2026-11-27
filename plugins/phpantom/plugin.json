@@ -10,7 +10,9 @@
     },
     "languageServers": [
       { "id": "phpantom.server", "languages": ["php"], "command": "${settings.path}",
-        "install": "cargo install phpantom_lsp --locked" }
+        "install": "cargo install phpantom_lsp --locked",
+        "download": { "url": "https://github.com/PHPantom-dev/phpantom_lsp/releases/latest/download/phpantom_lsp-{arch}-{os}.tar.gz", "bin": "phpantom_lsp",
+          "os": {"linux": "unknown-linux-gnu", "darwin": "apple-darwin"} } }
     ]
   }
 }
