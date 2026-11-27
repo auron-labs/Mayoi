@@ -78,6 +78,9 @@ type Handlers struct {
 	Log func(level, msg string)
 	// Notification receives notifications not otherwise handled by the client.
 	Notification func(method string, params json.RawMessage)
+	// RefreshSemanticTokens is the server's ask for the semantic tokens of
+	// every document again, as after its configuration changed.
+	RefreshSemanticTokens func()
 }
 
 // Options start a client.
@@ -112,6 +115,9 @@ type Client struct {
 		// Sync is the text document sync kind: 1 full, 2 incremental.
 		Sync int
 	}
+	semantic semanticProvider
+	// tokens are the semantic tokens last answered, by document URI.
+	tokens map[string]semanticState
 
 	wonce   sync.Once
 	writing chan struct{} // one frame writer; acquiring it can be cancelled
@@ -169,7 +175,7 @@ func Start(ctx context.Context, opts Options) (*Client, error) {
 		return nil, err
 	}
 	c := &Client{cmd: opts.Cmd, in: in, h: opts.Handlers, waiting: map[int]chan response{}, done: make(chan struct{}),
-		versions: map[string]int{}, configuration: opts.Configuration, folders: opts.WorkspaceFolders,
+		versions: map[string]int{}, tokens: map[string]semanticState{}, configuration: opts.Configuration, folders: opts.WorkspaceFolders,
 		toServer: sortedMappings(opts.PathMappings, true), toClient: sortedMappings(opts.PathMappings, false)}
 	if c.folders == nil {
 		c.folders = []WorkspaceFolder{{URI: opts.RootURI, Name: filepath.Base(Path(opts.RootURI))}}
@@ -223,8 +229,17 @@ func Start(ctx context.Context, opts Options) (*Client, error) {
 				"completion":         map[string]any{"completionItem": map[string]any{"snippetSupport": true}},
 				"formatting":         map[string]any{},
 				"publishDiagnostics": map[string]any{"relatedInformation": false},
+				"semanticTokens": map[string]any{
+					"requests":                map[string]any{"full": map[string]any{"delta": true}, "range": true},
+					"tokenTypes":              semanticTokenTypes,
+					"tokenModifiers":          semanticTokenModifiers,
+					"formats":                 []string{"relative"},
+					"multilineTokenSupport":   false,
+					"overlappingTokenSupport": false,
+				},
 			},
-			"workspace": map[string]any{"workspaceFolders": true, "configuration": true, "symbol": map[string]any{}},
+			"workspace": map[string]any{"workspaceFolders": true, "configuration": true, "symbol": map[string]any{},
+				"semanticTokens": map[string]any{"refreshSupport": true}},
 		},
 		"clientInfo": map[string]any{"name": "Mayoi"},
 	}
@@ -254,6 +269,7 @@ func Start(ctx context.Context, opts Options) (*Client, error) {
 			} `json:"executeCommandProvider"`
 			CompletionProvider         json.RawMessage `json:"completionProvider"`
 			DocumentFormattingProvider json.RawMessage `json:"documentFormattingProvider"`
+			SemanticTokensProvider     json.RawMessage `json:"semanticTokensProvider"`
 			TextDocumentSync           json.RawMessage `json:"textDocumentSync"`
 			Experimental               json.RawMessage `json:"experimental"`
 		} `json:"capabilities"`
@@ -268,6 +284,7 @@ func Start(ctx context.Context, opts Options) (*Client, error) {
 	c.caps.References = on(cp.ReferencesProvider)
 	c.caps.WorkspaceSymbol = on(cp.WorkspaceSymbolProvider)
 	c.caps.Commands = cp.ExecuteCommandProvider.Commands
+	c.semantic = parseSemanticProvider(cp.SemanticTokensProvider)
 	_ = json.Unmarshal(cp.Experimental, &c.caps.Experimental)
 	c.caps.Sync = 1
 	var kind int
@@ -518,6 +535,10 @@ func (c *Client) answer(id json.RawMessage, method string, params json.RawMessag
 		result = values
 	case "workspace/workspaceFolders":
 		result = c.folders
+	case "workspace/semanticTokens/refresh":
+		if c.h.RefreshSemanticTokens != nil {
+			c.h.RefreshSemanticTokens()
+		}
 	}
 	raw, err := json.Marshal(result)
 	if err == nil {
@@ -641,6 +662,7 @@ func (c *Client) Closed(uri string) {
 	c.mu.Lock()
 	_, open := c.versions[uri]
 	delete(c.versions, uri)
+	delete(c.tokens, uri)
 	c.mu.Unlock()
 	if open {
 		c.Notify("textDocument/didClose", map[string]any{"textDocument": map[string]any{"uri": uri}})

@@ -7,8 +7,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"sort"
 	"strconv"
 	"strings"
+	"unicode/utf16"
 )
 
 // Serve answers as a language server of a language whose every word
@@ -24,7 +26,11 @@ import (
 // it flags in place of "bad", and capabilities what it says it does in
 // place of all it does, as a server that only lints. test/snapshot
 // answers what it was greeted with, its last document, navigation and
-// settings, those of the last workspace/didChangeConfiguration.
+// settings, those of the last workspace/didChangeConfiguration. With
+// initializationOptions semantic, it answers semantic tokens, a token of
+// the type and modifiers it gives for each of its words in the document,
+// and in place of the words of the last answer, as edits, to a delta; and
+// test/refresh has it ask for them again.
 func Serve(in io.Reader, out io.Writer) {
 	r := bufio.NewReader(in)
 	send := func(m any) {
@@ -39,7 +45,15 @@ func Serve(in io.Reader, out io.Writer) {
 		FailInitialize string          `json:"failInitialize"`
 		Word           string          `json:"word"`
 		Capabilities   json.RawMessage `json:"capabilities"`
+		Semantic       *struct {
+			Legend map[string][]string `json:"legend"`
+			// Words are the words that are tokens, by their type's index and
+			// modifiers' bits.
+			Words map[string][2]uint32 `json:"words"`
+		} `json:"semantic"`
 	}
+	results := 0 // the semantic tokens answers made
+	previous := map[string][]uint32{}
 	for {
 		n := -1
 		for {
@@ -104,13 +118,43 @@ func Serve(in io.Reader, out io.Writer) {
 				reply(map[string]any{"capabilities": options.Capabilities})
 				break
 			}
-			reply(map[string]any{"capabilities": map[string]any{
+			caps := map[string]any{
 				"hoverProvider": true, "definitionProvider": true, "completionProvider": map[string]any{},
 				"documentFormattingProvider": true, "textDocumentSync": 1,
 				"typeDefinitionProvider": map[string]any{}, "implementationProvider": true, "referencesProvider": true,
 				"workspaceSymbolProvider": true,
 				"executeCommandProvider":  map[string]any{"commands": []string{"fake.sourceDefinition"}},
-			}})
+			}
+			if options.Semantic != nil {
+				caps["semanticTokensProvider"] = map[string]any{"full": map[string]any{"delta": true}, "legend": map[string]any{
+					"tokenTypes": options.Semantic.Legend["types"], "tokenModifiers": options.Semantic.Legend["modifiers"]}}
+			}
+			reply(map[string]any{"capabilities": caps})
+		case "textDocument/semanticTokens/full", "textDocument/semanticTokens/full/delta":
+			var p struct {
+				TextDocument struct {
+					URI string `json:"uri"`
+				} `json:"textDocument"`
+				PreviousResultID string `json:"previousResultId"`
+			}
+			json.Unmarshal(m.Params, &p)
+			data := semanticData(texts[p.TextDocument.URI], options.Semantic.Words)
+			old := previous[p.TextDocument.URI]
+			previous[p.TextDocument.URI] = data
+			results++
+			id := strconv.Itoa(results)
+			if m.Method == "textDocument/semanticTokens/full/delta" {
+				if p.PreviousResultID != strconv.Itoa(results-1) {
+					send(map[string]any{"jsonrpc": "2.0", "id": *m.ID, "error": map[string]any{"code": -32603, "message": "unknown result " + p.PreviousResultID}})
+					break
+				}
+				reply(map[string]any{"resultId": id, "edits": []any{map[string]any{"start": 0, "deleteCount": len(old), "data": data}}})
+				break
+			}
+			reply(map[string]any{"resultId": id, "data": data})
+		case "test/refresh":
+			send(map[string]any{"jsonrpc": "2.0", "id": 1 << 20, "method": "workspace/semanticTokens/refresh"})
+			reply(nil)
 		case "textDocument/didOpen", "textDocument/didChange":
 			document = append(json.RawMessage(nil), m.Params...)
 			var p struct {
@@ -306,4 +350,40 @@ func wordSpan(texts map[string]string, params json.RawMessage) (line, start, end
 		e++
 	}
 	return p.Position.Line, s, e, text[s:e]
+}
+
+// semanticData is the relative encoding of the tokens of text: a token for
+// each occurrence of each of the words, whose values are the type and the
+// modifiers.
+func semanticData(text string, words map[string][2]uint32) []uint32 {
+	data := []uint32{}
+	lastLine, lastStart := 0, 0
+	for i, line := range strings.Split(text, "\n") {
+		type hit struct {
+			at   int
+			word string
+		}
+		var hits []hit
+		for w := range words {
+			for from := 0; ; {
+				at := strings.Index(line[from:], w)
+				if at < 0 {
+					break
+				}
+				hits = append(hits, hit{from + at, w})
+				from += at + len(w)
+			}
+		}
+		sort.Slice(hits, func(a, b int) bool { return hits[a].at < hits[b].at })
+		for _, h := range hits {
+			start := len(utf16.Encode([]rune(line[:h.at])))
+			dLine, dStart := i-lastLine, start
+			if dLine == 0 {
+				dStart = start - lastStart
+			}
+			data = append(data, uint32(dLine), uint32(dStart), uint32(len(utf16.Encode([]rune(h.word)))), words[h.word][0], words[h.word][1])
+			lastLine, lastStart = i, start
+		}
+	}
+	return data
 }

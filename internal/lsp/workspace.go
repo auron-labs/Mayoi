@@ -91,7 +91,8 @@ func parameterURIs(method string) uriFields {
 		return uriFields{"rootUri": nil, "workspaceFolders": folderURIs}
 	case "textDocument/didOpen", "textDocument/didChange", "textDocument/didSave", "textDocument/didClose",
 		"textDocument/hover", "textDocument/definition", "textDocument/typeDefinition", "textDocument/implementation",
-		"textDocument/references", "textDocument/completion", "textDocument/formatting":
+		"textDocument/references", "textDocument/completion", "textDocument/formatting",
+		"textDocument/semanticTokens/full", "textDocument/semanticTokens/full/delta":
 		return documentURI
 	case "textDocument/publishDiagnostics":
 		return uriFields{"uri": nil, "diagnostics": {"*": {
